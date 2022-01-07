@@ -259,6 +259,10 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
     }
     player.melded = newMeld
 
+    if (player.cards.length === 0) {
+        endPlayerTurn(player)
+    }
+
     return {
         success: true,
         message: "Succesfully melded cards"
@@ -339,13 +343,15 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): Card[] | undefin
 
 // NOTE!!! REQUIREMENTS FOR ALL STRAIGHTS MUST HAVE EQUAL LENGTH AND ALL SETS MUST BE OF EQUAL SIZE
 const areMeldsValid = (player: Player, playerMelds: MeldAction) => {
-    if (checkDuplicateMeldCards(playerMelds)) {
+    if (hasDuplicateMeldCards(playerMelds)) {
+        console.log("duplicate meld cards")
         return false
     }
 
     const round = game.rounds[state.roundNumber]
 
     if (playerMelds.melds.length !== round.melds.length) {
+        console.log("Invalid meld array count")
         return false
     }
 
@@ -357,12 +363,12 @@ const areMeldsValid = (player: Player, playerMelds: MeldAction) => {
         }
     }
 
-    throw "Not yet implemented"
+    return true
 }
 
-const checkDuplicateMeldCards = (melds: MeldAction) => {
+const hasDuplicateMeldCards = (melds: MeldAction) => {
     const cardIDs = flatMap(melds.melds, m => m.cardIDs)
-    return cardIDs.length === uniq(cardIDs).length
+    return cardIDs.length !== uniq(cardIDs).length
 }
 
 const isPlayerMeldValid = (player: Player, meld: Meld, playerMeld: MeldCards) => {
@@ -370,6 +376,7 @@ const isPlayerMeldValid = (player: Player, meld: Meld, playerMeld: MeldCards) =>
 
     // Tried to meld cards we don't have
     if (cards.length !== playerMeld.cardIDs.length) {
+        console.log("melding unavailable cards")
         return false
     }
 
@@ -383,6 +390,7 @@ const isMeldValid = (meld: Meld, cards: Card[]) => {
     if (meld.type === "straight") {
         return checkStraightValidity(cards, meld.length)
     }
+    throw "Invalid meld type"
 }
 
 // Input is ordered by meld order
@@ -413,6 +421,7 @@ const checkStraightValidity = (cards: Card[], length: number) => {
 
     // No cards
     if (!refCard) {
+        console.log("no cards")
         return false
     }
 
@@ -427,15 +436,19 @@ const checkStraightValidity = (cards: Card[], length: number) => {
     for (let card of ordered) {
         // Straight did not end at an Ace
         if (!expectedRank) {
+            console.log("unexpected rank")
             return false
         }
         // Card is not joker and card is not the next expected rank
         // or suit is wrong
         if (card.rank !== 25 && card.rank !== expectedRank && card.suit !== refCard.suit) {
+            console.log("unexpected suit")
             return false
         }
         expectedRank = nextRank(expectedRank)
     }
+
+    return ordered.length >= length
 }
 
 const endPlayerTurn = (player: Player) => {
@@ -514,7 +527,9 @@ const getPlayerCards = (player: Player, cardIDs: number[], removeCards: boolean)
     const cardsToTake = compact(cardIDs.map(id => find(player.cards, c => c.id === id)))
 
     if (removeCards) {
-        player.cards = remove(player.cards, card => some(cardsToTake, toTake => toTake.id === card.id))
+        console.log("removing cards...", { player, cardsToTake })
+        player.cards = filter(player.cards, card => !cardsToTake.includes(card))
+        console.log(player)
     }
 
     return cardsToTake
@@ -536,6 +551,8 @@ const giveCard = (player: Player, card: Card) => {
 }
 
 const shuffle = (cards: Card[]): Card[] => {
+    // for testing
+    return cards
     const array = [...cards]
     let currentIndex = array.length, randomIndex;
 

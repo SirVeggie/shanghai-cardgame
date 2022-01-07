@@ -1,12 +1,15 @@
-export const getDefaultConfiguration = (): ShanghaiOptions => ({
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.testConfig = exports.getDefaultConfiguration = void 0;
+const getDefaultConfiguration = () => ({
     players: ["Eetu", "Veikka", "Niko", "Johannes"],
     deckCount: 2,
     jokerCount: 4,
     shanghaiCount: 3,
     rounds: defaultRounds
-})
-
-export const testConfig = (): ShanghaiOptions => ({
+});
+exports.getDefaultConfiguration = getDefaultConfiguration;
+const testConfig = () => ({
     players: ["Eetu", "Veikka"],
     deckCount: 1,
     jokerCount: 0,
@@ -23,9 +26,9 @@ export const testConfig = (): ShanghaiOptions => ({
             ]
         },
     ]
-})
-
-const defaultRounds: RoundConfig[] = [
+});
+exports.testConfig = testConfig;
+const defaultRounds = [
     {
         description: "Two sets",
         cardCount: 11,
@@ -140,4 +143,4 @@ const defaultRounds: RoundConfig[] = [
             }
         ]
     },
-]
+];
