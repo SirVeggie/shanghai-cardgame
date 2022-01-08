@@ -1,10 +1,16 @@
-//#region main types
-interface ShanghaiGame {
+//#region main export types
+export interface ShanghaiGame {
     options: ShanghaiOptions
-    state: ShanghaiState
+    state?: ShanghaiState
 }
 
-type ShanghaiOptions = {
+export type ActionResponse = {
+    success: boolean
+    error?: string
+    message?: string
+}
+
+export type ShanghaiOptions = {
     players: string[]
     deckCount: number
     jokerCount: number
@@ -12,7 +18,7 @@ type ShanghaiOptions = {
     rounds: RoundConfig[]
 }
 
-type ShanghaiState = {
+export type ShanghaiState = {
     players: Player[]
     roundNumber: number
     turn: number
@@ -24,7 +30,7 @@ type ShanghaiState = {
     winner?: string
 }
 
-type Action = {
+export type Action = {
     playerName: string
     setReady?: boolean
     revealDeck?: boolean
@@ -38,7 +44,7 @@ type Action = {
 }
 //#endregion
 
-type Player = {
+export type Player = {
     name: string
     isReady: boolean
     points: number
@@ -47,40 +53,40 @@ type Player = {
     shanghaiCount: number
 }
 
-type Card = {
+export type Card = {
     id: number
     suit: CSuit
     rank: CRank
 }
 
-type CSuit = "heart" | "spade" | "diamond" | "club"
-type CJokerRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
-type CRank = CJokerRank | 25
+export type CSuit = "heart" | "spade" | "diamond" | "club"
+export type CJokerRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
+export type CRank = CJokerRank | 25
 
-type RoundConfig = {
+export type RoundConfig = {
     description: string
     cardCount: number
     melds: Meld[]
 }
 
-type Meld = {
+export type Meld = {
     type: MeldType
     length: number
 }
 
-type MeldType = "set" | "straight"
+export type MeldType = "set" | "straight"
 
-type MeldedMeld = {
+export type MeldedMeld = {
     cards: Card[]
 }
 
 // The entire meld of a player, with each meld of the array
 // corresponding to the meld of the same index in roundConfig melds
-type MeldAction = {
+export type MeldAction = {
     melds: MeldCards[]
 }
 
-type AddToMeldAction = {
+export type AddToMeldAction = {
     targetPlayer: string
     targetMeldIndex: number
     cardToMeldId: number
@@ -88,6 +94,6 @@ type AddToMeldAction = {
 }
 
 // Single meld array, where each index corresponds to a players card
-type MeldCards = {
+export type MeldCards = {
     cardIDs: number[]
 }

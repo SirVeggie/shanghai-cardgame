@@ -1,25 +1,22 @@
 import { compact, filter, find, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse } from '../../'
 
-let game: ShanghaiOptions
+// NOTE ACE IS NOT 1
+
+let options: ShanghaiOptions
 let state: ShanghaiState
 
-export const getGame = () => game
+export const getGame = () => options
 export const getState = () => state
 
-export type ActionResponse = {
-    success: boolean
-    error?: string
-    message?: string
-}
-
-export const startGame = (options: ShanghaiOptions) => {
-    game = options
-    state = initialState(game.players)
+export const startGame = (game: ShanghaiGame) => {
+    options = game.options
+    state = game.state ? game.state : initialState(options.players)
 }
 
 //#region game logic
 export const handleAction = (action: Action): ActionResponse => {
-    if (!some(game.players, n => n === action.playerName)) {
+    if (!some(options.players, n => n === action.playerName)) {
         return {
             success: false,
             error: `Player ${action.playerName} is not in the game`
@@ -142,7 +139,7 @@ const actionCallShanghai = (playerName: string): ActionResponse => {
             error: "You cannot call Shanghai after melding"
         }
     }
-    if (player.shanghaiCount >= game.shanghaiCount) {
+    if (player.shanghaiCount >= options.shanghaiCount) {
         return {
             success: false,
             error: "You have already called Shanghai maximum amount of times"
@@ -186,6 +183,8 @@ const actionAllowShanghaiCall = (): ActionResponse => {
     giveCard(player, discard)
     giveCard(player, penalty)
 
+    state.shanghaiIsAllowed = false
+
     return {
         success: true,
         message: `Succesfully called Shanghai for ${cardToString(discard)} and received ${cardToString(penalty)} as penalty`
@@ -221,6 +220,7 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
 
     giveCard(player, card)
 
+    state.shanghaiIsAllowed = false
     return {
         success: true,
         message: `Picked up ${cardToString(card)}`
@@ -251,7 +251,7 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
     }
 
     const newMeld: MeldedMeld[] = []
-    const round = game.rounds[state.roundNumber]
+    const round = options.rounds[state.roundNumber]
     for (let i = 0; i < round.melds.length; i++) {
         // take and remove cards
         const cards = getPlayerCards(player, meld.melds[i].cardIDs, true)
@@ -283,6 +283,7 @@ const actionDiscard = (player: Player, toDiscard: Card): ActionResponse => {
 
     endPlayerTurn(player)
 
+    state.shanghaiIsAllowed = true
     return {
         success: true,
         message: `Discarded ${cardToString(toDiscard)}`
@@ -328,7 +329,7 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): Card[] | undefin
         return undefined
     }
 
-    const round = game.rounds[state.roundNumber]
+    const round = options.rounds[state.roundNumber]
     const targetMeld = round.melds[meld.targetMeldIndex]
     let targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards
     targetMeldCards = targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld)
@@ -348,7 +349,7 @@ const areMeldsValid = (player: Player, playerMelds: MeldAction) => {
         return false
     }
 
-    const round = game.rounds[state.roundNumber]
+    const round = options.rounds[state.roundNumber]
 
     if (playerMelds.melds.length !== round.melds.length) {
         console.log("Invalid meld array count")
@@ -458,7 +459,7 @@ const endPlayerTurn = (player: Player) => {
         unreadyPlayers()
 
         /// last round just ended
-        if (state.roundNumber === game.rounds.length - 1) {
+        if (state.roundNumber === options.rounds.length - 1) {
             const winner = minBy(state.players, p => p.points)
             state.winner = winner ? winner.name : "No winner"
             return
@@ -495,11 +496,11 @@ const checkGameContinue = () => {
 
 const initializeRound = () => {
     state.roundIsOn = true
-    const round = game.rounds[state.roundNumber]
+    const round = options.rounds[state.roundNumber]
 
     state.players.forEach(resetPlayer)
 
-    state.deck = shuffle(createDeck(game.deckCount, game.jokerCount))
+    state.deck = shuffle(createDeck(options.deckCount, options.jokerCount))
 
     // deal
     for (let p = 0; p < state.players.length; p++) {
@@ -578,7 +579,7 @@ const initialState = (players: string[]): ShanghaiState => {
         turn: 0,
         shanghaiIsAllowed: false,
         shanghaiFor: null,
-        deck: createDeck(game.deckCount, game.jokerCount),
+        deck: createDeck(options.deckCount, options.jokerCount),
         discarded: [],
     }
 }

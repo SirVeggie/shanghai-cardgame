@@ -1,11 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 //import dotenv from 'dotenv'
 const shanghai_1 = require("./game/shanghai");
 const shanghaiGameConfig_1 = require("./game/shanghaiGameConfig");
 //dotenv.config()
 const test = () => {
-    (0, shanghai_1.startGame)((0, shanghaiGameConfig_1.testConfig)());
+    (0, shanghai_1.startGame)({ options: (0, shanghaiGameConfig_1.testConfig)() });
     console.log((0, shanghai_1.getState)().players);
     console.log(JSON.stringify((0, shanghai_1.getState)(), null, 2));
     console.log((0, shanghai_1.handleAction)({
@@ -38,7 +41,7 @@ const test = () => {
     console.log(JSON.stringify((0, shanghai_1.getState)(), null, 2));
 };
 test();
-// import createServer from './server';
-// console.log('Started application')
-// console.log("Cache all: ", process.env.CACHE_ALL)
-// createServer()
+const server_1 = __importDefault(require("./server"));
+console.log('Started application');
+console.log("Cache all: ", process.env.CACHE_ALL);
+(0, server_1.default)();

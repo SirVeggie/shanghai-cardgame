@@ -2,20 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleAction = exports.startGame = exports.getState = exports.getGame = void 0;
 const lodash_1 = require("lodash");
-let game;
+// NOTE ACE IS NOT 1
+let options;
 let state;
-const getGame = () => game;
+const getGame = () => options;
 exports.getGame = getGame;
 const getState = () => state;
 exports.getState = getState;
-const startGame = (options) => {
-    game = options;
-    state = initialState(game.players);
+const startGame = (game) => {
+    options = game.options;
+    state = game.state ? game.state : initialState(options.players);
 };
 exports.startGame = startGame;
 //#region game logic
 const handleAction = (action) => {
-    if (!(0, lodash_1.some)(game.players, n => n === action.playerName)) {
+    if (!(0, lodash_1.some)(options.players, n => n === action.playerName)) {
         return {
             success: false,
             error: `Player ${action.playerName} is not in the game`
@@ -125,7 +126,7 @@ const actionCallShanghai = (playerName) => {
             error: "You cannot call Shanghai after melding"
         };
     }
-    if (player.shanghaiCount >= game.shanghaiCount) {
+    if (player.shanghaiCount >= options.shanghaiCount) {
         return {
             success: false,
             error: "You have already called Shanghai maximum amount of times"
@@ -215,7 +216,7 @@ const actionMeld = (player, meld) => {
         };
     }
     const newMeld = [];
-    const round = game.rounds[state.roundNumber];
+    const round = options.rounds[state.roundNumber];
     for (let i = 0; i < round.melds.length; i++) {
         // take and remove cards
         const cards = getPlayerCards(player, meld.melds[i].cardIDs, true);
@@ -277,7 +278,7 @@ const isValidAddMeld = (player, meld) => {
     if (!targetPlayer.melded.length) {
         return undefined;
     }
-    const round = game.rounds[state.roundNumber];
+    const round = options.rounds[state.roundNumber];
     const targetMeld = round.melds[meld.targetMeldIndex];
     let targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards;
     targetMeldCards = targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld);
@@ -292,7 +293,7 @@ const areMeldsValid = (player, playerMelds) => {
         console.log("duplicate meld cards");
         return false;
     }
-    const round = game.rounds[state.roundNumber];
+    const round = options.rounds[state.roundNumber];
     if (playerMelds.melds.length !== round.melds.length) {
         console.log("Invalid meld array count");
         return false;
@@ -381,7 +382,7 @@ const endPlayerTurn = (player) => {
         addPlayerPoints();
         unreadyPlayers();
         /// last round just ended
-        if (state.roundNumber === game.rounds.length - 1) {
+        if (state.roundNumber === options.rounds.length - 1) {
             const winner = (0, lodash_1.minBy)(state.players, p => p.points);
             state.winner = winner ? winner.name : "No winner";
             return;
@@ -412,9 +413,9 @@ const checkGameContinue = () => {
 };
 const initializeRound = () => {
     state.roundIsOn = true;
-    const round = game.rounds[state.roundNumber];
+    const round = options.rounds[state.roundNumber];
     state.players.forEach(resetPlayer);
-    state.deck = shuffle(createDeck(game.deckCount, game.jokerCount));
+    state.deck = shuffle(createDeck(options.deckCount, options.jokerCount));
     // deal
     for (let p = 0; p < state.players.length; p++) {
         const player = state.players[p];
@@ -479,7 +480,7 @@ const initialState = (players) => {
         turn: 0,
         shanghaiIsAllowed: false,
         shanghaiFor: null,
-        deck: createDeck(game.deckCount, game.jokerCount),
+        deck: createDeck(options.deckCount, options.jokerCount),
         discarded: [],
     };
 };

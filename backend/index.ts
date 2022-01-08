@@ -5,7 +5,7 @@ import { getDefaultConfiguration, testConfig } from './game/shanghaiGameConfig'
 //dotenv.config()
 
 const test = () => {
-    startGame(testConfig())
+    startGame({ options: testConfig() })
     console.log(getState().players)
     console.log(JSON.stringify(getState(), null, 2))
     console.log(handleAction({
@@ -40,11 +40,11 @@ const test = () => {
 
 test()
 
-// import createServer from './server';
+import createServer from './server';
 
-// console.log('Started application')
-// console.log("Cache all: ", process.env.CACHE_ALL)
+console.log('Started application')
+console.log("Cache all: ", process.env.CACHE_ALL)
 
-// createServer()
+createServer()
 
 

@@ -1,11 +1,12 @@
-import Listing from './components/listing';
+import React from 'react';
+import logo from './logo.svg';
+import Game from './components/game'
+import './App.css';
 
 function App() {
   return (
     <div className="App">
-
-      <Listing />
-
+      <Game />
     </div>
   );
 }
