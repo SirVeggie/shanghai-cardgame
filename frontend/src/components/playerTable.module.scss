@@ -1,0 +1,29 @@
+@import "../shared";
+
+.playerArea {
+    display: flex;
+    flex-direction: row;
+}
+
+.cardContainer {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+}
+
+.infoMessage {
+    display: flex;
+    flex-direction: column;
+
+    >span {
+        background-color: $darkGrey;
+    }
+
+    .message {
+        color: $green;
+    }
+
+    .error {
+        color: $red;
+    }
+}

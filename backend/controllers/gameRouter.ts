@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { getGame, getState, handleAction, startGame } from '../game/shanghai'
 import { getDefaultConfiguration } from '../game/shanghaiGameConfig'
-import { ShanghaiGame, Action } from '../../index'
+import { ShanghaiGame, Action } from '../../frontend/src/shared'
 
 const router = Router()
 

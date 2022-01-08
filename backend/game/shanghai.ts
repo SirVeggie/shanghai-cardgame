@@ -1,5 +1,5 @@
 import { compact, filter, find, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse } from '../../'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber } from '../../frontend/src/shared'
 
 // NOTE ACE IS NOT 1
 
@@ -90,8 +90,8 @@ const currentPlayerAction = (action: Action): ActionResponse => {
     if (action.meld) {
         return actionMeld(player, action.meld)
     }
-    if (action.discard) {
-        return actionDiscard(player, action.discard)
+    if (action.discardID) {
+        return actionDiscard(player, action.discardID)
     }
     if (action.addToMeld) {
         return actionAddToMeld(player, action.addToMeld)
@@ -269,24 +269,24 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
     }
 }
 
-const actionDiscard = (player: Player, toDiscard: Card): ActionResponse => {
-    const hasCard = player.cards.some(c => c.id === toDiscard.id)
-    if (!hasCard) {
+const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
+    const cardToDiscard = player.cards.find(c => c.id === toDiscardId)
+    if (!cardToDiscard) {
         return {
             success: false,
             error: "You do not have this card in hand"
         }
     }
 
-    player.cards = player.cards.filter(c => c.id !== toDiscard.id)
-    state.discarded.push(toDiscard)
+    player.cards = player.cards.filter(c => c.id !== toDiscardId)
+    state.discarded.push(cardToDiscard)
 
     endPlayerTurn(player)
 
     state.shanghaiIsAllowed = true
     return {
         success: true,
-        message: `Discarded ${cardToString(toDiscard)}`
+        message: `Discarded ${cardToString(cardToDiscard)}`
     }
 }
 
@@ -610,20 +610,6 @@ const createDeck = (deckCount: number, jokerCount: number) => {
     return cards
 }
 
-const suitFromNumber = (n: number): CSuit => {
-    const v = n % 4
-    switch (v) {
-        case 0:
-            return "heart"
-        case 1:
-            return "spade"
-        case 2:
-            return "diamond"
-        default:
-            return "club"
-    }
-}
-
 const createPlayer = (name: string): Player => ({
     name,
     isReady: false,
@@ -633,29 +619,3 @@ const createPlayer = (name: string): Player => ({
     shanghaiCount: 0,
 })
 
-const cardToString = (card: Card) => `${rankToString(card.rank)} of ${card.suit}s`
-
-const rankToString = (rank: CRank) => {
-    switch (rank) {
-        case 11:
-            return "Jack"
-        case 12:
-            return "Queen"
-        case 13:
-            return "King"
-        case 14:
-            return "Ace"
-        case 25:
-            return "Joker"
-        default:
-            return `${rank}`
-    }
-}
-
-const nextRank = (rank: CRank) => {
-    let rankAdd = rank + 1
-    if (rank > 14) {
-        return undefined
-    }
-    return rankAdd as CRank
-}

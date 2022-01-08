@@ -1,0 +1,19 @@
+@import "../shared.scss";
+
+.playingCard {
+    min-width: 50px;
+    min-height: 350px;
+    border-style: solid;
+    border-radius: $small;
+
+    &:hover {
+        min-width: 250px;
+    }
+}
+
+.fullSize {
+    min-width: 250px;
+}
+
+.coveredSize {
+}

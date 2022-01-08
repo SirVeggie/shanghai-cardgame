@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tsc & node ./build/index.js",
-    "start": "node build/index.js",
+    "test": "tsc & node ./build/backend/index.js",
+    "start": "node build/backend/index.js",
     "deploy": "cd ..; git subtree push --prefix backend/ heroku master"
   },
   "author": "",

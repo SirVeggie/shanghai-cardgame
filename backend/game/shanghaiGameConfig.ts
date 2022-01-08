@@ -1,3 +1,5 @@
+import { RoundConfig, ShanghaiOptions } from "../../frontend/src/shared"
+
 export const getDefaultConfiguration = (): ShanghaiOptions => ({
     players: ["Eetu", "Veikka", "Niko", "Johannes"],
     deckCount: 2,

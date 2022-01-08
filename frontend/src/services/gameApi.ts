@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Action, ActionResponse, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../../../'
+import { Action, ActionResponse, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
 
 //const baseURL = 'localhost:3001/api/'
 const baseURL = '/api/game/'
@@ -47,7 +47,7 @@ export const startGame = async (game: ShanghaiGame | undefined) => {
     })
 }
 
-export const playerAction = async (action: Action): Promise<ActionResponse> => {
+export const executePlayerAction = async (action: Action): Promise<ActionResponse> => {
     const path = apiPath("action")
 
     const body = {

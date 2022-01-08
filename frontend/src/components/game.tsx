@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ShanghaiOptions, ShanghaiState } from "../../.."
+import { ActionResponse, ShanghaiOptions, ShanghaiState } from "../shared"
 import { GameContext } from "../context/gameContext"
 import { getGameOptions, getGameState } from "../services/gameApi"
 import { GameView } from "./gameView"
@@ -9,11 +9,13 @@ import { NameInput } from "./nameInput"
 let updateInProgress = false
 
 const Game = () => {
-    const [myPlayerName, setMyPlayerName] = useState<string>()
+    const [myPlayerName, setMyPlayerName] = useState<string | undefined>("Eetu")
     const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
     const [gameState, setGameState] = useState<ShanghaiState>()
+    const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
 
     console.log("Player name: " + myPlayerName)
+    console.log({ gameOptions, gameState })
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -31,7 +33,7 @@ const Game = () => {
         return () => clearInterval(interval);
     }, []);
 
-    if (!myPlayerName) {
+    if (!myPlayerName?.length) {
         return <NameInput setName={setMyPlayerName} />
     }
 
@@ -45,11 +47,14 @@ const Game = () => {
         return <div>Loading...</div>
     }
 
+    console.log("render game view")
     return (
         <GameContext.Provider value={{
             myPlayerName,
             options: gameOptions,
-            state: gameState
+            state: gameState,
+            actionResponse,
+            setActionResponse
         }}>
             <GameView />
         </GameContext.Provider>

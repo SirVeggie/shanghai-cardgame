@@ -5,9 +5,7 @@ import { getDefaultConfiguration, testConfig } from './game/shanghaiGameConfig'
 //dotenv.config()
 
 const test = () => {
-    startGame({ options: testConfig() })
-    console.log(getState().players)
-    console.log(JSON.stringify(getState(), null, 2))
+    startGame({ options: getDefaultConfiguration() })
     console.log(handleAction({
         playerName: "Eetu",
         setReady: true
@@ -24,18 +22,6 @@ const test = () => {
         playerName: "Johannes",
         setReady: true
     }))
-    console.log(JSON.stringify(getState(), null, 2))
-    console.log(handleAction({
-        playerName: "Eetu",
-        meld: {
-            melds: [
-                {
-                    cardIDs: [1, 2, 3, 4, 5]
-                }
-            ]
-        }
-    }))
-    console.log(JSON.stringify(getState(), null, 2))
 }
 
 test()
