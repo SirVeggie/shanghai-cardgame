@@ -139,3 +139,9 @@ export const nextRank = (rank: CRank) => {
     }
     return rankAdd as CRank
 }
+
+export const getCurrentPlayer = (state: ShanghaiState) => state.players[getPlayerTurn(state, state.turn)]
+
+export const getPlayerByName = (state: ShanghaiState, name: string) => state.players.filter(p => p.name === name)[0]
+
+export const getPlayerTurn = (state: ShanghaiState, turnIndex: number) => turnIndex % state.players.length

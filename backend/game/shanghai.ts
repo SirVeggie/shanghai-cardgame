@@ -1,5 +1,5 @@
 import { compact, filter, find, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber } from '../../frontend/src/shared'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber, getCurrentPlayer, getPlayerByName } from '../../frontend/src/shared'
 
 // NOTE ACE IS NOT 1
 
@@ -24,7 +24,7 @@ export const handleAction = (action: Action): ActionResponse => {
     }
 
     if (action.setReady) {
-        const player = getPlayerByName(action.playerName)
+        const player = getPlayerByName(state, action.playerName)
         player.isReady = true
         checkGameContinue()
         return {
@@ -39,7 +39,7 @@ export const handleAction = (action: Action): ActionResponse => {
         }
     }
 
-    const isPlayersTurn = action.playerName === getCurrentPlayer().name
+    const isPlayersTurn = action.playerName === getCurrentPlayer(state).name
 
     if (!isPlayersTurn) {
         return foreignPlayerAction(action)
@@ -79,7 +79,7 @@ const currentPlayerAction = (action: Action): ActionResponse => {
         return actionRevealDeck()
     }
 
-    const player = getCurrentPlayer()
+    const player = getCurrentPlayer(state)
 
     if (action.takeDiscard) {
         return actionTakeDiscard(player)
@@ -109,7 +109,7 @@ const currentPlayerShanghaiAction = (action: Action): ActionResponse => {
         return actionAllowShanghaiCall()
     }
     if (action.takeDiscard) {
-        return actionTakeDiscard(getCurrentPlayer())
+        return actionTakeDiscard(getCurrentPlayer(state))
     }
     return {
         success: false,
@@ -119,7 +119,7 @@ const currentPlayerShanghaiAction = (action: Action): ActionResponse => {
 
 //#region  individual actions
 const actionCallShanghai = (playerName: string): ActionResponse => {
-    const player = getPlayerByName(playerName)
+    const player = getPlayerByName(state, playerName)
     if (!state.shanghaiIsAllowed) {
         return {
             success: false,
@@ -178,7 +178,7 @@ const actionAllowShanghaiCall = (): ActionResponse => {
 
     const penalty = popDeck()
 
-    const player = getPlayerByName(state.shanghaiFor)
+    const player = getPlayerByName(state, state.shanghaiFor)
 
     giveCard(player, discard)
     giveCard(player, penalty)
@@ -303,7 +303,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
     getPlayerCards(player, [meld.cardToMeldId], true)
 
     // save target meld
-    getPlayerByName(meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards }
+    getPlayerByName(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards }
 
     if (player.cards.length === 0) {
         endPlayerTurn(player)
@@ -323,7 +323,7 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): Card[] | undefin
         return undefined
     }
 
-    const targetPlayer = getPlayerByName(meld.targetPlayer)
+    const targetPlayer = getPlayerByName(state, meld.targetPlayer)
 
     if (!targetPlayer.melded.length) {
         return undefined
@@ -517,13 +517,6 @@ const resetPlayer = (player: Player) => {
     player.melded = []
 }
 //#endregion
-
-const getCurrentPlayer = () => state.players[getPlayerTurn(state.turn)]
-
-const getPlayerByName = (name: string) => state.players.filter(p => p.name === name)[0]
-
-const getPlayerTurn = (turnIndex: number) => turnIndex % state.players.length
-
 const getPlayerCards = (player: Player, cardIDs: number[], removeCards: boolean) => {
     const cardsToTake = compact(cardIDs.map(id => find(player.cards, c => c.id === id)))
 

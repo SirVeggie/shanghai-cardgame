@@ -16,6 +16,10 @@ def main():
     print(scss)
     print(tsx)
 
+    if os.path.exists(tsx):
+        print("File exists")
+        return
+
     with open(scss, 'w') as f:
         f.write('@import "../shared";\n')
         f.write('\n')
@@ -23,7 +27,7 @@ def main():
         f.close()
 
     with open(tsx, 'w') as f:
-        f.write(f"import style from '{file}.module.scss'\n")
+        f.write(f"import style from './{file}.module.scss'\n")
         f.write('\n')
         f.write(f'export const {file.capitalize()} = () => ')
         f.write('{\n')

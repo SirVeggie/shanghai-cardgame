@@ -9,7 +9,7 @@ import { NameInput } from "./nameInput"
 let updateInProgress = false
 
 const Game = () => {
-    const [myPlayerName, setMyPlayerName] = useState<string | undefined>("Eetu")
+    const [myPlayerName, setMyPlayerName] = useState<string | undefined>("Niko")
     const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
     const [gameState, setGameState] = useState<ShanghaiState>()
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
