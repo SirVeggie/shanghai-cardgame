@@ -1,28 +1,48 @@
 @import "../shared.scss";
 
 .mainArea {
-    width: 100vh;
-    height: 100vh;
-    display: flex;
-    flex-direction: row;
-}
-
-.tableArea {
-    width: 80%;
     display: flex;
     flex-direction: column;
-}
 
-.publicTable {
-    height: 70%;
-    padding: $large;
-}
+    .publicTable {
+        display: flex;
+        flex-direction: row;
 
-.playerTable {
-    height: 30%;
-    padding: $large;
-}
+        height: 66vh;
+        width: 100%;
 
-.infoArea {
-    width: 20%;
+        padding: $large;
+
+        .meldArea {
+            width: 50vw;
+            height: 100%;
+        }
+        .stateArea {
+            display: flex;
+            flex-direction: column;
+
+            width: 25vw;
+            height: 100%;
+
+            .playerList {
+                width: 100%;
+                height: 33vh;
+            }
+            .deckArea {
+                width: 100%;
+                height: 33vh;
+            }
+        }
+        .infoArea {
+            width: 25vh;
+            height: 100%;
+        }
+    }
+
+    .playerTable {
+        width: 100%;
+        height: 34vh;
+
+        padding: $large;
+    }
 }

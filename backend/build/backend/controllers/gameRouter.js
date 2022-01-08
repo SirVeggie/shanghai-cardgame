@@ -35,6 +35,10 @@ router.get('/state', (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
     return res.json((0, shanghai_1.getState)());
 }));
+router.get('/newgame', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    (0, shanghai_1.startGame)({ options: (0, shanghaiGameConfig_1.getDefaultConfiguration)() });
+    return res.status(200).send();
+}));
 router.post('/newgame', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const game = req.body["game"];
     if (game) {

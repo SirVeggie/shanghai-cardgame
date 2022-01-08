@@ -34,6 +34,11 @@ router.get('/state', async (req, res) => {
     return res.json(getState())
 })
 
+router.get('/newgame', async (req, res) => {
+    startGame({ options: getDefaultConfiguration() })
+    return res.status(200).send()
+})
+
 router.post('/newgame', async (req, res) => {
     const game = req.body["game"] as ShanghaiGame
 

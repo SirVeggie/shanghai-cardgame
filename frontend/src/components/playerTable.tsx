@@ -16,7 +16,9 @@ export const PlayerTable = () => {
         return <div>Error</div>
     }
 
-    const orderByRankFunc = (card: Card) => card.id
+    console.log({ orderByRank })
+
+    const orderByRankFunc = (card: Card) => card.rank
 
     return <div className={style.playerArea}>
         <div className={style.cardContainer}>
