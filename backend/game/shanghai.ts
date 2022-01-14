@@ -1,5 +1,6 @@
 import { compact, filter, find, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
 import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber, getCurrentPlayer, getPlayerByName } from '../../frontend/src/shared'
+import arrayShuffle from 'shuffle-array'
 
 // NOTE ACE IS NOT 1
 
@@ -16,6 +17,8 @@ export const startGame = (game: ShanghaiGame) => {
 
 //#region game logic
 export const handleAction = (action: Action): ActionResponse => {
+    console.log('Action')
+    console.log(JSON.stringify(action, null, 2))
     if (!some(options.players, n => n === action.playerName)) {
         return {
             success: false,
@@ -75,12 +78,11 @@ const currentPlayerAction = (action: Action): ActionResponse => {
         }
     }
 
-    if (action.revealDeck) {
-        return actionRevealDeck()
-    }
-
     const player = getCurrentPlayer(state)
 
+    if (action.revealDeck) {
+        return actionRevealDeck(player)
+    }
     if (action.takeDiscard) {
         return actionTakeDiscard(player)
     }
@@ -191,7 +193,14 @@ const actionAllowShanghaiCall = (): ActionResponse => {
     }
 }
 
-const actionRevealDeck = (): ActionResponse => {
+const actionRevealDeck = (player: Player): ActionResponse => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        }
+    }
+
     if (state.discarded.length > 0 && state.deck.length > 0) {
         return {
             success: false,
@@ -209,6 +218,13 @@ const actionRevealDeck = (): ActionResponse => {
 }
 
 const actionTakeDiscard = (player: Player): ActionResponse => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        }
+    }
+
     const card = state.discarded.pop()
 
     if (!card) {
@@ -219,6 +235,7 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     }
 
     giveCard(player, card)
+    player.canTakeCard = false
 
     state.shanghaiIsAllowed = false
     return {
@@ -228,8 +245,17 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
 }
 
 const actionTakeDeck = (player: Player): ActionResponse => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        }
+    }
+
     const card = popDeck()
     giveCard(player, card)
+    player.canTakeCard = false
+
     return {
         success: true,
         message: `Picked up ${cardToString(card)}`
@@ -243,11 +269,9 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
             error: "You have already melded your cards"
         }
     }
-    if (!areMeldsValid(player, meld)) {
-        return {
-            success: false,
-            error: "Invalid meld"
-        }
+    const check = areMeldsValid(player, meld)
+    if (!check.success) {
+        return check
     }
 
     const newMeld: MeldedMeld[] = []
@@ -270,6 +294,13 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
 }
 
 const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
+    if (!playerCanDiscard(player)) {
+        return {
+            success: false,
+            error: 'You must take a card before discarding'
+        }
+    }
+
     const cardToDiscard = player.cards.find(c => c.id === toDiscardId)
     if (!cardToDiscard) {
         return {
@@ -292,10 +323,13 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
 
 const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse => {
     const newMeldCards = isValidAddMeld(player, meld)
-    if (!newMeldCards) {
+    if (!newMeldCards.response.success) {
+        return newMeldCards.response
+    }
+    if (!newMeldCards.cards) {
         return {
             success: false,
-            error: "Invalid meld action"
+            error: 'Unknown actionAddToMeld error'
         }
     }
 
@@ -303,7 +337,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
     getPlayerCards(player, [meld.cardToMeldId], true)
 
     // save target meld
-    getPlayerByName(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards }
+    getPlayerByName(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards }
 
     if (player.cards.length === 0) {
         endPlayerTurn(player)
@@ -316,55 +350,105 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
 
 //#endregion
 // Returns the new meld cards if they are valid, undefined otherwise
-const isValidAddMeld = (player: Player, meld: AddToMeldAction): Card[] | undefined => {
+const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse => {
     // Check if player has card
     const cardToMeld = find(player.cards, card => card.id == meld.cardToMeldId)
     if (!cardToMeld) {
-        return undefined
+        return {
+            response: {
+                success: false,
+                error: 'You do not have this card'
+            }
+        }
     }
 
     const targetPlayer = getPlayerByName(state, meld.targetPlayer)
 
     if (!targetPlayer.melded.length) {
-        return undefined
+        return {
+            response: {
+                success: false,
+                error: 'Target player has not melded yet'
+            }
+        }
+    }
+
+    // todo joker replace
+    if (meld.targetMeldInsertIndex === undefined) {
+        return {
+            response: {
+                success: false,
+                error: 'Replacing joker in a meld is not yet possible'
+            }
+        }
     }
 
     const round = options.rounds[state.roundNumber]
     const targetMeld = round.melds[meld.targetMeldIndex]
-    let targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards
-    targetMeldCards = targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld)
+    const targetMeldCards = [...targetPlayer.melded[meld.targetMeldIndex].cards]
+    console.log("first: ", { targetMeldCards })
+    targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld)
+
+    console.log({
+        round, targetMeld, targetMeldCards
+    })
 
     if (!isMeldValid(targetMeld, targetMeldCards)) {
-        return undefined
+        return {
+            response: {
+                success: false,
+                error: 'Invalid card or position in a meld'
+            }
+        }
     }
 
-    return targetMeldCards
+    return {
+        response: {
+            success: true
+        },
+        cards: targetMeldCards
+    }
+}
+type MeldAddResponse = {
+    response: ActionResponse
+    cards?: Card[]
 }
 
 
 // NOTE!!! REQUIREMENTS FOR ALL STRAIGHTS MUST HAVE EQUAL LENGTH AND ALL SETS MUST BE OF EQUAL SIZE
-const areMeldsValid = (player: Player, playerMelds: MeldAction) => {
+const areMeldsValid = (player: Player, playerMelds: MeldAction): ActionResponse => {
     if (hasDuplicateMeldCards(playerMelds)) {
         console.log("duplicate meld cards")
-        return false
+        return {
+            success: false,
+            error: 'You tried to meld duplicate cards'
+        }
     }
 
     const round = options.rounds[state.roundNumber]
 
     if (playerMelds.melds.length !== round.melds.length) {
         console.log("Invalid meld array count")
-        return false
+        return {
+            success: false,
+            error: 'Invalid amount of melds'
+        }
     }
 
     for (let i = 0; i < round.melds.length; i++) {
         const meld = round.melds[i]
         const playerMeld = playerMelds.melds[i]
         if (!isPlayerMeldValid(player, meld, playerMeld)) {
-            return false
+            return {
+                success: false,
+                error: 'Invalid meld'
+            }
         }
     }
 
-    return true
+    return {
+        success: true
+    }
 }
 
 const hasDuplicateMeldCards = (melds: MeldAction) => {
@@ -400,19 +484,23 @@ const checkSetValidity = (cards: Card[], size: number) => {
 
     // No cards
     if (!refCard) {
+        console.log('Set error: no cards')
         return false
     }
 
     // All jokers
     if (refCard.rank === 25 && cards.length >= size) {
+        console.log('Set success: all jokers')
         return true
     }
 
     // Many different ranks
     if (cards.some(card => card.rank !== 25 && card.rank !== refCard.rank)) {
+        console.log('Set error: many different ranks')
         return false
     }
 
+    console.log(`return ${cards.length} >= ${size}`)
     return cards.length >= size
 }
 
@@ -452,8 +540,20 @@ const checkStraightValidity = (cards: Card[], length: number) => {
     return ordered.length >= length
 }
 
+const playerCanTakeCard = (player: Player) => {
+    return player.canTakeCard
+}
+
+const playerCanDiscard = (player: Player) => {
+    return !player.canTakeCard
+}
+
+const getPlayerTargetCardCount = (player: Player) => {
+    return options.rounds[state.roundNumber].cardCount + player.shanghaiCount * 2
+}
+
 const endPlayerTurn = (player: Player) => {
-    if (player.cards.length === 0) {
+    if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false
         addPlayerPoints()
         unreadyPlayers()
@@ -467,6 +567,13 @@ const endPlayerTurn = (player: Player) => {
     }
 
     state.turn++
+    enablePlayerTurn()
+}
+
+const enablePlayerTurn = () => {
+    state.players.forEach(p => p.canTakeCard = false)
+    const player = getCurrentPlayer(state)
+    player.canTakeCard = true
 }
 
 const addPlayerPoints = () => {
@@ -509,12 +616,16 @@ const initializeRound = () => {
             giveCard(player, popDeck())
         }
     }
+
+    state.turn = state.roundNumber % state.players.length
+    enablePlayerTurn()
 }
 
 const resetPlayer = (player: Player) => {
     player.cards = []
     player.shanghaiCount = 0
     player.melded = []
+    player.canTakeCard = false
 }
 //#endregion
 const getPlayerCards = (player: Player, cardIDs: number[], removeCards: boolean) => {
@@ -545,23 +656,7 @@ const giveCard = (player: Player, card: Card) => {
 }
 
 const shuffle = (cards: Card[]): Card[] => {
-    // for testing
-    return cards
-    const array = [...cards]
-    let currentIndex = array.length, randomIndex;
-
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-
-        // And swap it with the current element.
-        [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]];
-    }
-
-    return array;
+    return arrayShuffle(cards)
 }
 
 const initialState = (players: string[]): ShanghaiState => {
@@ -610,5 +705,6 @@ const createPlayer = (name: string): Player => ({
     cards: [],
     melded: [],
     shanghaiCount: 0,
+    canTakeCard: false
 })
 

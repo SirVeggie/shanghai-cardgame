@@ -11,7 +11,7 @@ type ButtonConfig = {
 }
 
 export const PlayerActions = () => {
-    const { myPlayerName, setActionResponse } = useContext(GameContext)
+    const { myPlayerName, setActionResponse, selectedCard } = useContext(GameContext)
 
     const buttons: ButtonConfig[] = [
         {
@@ -19,24 +19,8 @@ export const PlayerActions = () => {
             onClick: () => actionCallShanghai(setActionResponse, myPlayerName)
         },
         {
-            label: "Take from discard pile",
-            onClick: () => actionTakeDiscard(setActionResponse, myPlayerName)
-        },
-        {
-            label: "Take from deck",
-            onClick: () => actionTakeDeck(setActionResponse, myPlayerName)
-        },
-        {
             label: "Reveal card from deck",
             onClick: () => actionRevealDeck(setActionResponse, myPlayerName)
-        },
-        {
-            label: "Meld card sets",
-            onClick: () => { }
-        },
-        {
-            label: "Meld single card",
-            onClick: () => { }
         },
         {
             label: "Allow Shanghai",
@@ -44,7 +28,11 @@ export const PlayerActions = () => {
         },
         {
             label: "Discard card",
-            onClick: () => { }
+            onClick: () => {
+                if (selectedCard) {
+                    actionDiscardCard(setActionResponse, myPlayerName, selectedCard)
+                }
+            }
         },
         {
             label: "Set ready",

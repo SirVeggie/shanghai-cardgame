@@ -51,6 +51,7 @@ export type Player = {
     cards: Card[]
     melded: MeldedMeld[]
     shanghaiCount: number
+    canTakeCard: boolean
 }
 
 export type Card = {
@@ -90,7 +91,8 @@ export type AddToMeldAction = {
     targetPlayer: string
     targetMeldIndex: number
     cardToMeldId: number
-    targetMeldInsertIndex: number
+    replaceJoker?: boolean
+    targetMeldInsertIndex?: number
 }
 
 // Single meld array, where each index corresponds to a players card

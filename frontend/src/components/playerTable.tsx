@@ -4,11 +4,12 @@ import { GameContext } from "../context/gameContext"
 import { CardCollection } from "./cardCollection"
 import { ActionResponse, Card } from '../shared'
 import { PlayerActions } from './playerActions'
+import { filter } from 'lodash'
 
 export const PlayerTable = () => {
     const [orderByRank, setOrderByRank] = useState(false)
 
-    const { myPlayerName, state, actionResponse } = useContext(GameContext)
+    const { myPlayerName, state, actionResponse, hiddenCards } = useContext(GameContext)
 
     const myPlayer = state.players.find(p => p.name === myPlayerName)
 
@@ -20,13 +21,15 @@ export const PlayerTable = () => {
 
     const orderByRankFunc = (card: Card) => card.rank
 
+    const filteredCards = filter(myPlayer.cards, card => !hiddenCards.includes(card.id))
+
     return <div className={style.playerArea}>
         <div className={style.cardContainer}>
             <InfoMessage success={actionResponse.success} message={actionResponse.message} error={actionResponse.error} />
             <button onClick={(s) => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <CardCollection cards={myPlayer.cards} order={orderByRank ? orderByRankFunc : undefined} />
+            <CardCollection cards={filteredCards} size='large' order={orderByRank ? orderByRankFunc : undefined} />
         </div>
         <PlayerActions />
     </div>

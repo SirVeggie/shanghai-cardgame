@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleAction = exports.startGame = exports.getState = exports.getGame = void 0;
 const lodash_1 = require("lodash");
 const shared_1 = require("../../frontend/src/shared");
+const shuffle_array_1 = __importDefault(require("shuffle-array"));
 // NOTE ACE IS NOT 1
 let options;
 let state;
@@ -17,6 +21,8 @@ const startGame = (game) => {
 exports.startGame = startGame;
 //#region game logic
 const handleAction = (action) => {
+    console.log('Action');
+    console.log(JSON.stringify(action, null, 2));
     if (!(0, lodash_1.some)(options.players, n => n === action.playerName)) {
         return {
             success: false,
@@ -24,7 +30,7 @@ const handleAction = (action) => {
         };
     }
     if (action.setReady) {
-        const player = getPlayerByName(action.playerName);
+        const player = (0, shared_1.getPlayerByName)(state, action.playerName);
         player.isReady = true;
         checkGameContinue();
         return {
@@ -37,7 +43,7 @@ const handleAction = (action) => {
             error: "Round hasn't started"
         };
     }
-    const isPlayersTurn = action.playerName === getCurrentPlayer().name;
+    const isPlayersTurn = action.playerName === (0, shared_1.getCurrentPlayer)(state).name;
     if (!isPlayersTurn) {
         return foreignPlayerAction(action);
     }
@@ -69,10 +75,10 @@ const currentPlayerAction = (action) => {
             error: "You cannot call Shanghai on your turn"
         };
     }
+    const player = (0, shared_1.getCurrentPlayer)(state);
     if (action.revealDeck) {
-        return actionRevealDeck();
+        return actionRevealDeck(player);
     }
-    const player = getCurrentPlayer();
     if (action.takeDiscard) {
         return actionTakeDiscard(player);
     }
@@ -99,7 +105,7 @@ const currentPlayerShanghaiAction = (action) => {
         return actionAllowShanghaiCall();
     }
     if (action.takeDiscard) {
-        return actionTakeDiscard(getCurrentPlayer());
+        return actionTakeDiscard((0, shared_1.getCurrentPlayer)(state));
     }
     return {
         success: false,
@@ -108,7 +114,7 @@ const currentPlayerShanghaiAction = (action) => {
 };
 //#region  individual actions
 const actionCallShanghai = (playerName) => {
-    const player = getPlayerByName(playerName);
+    const player = (0, shared_1.getPlayerByName)(state, playerName);
     if (!state.shanghaiIsAllowed) {
         return {
             success: false,
@@ -159,7 +165,7 @@ const actionAllowShanghaiCall = () => {
         };
     }
     const penalty = popDeck();
-    const player = getPlayerByName(state.shanghaiFor);
+    const player = (0, shared_1.getPlayerByName)(state, state.shanghaiFor);
     giveCard(player, discard);
     giveCard(player, penalty);
     state.shanghaiIsAllowed = false;
@@ -168,7 +174,13 @@ const actionAllowShanghaiCall = () => {
         message: `Succesfully called Shanghai for ${(0, shared_1.cardToString)(discard)} and received ${(0, shared_1.cardToString)(penalty)} as penalty`
     };
 };
-const actionRevealDeck = () => {
+const actionRevealDeck = (player) => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        };
+    }
     if (state.discarded.length > 0 && state.deck.length > 0) {
         return {
             success: false,
@@ -183,6 +195,12 @@ const actionRevealDeck = () => {
     };
 };
 const actionTakeDiscard = (player) => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        };
+    }
     const card = state.discarded.pop();
     if (!card) {
         return {
@@ -191,6 +209,7 @@ const actionTakeDiscard = (player) => {
         };
     }
     giveCard(player, card);
+    player.canTakeCard = false;
     state.shanghaiIsAllowed = false;
     return {
         success: true,
@@ -198,8 +217,15 @@ const actionTakeDiscard = (player) => {
     };
 };
 const actionTakeDeck = (player) => {
+    if (!playerCanTakeCard(player)) {
+        return {
+            success: false,
+            error: 'You can only take 1 card per turn'
+        };
+    }
     const card = popDeck();
     giveCard(player, card);
+    player.canTakeCard = false;
     return {
         success: true,
         message: `Picked up ${(0, shared_1.cardToString)(card)}`
@@ -212,11 +238,9 @@ const actionMeld = (player, meld) => {
             error: "You have already melded your cards"
         };
     }
-    if (!areMeldsValid(player, meld)) {
-        return {
-            success: false,
-            error: "Invalid meld"
-        };
+    const check = areMeldsValid(player, meld);
+    if (!check.success) {
+        return check;
     }
     const newMeld = [];
     const round = options.rounds[state.roundNumber];
@@ -235,6 +259,12 @@ const actionMeld = (player, meld) => {
     };
 };
 const actionDiscard = (player, toDiscardId) => {
+    if (!playerCanDiscard(player)) {
+        return {
+            success: false,
+            error: 'You must take a card before discarding'
+        };
+    }
     const cardToDiscard = player.cards.find(c => c.id === toDiscardId);
     if (!cardToDiscard) {
         return {
@@ -253,16 +283,19 @@ const actionDiscard = (player, toDiscardId) => {
 };
 const actionAddToMeld = (player, meld) => {
     const newMeldCards = isValidAddMeld(player, meld);
-    if (!newMeldCards) {
+    if (!newMeldCards.response.success) {
+        return newMeldCards.response;
+    }
+    if (!newMeldCards.cards) {
         return {
             success: false,
-            error: "Invalid meld action"
+            error: 'Unknown actionAddToMeld error'
         };
     }
     // remove card from player
     getPlayerCards(player, [meld.cardToMeldId], true);
     // save target meld
-    getPlayerByName(meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards };
+    (0, shared_1.getPlayerByName)(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards };
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
@@ -276,40 +309,84 @@ const isValidAddMeld = (player, meld) => {
     // Check if player has card
     const cardToMeld = (0, lodash_1.find)(player.cards, card => card.id == meld.cardToMeldId);
     if (!cardToMeld) {
-        return undefined;
+        return {
+            response: {
+                success: false,
+                error: 'You do not have this card'
+            }
+        };
     }
-    const targetPlayer = getPlayerByName(meld.targetPlayer);
+    const targetPlayer = (0, shared_1.getPlayerByName)(state, meld.targetPlayer);
     if (!targetPlayer.melded.length) {
-        return undefined;
+        return {
+            response: {
+                success: false,
+                error: 'Target player has not melded yet'
+            }
+        };
+    }
+    // todo joker replace
+    if (meld.targetMeldInsertIndex === undefined) {
+        return {
+            response: {
+                success: false,
+                error: 'Replacing joker in a meld is not yet possible'
+            }
+        };
     }
     const round = options.rounds[state.roundNumber];
     const targetMeld = round.melds[meld.targetMeldIndex];
-    let targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards;
-    targetMeldCards = targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld);
+    const targetMeldCards = [...targetPlayer.melded[meld.targetMeldIndex].cards];
+    console.log("first: ", { targetMeldCards });
+    targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld);
+    console.log({
+        round, targetMeld, targetMeldCards
+    });
     if (!isMeldValid(targetMeld, targetMeldCards)) {
-        return undefined;
+        return {
+            response: {
+                success: false,
+                error: 'Invalid card or position in a meld'
+            }
+        };
     }
-    return targetMeldCards;
+    return {
+        response: {
+            success: true
+        },
+        cards: targetMeldCards
+    };
 };
 // NOTE!!! REQUIREMENTS FOR ALL STRAIGHTS MUST HAVE EQUAL LENGTH AND ALL SETS MUST BE OF EQUAL SIZE
 const areMeldsValid = (player, playerMelds) => {
     if (hasDuplicateMeldCards(playerMelds)) {
         console.log("duplicate meld cards");
-        return false;
+        return {
+            success: false,
+            error: 'You tried to meld duplicate cards'
+        };
     }
     const round = options.rounds[state.roundNumber];
     if (playerMelds.melds.length !== round.melds.length) {
         console.log("Invalid meld array count");
-        return false;
+        return {
+            success: false,
+            error: 'Invalid amount of melds'
+        };
     }
     for (let i = 0; i < round.melds.length; i++) {
         const meld = round.melds[i];
         const playerMeld = playerMelds.melds[i];
         if (!isPlayerMeldValid(player, meld, playerMeld)) {
-            return false;
+            return {
+                success: false,
+                error: 'Invalid meld'
+            };
         }
     }
-    return true;
+    return {
+        success: true
+    };
 };
 const hasDuplicateMeldCards = (melds) => {
     const cardIDs = (0, lodash_1.flatMap)(melds.melds, m => m.cardIDs);
@@ -338,16 +415,20 @@ const checkSetValidity = (cards, size) => {
     const refCard = (0, lodash_1.minBy)(cards, c => c.rank);
     // No cards
     if (!refCard) {
+        console.log('Set error: no cards');
         return false;
     }
     // All jokers
     if (refCard.rank === 25 && cards.length >= size) {
+        console.log('Set success: all jokers');
         return true;
     }
     // Many different ranks
     if (cards.some(card => card.rank !== 25 && card.rank !== refCard.rank)) {
+        console.log('Set error: many different ranks');
         return false;
     }
+    console.log(`return ${cards.length} >= ${size}`);
     return cards.length >= size;
 };
 // Input is ordered by meld order
@@ -380,8 +461,17 @@ const checkStraightValidity = (cards, length) => {
     }
     return ordered.length >= length;
 };
+const playerCanTakeCard = (player) => {
+    return player.canTakeCard;
+};
+const playerCanDiscard = (player) => {
+    return !player.canTakeCard;
+};
+const getPlayerTargetCardCount = (player) => {
+    return options.rounds[state.roundNumber].cardCount + player.shanghaiCount * 2;
+};
 const endPlayerTurn = (player) => {
-    if (player.cards.length === 0) {
+    if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false;
         addPlayerPoints();
         unreadyPlayers();
@@ -393,6 +483,12 @@ const endPlayerTurn = (player) => {
         }
     }
     state.turn++;
+    enablePlayerTurn();
+};
+const enablePlayerTurn = () => {
+    state.players.forEach(p => p.canTakeCard = false);
+    const player = (0, shared_1.getCurrentPlayer)(state);
+    player.canTakeCard = true;
 };
 const addPlayerPoints = () => {
     state.players.forEach(player => {
@@ -427,16 +523,16 @@ const initializeRound = () => {
             giveCard(player, popDeck());
         }
     }
+    state.turn = state.roundNumber % state.players.length;
+    enablePlayerTurn();
 };
 const resetPlayer = (player) => {
     player.cards = [];
     player.shanghaiCount = 0;
     player.melded = [];
+    player.canTakeCard = false;
 };
 //#endregion
-const getCurrentPlayer = () => state.players[getPlayerTurn(state.turn)];
-const getPlayerByName = (name) => state.players.filter(p => p.name === name)[0];
-const getPlayerTurn = (turnIndex) => turnIndex % state.players.length;
 const getPlayerCards = (player, cardIDs, removeCards) => {
     const cardsToTake = (0, lodash_1.compact)(cardIDs.map(id => (0, lodash_1.find)(player.cards, c => c.id === id)));
     if (removeCards) {
@@ -460,21 +556,7 @@ const giveCard = (player, card) => {
     player.cards = (0, lodash_1.orderBy)(player.cards, c => c.id);
 };
 const shuffle = (cards) => {
-    // for testing
-    return cards;
-    const array = [...cards];
-    let currentIndex = array.length, randomIndex;
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-        // Pick a remaining element...
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        // And swap it with the current element.
-        [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]
-        ];
-    }
-    return array;
+    return (0, shuffle_array_1.default)(cards);
 };
 const initialState = (players) => {
     return {
@@ -518,4 +600,5 @@ const createPlayer = (name) => ({
     cards: [],
     melded: [],
     shanghaiCount: 0,
+    canTakeCard: false
 });

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.nextRank = exports.rankToString = exports.cardToString = exports.suitFromNumber = void 0;
+exports.getPlayerTurn = exports.getPlayerByName = exports.getCurrentPlayer = exports.nextRank = exports.suitToString = exports.rankToString = exports.cardToString = exports.suitFromNumber = void 0;
 const suitFromNumber = (n) => {
     const v = n % 4;
     switch (v) {
@@ -34,6 +34,19 @@ const rankToString = (rank) => {
     }
 };
 exports.rankToString = rankToString;
+const suitToString = (rank) => {
+    switch (rank) {
+        case 'heart':
+            return '♥';
+        case 'diamond':
+            return '♦';
+        case 'spade':
+            return '♠';
+        default:
+            return '♣';
+    }
+};
+exports.suitToString = suitToString;
 const nextRank = (rank) => {
     let rankAdd = rank + 1;
     if (rank > 14) {
@@ -42,3 +55,9 @@ const nextRank = (rank) => {
     return rankAdd;
 };
 exports.nextRank = nextRank;
+const getCurrentPlayer = (state) => state.players[(0, exports.getPlayerTurn)(state, state.turn)];
+exports.getCurrentPlayer = getCurrentPlayer;
+const getPlayerByName = (state, name) => state.players.filter(p => p.name === name)[0];
+exports.getPlayerByName = getPlayerByName;
+const getPlayerTurn = (state, turnIndex) => turnIndex % state.players.length;
+exports.getPlayerTurn = getPlayerTurn;

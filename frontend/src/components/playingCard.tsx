@@ -8,36 +8,54 @@ import { GameContext } from '../context/gameContext'
 type CardProps = {
     card?: Card
     expanded?: Boolean
+    overrideOnClick?: (card: Card | undefined) => void
+    size: CardSize
 }
 
 type FaceProps = {
     name: string
     suit: string
     color: CardColor
+    size: CardSize
 }
+
+export type CardSize = 'large' | 'normal'
+
 
 type CardColor = 'red' | 'black'
 
-type CardSize = "normal" | "covered"
+export const PlayingCard = ({ card, expanded, overrideOnClick, size }: CardProps) => {
+    const { selectedCard, setSelectedCard } = useContext(GameContext)
 
-export const PlayingCard = ({ card, expanded }: CardProps) => {
-    const { setSelectedCard } = useContext(GameContext)
+    const classSize = size === 'normal' ? style.normalCard : style.largeCard
+    const classExpanded = size === 'normal' ? style.normalCardFull : style.largeCardFull
 
     if (!card) {
-        return <div>
-            Back of card
+        return <div className={cx(style.playingCard, classSize, expanded && classExpanded)} onClick={() => {
+            if (overrideOnClick) {
+                overrideOnClick(undefined)
+            }
+        }}>
+            <CardBack size={size} />
         </div>
     }
 
+    const isSelected = selectedCard === card.id
     const color: CardColor = card.suit === 'heart' || card.suit === 'diamond' ? 'red' : 'black'
 
-    return <div className={cx(style.playingCard, expanded && style.fullSize)} onClick={() => {
-        if (card) {
-            console.log('Select ' + cardToString(card))
+    return <div className={cx(style.playingCard, classSize, (expanded || isSelected) && classExpanded, isSelected && style.selected)} onClick={() => {
+        if (overrideOnClick) {
+            overrideOnClick(card)
+            return
+        }
+        console.log('Select ' + cardToString(card))
+        if (isSelected) {
+            setSelectedCard(undefined)
+        } else {
             setSelectedCard(card.id)
         }
     }}>
-        <CardFace name={rankPrefix(card.rank)} suit={suitToString(card.suit)} color={color} />
+        <CardFace name={rankPrefix(card.rank)} suit={suitToString(card.suit)} color={color} size={size} />
     </div>
 }
 
@@ -51,8 +69,9 @@ const rankPrefix = (rank: CRank) => {
     return rankToString(rank)
 }
 
-const CardFace = ({ name, suit, color }: FaceProps) => {
-    return <div className={cx(style.cardFace, color == 'red' ? style.red : style.black)}>
+const CardFace = ({ name, suit, color, size }: FaceProps) => {
+    const sizeClass = size === 'normal' ? style.cardFaceNormal : style.cardFaceLarge
+    return <div className={cx(style.cardFace, sizeClass, color == 'red' ? style.red : style.black)}>
         <div className={style.info}>
             <span className={style.text}>{name}</span>
             <span className={style.text}>{suit}</span>
@@ -63,4 +82,8 @@ const CardFace = ({ name, suit, color }: FaceProps) => {
     </div >
 }
 
-const getCardUrl = (card: Card) => `https://tekeye.uk/playing_cards/images/svg_playing_cards/fronts/clubs_ace.svg`
+const CardBack = ({ size }: { size: CardSize }) => {
+    const sizeClass = size === 'normal' ? style.cardFaceNormal : style.cardFaceLarge
+    return <div className={cx(style.cardBack, sizeClass)}>
+    </div >
+}

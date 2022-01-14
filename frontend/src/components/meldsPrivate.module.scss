@@ -1,5 +1,28 @@
 @import "../shared";
 
 .meldsPrivate {
-}
+    border-style: solid;
+    border-color: $outlineColor;
 
+    width: 100%;
+    height: 100%;
+    background-color: $lightGrey;
+
+    display: flex;
+    flex-direction: column;
+
+    .meldRow {
+        display: flex;
+        flex-direction: row;
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+
+            > button {
+                padding: $medium;
+            }
+        }
+    }
+}

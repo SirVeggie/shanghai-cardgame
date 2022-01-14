@@ -19,7 +19,7 @@ export const Deckarea = () => {
         actionTakeDeck(setActionResponse, myPlayerName)
     }
 
-    const discardCard = state.discarded.length ? state.discarded[0] : undefined
+    const discardCard = state.discarded.length ? state.discarded[state.discarded.length - 1] : undefined
 
     return <div className={style.deckArea}>
         <CardContainer card={discardCard} onClick={clickDiscard} defaultCard='none' />
@@ -34,8 +34,8 @@ type Props = {
 }
 
 const CardContainer = ({ card, onClick, defaultCard }: Props) => {
-    const showDefaultCard = () => defaultCard === 'back' ? <PlayingCard /> : null
+    const showDefaultCard = () => defaultCard === 'back' ? <PlayingCard size='large' expanded={true} card={undefined} /> : null
     return <div className={style.cardContainer} onClick={() => onClick(card)}>
-        {card ? <PlayingCard card={card} expanded={true} /> : showDefaultCard()}
+        {card ? <PlayingCard card={card} expanded={true} size='large' /> : showDefaultCard()}
     </div>
 }

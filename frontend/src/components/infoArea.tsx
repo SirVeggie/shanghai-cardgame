@@ -23,7 +23,7 @@ export const Infoarea = () => {
     </div>
 }
 
-const meldInfo = ({ meld, meldIndex }: MeldProps) => {
+export const meldInfo = ({ meld, meldIndex, noDiv }: MeldProps) => {
     const meldType: MeldTypeStr = meld.type === 'set' ? {
         name: 'Set',
         sizeDesc: 'size'
@@ -33,10 +33,16 @@ const meldInfo = ({ meld, meldIndex }: MeldProps) => {
             sizeDesc: 'length'
         }
 
+    const span = <span>
+        Meld {meldIndex + 1}: {meldType.name} of {meldType.sizeDesc} {meld.length}
+    </span>
+
+    if (noDiv) {
+        return span
+    }
+
     return <div className={style.meld} key={`meld-desc-${meldIndex}`}>
-        <span>
-            Meld {meldIndex + 1}: {meldType.name} of {meldType.sizeDesc} {meld.length}
-        </span>
+        {span}
     </div>
 }
 
@@ -48,4 +54,5 @@ type MeldTypeStr = {
 type MeldProps = {
     meldIndex: number
     meld: Meld
+    noDiv?: boolean
 }

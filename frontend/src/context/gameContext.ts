@@ -9,6 +9,8 @@ type GameContextType = {
     setActionResponse: (a: ActionResponse) => void
     selectedCard?: number,
     setSelectedCard: (n: number | undefined) => void
+    hiddenCards: number[],
+    setHiddenCards: (n: number[]) => void
 }
 
 const defaultGameContext: GameContextType = {
@@ -34,7 +36,9 @@ const defaultGameContext: GameContextType = {
         success: true
     },
     setActionResponse: () => { },
-    setSelectedCard: () => { }
+    setSelectedCard: () => { },
+    hiddenCards: [],
+    setHiddenCards: () => { }
 }
 
 export const GameContext = React.createContext(

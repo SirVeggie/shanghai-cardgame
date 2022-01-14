@@ -4,29 +4,80 @@
     cursor: pointer;
     user-select: none;
     background-color: $white;
-    max-width: 125px;
-    min-height: 350px;
+
+    border-radius: $medium;
     border-style: solid;
     border-radius: $small;
+}
+
+.largeCard {
+    max-width: 125px;
+    min-height: 350px;
+    max-height: 350px;
 
     &:hover {
         min-width: 250px;
         max-width: 250px;
     }
 }
-
-.fullSize {
+.largeCardFull {
     min-width: 250px;
     max-width: 250px;
 }
 
+.normalCard {
+    max-width: 60px;
+    min-height: 168px;
+    max-height: 168px;
+
+    &:hover {
+        min-width: 120px;
+        max-width: 120px;
+    }
+}
+.normalCardFull {
+    min-width: 120px;
+    max-width: 120px;
+}
+
+.selected {
+    border-color: $green;
+}
+
 .cardFace {
     overflow: hidden;
-    min-width: 250px;
     display: flex;
     flex-direction: column;
 
     font-weight: bold;
+}
+
+.cardFaceNormal {
+    min-width: 120px;
+    min-height: 168px;
+
+    .info {
+        display: flex;
+        flex-direction: row;
+
+        .text {
+            margin: $medium;
+            font-size: $text-large;
+        }
+        span:last-child {
+            margin-left: auto;
+        }
+    }
+    .suit {
+        margin: auto;
+        .text {
+            font-size: $text-xlarge;
+        }
+    }
+}
+
+.cardFaceLarge {
+    min-width: 250px;
 
     .info {
         display: flex;
@@ -54,4 +105,8 @@
 
 .black {
     color: $cardBlack;
+}
+
+.cardBack {
+    background-color: $navyBlue;
 }

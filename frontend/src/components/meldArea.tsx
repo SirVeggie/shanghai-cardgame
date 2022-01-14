@@ -4,7 +4,7 @@ import { Meldsprivate } from './meldsPrivate'
 import { Meldspublic } from './meldsPublic'
 
 export const Meldarea = () => {
-    const [myMelds, setMyMelds] = useState(true)
+    const [myMelds, setMyMelds] = useState(false)
 
     return <div className={style.meldArea}>
         <button onClick={() => setMyMelds(prev => !prev)}>{myMelds ? 'Show public melds' : 'Show my melds'}</button>

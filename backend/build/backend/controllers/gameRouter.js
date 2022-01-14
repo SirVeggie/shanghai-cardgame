@@ -21,7 +21,6 @@ router.get('/options', (req, res) => __awaiter(void 0, void 0, void 0, function*
 router.get('/state', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const startTime = new Date().getTime();
     while (true) {
-        console.log("WAIT ARTIFIACl");
         const currentTime = new Date().getTime();
         if (currentTime - startTime >= UPDATE_INTERVAL) {
             break;

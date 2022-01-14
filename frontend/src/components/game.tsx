@@ -9,14 +9,18 @@ import { NameInput } from "./nameInput"
 let updateInProgress = false
 
 const Game = () => {
-    const [myPlayerName, setMyPlayerName] = useState<string | undefined>("Niko")
+    const [myPlayerNameState, setMyPlayerName] = useState<string | undefined>("Niko")
     const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
     const [gameState, setGameState] = useState<ShanghaiState>()
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
     const [selectedCard, setSelectedCard] = useState<number>()
+    const [hiddenCards, setHiddenCards] = useState<number[]>([])
 
-    console.log("Player name: " + myPlayerName)
     console.log({ gameOptions, gameState })
+
+    // debug
+    const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
+    console.log("Player name: " + myPlayerName)
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -57,7 +61,9 @@ const Game = () => {
             actionResponse,
             setActionResponse,
             selectedCard,
-            setSelectedCard
+            setSelectedCard,
+            hiddenCards,
+            setHiddenCards
         }}>
             <GameView />
         </GameContext.Provider>

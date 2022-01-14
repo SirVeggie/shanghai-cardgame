@@ -1,5 +1,28 @@
 @import "../shared";
 
 .meldsPublic {
+    height: 60vh;
+    overflow: auto;
 }
 
+.playerRow {
+    margin: $medium;
+    background-color: $lightGrey;
+    border-style: solid;
+    border-color: $outlineColor;
+}
+
+.meldRow {
+    display: flex;
+    flex-direction: row;
+
+    .buttons {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+
+        > button {
+            padding: $medium;
+        }
+    }
+}

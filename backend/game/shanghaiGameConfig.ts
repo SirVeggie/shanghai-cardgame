@@ -34,11 +34,11 @@ const defaultRounds: RoundConfig[] = [
         melds: [
             {
                 type: "set",
-                length: 3
+                length: 1
             },
             {
                 type: "set",
-                length: 3
+                length: 1
             }
         ]
     },
