@@ -13,17 +13,23 @@ export const GameView = () => {
                 <div className={style.meldArea}>
                     <Meldarea />
                 </div>
+
                 <div className={style.stateArea}>
-                    <div className={style.playerList}>
-                        <Playerlist />
+                    <div className={style.gameInfo}>
+                        <div className={style.playerList}>
+                            <Playerlist />
+                        </div>
+                        <div className={style.infoArea}>
+                            <Infoarea />
+                        </div>
                     </div>
                     <div className={style.deckArea}>
                         <Deckarea />
                     </div>
                 </div>
-                <div className={style.infoArea}>
-                    <Infoarea />
-                </div>
+
+
+
             </div>
             <div className={style.playerTable}>
                 <PlayerTable />

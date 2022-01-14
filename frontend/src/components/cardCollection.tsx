@@ -13,7 +13,7 @@ export const CardCollection = ({ cards: unorderedCards, order }: HandProps) => {
 
     return <div>
         <div className={style.cardRow}>
-            {cards.map(card => <PlayingCard card={card} key={`card-${card.id}`} />)}
+            {cards.map((card, index) => <PlayingCard card={card} expanded={index === cards.length - 1} key={`card-${card.id}`} />)}
         </div>
     </div>
 }

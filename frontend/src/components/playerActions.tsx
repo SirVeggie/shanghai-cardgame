@@ -95,18 +95,18 @@ export const actionTakeDeck = async (cb: ActionCallback, playerName: string) => 
     cb(res)
 }
 
-export const actionMeld = async (cb: ActionCallback, playerName: string, meldAction: AddToMeldAction) => {
+export const actionMeld = async (cb: ActionCallback, playerName: string, meldAction: MeldAction) => {
     const res = await executePlayerAction({
         playerName,
-        addToMeld: meldAction
+        meld: meldAction
     })
     cb(res)
 }
 
-export const actionAddToMeld = async (cb: ActionCallback, playerName: string, meldAction: MeldAction) => {
+export const actionAddToMeld = async (cb: ActionCallback, playerName: string, meldAction: AddToMeldAction) => {
     const res = await executePlayerAction({
         playerName,
-        meld: meldAction
+        addToMeld: meldAction
     })
     cb(res)
 }

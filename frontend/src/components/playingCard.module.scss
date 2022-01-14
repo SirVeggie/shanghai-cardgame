@@ -1,19 +1,57 @@
 @import "../shared.scss";
 
 .playingCard {
-    min-width: 50px;
+    cursor: pointer;
+    user-select: none;
+    background-color: $white;
+    max-width: 125px;
     min-height: 350px;
     border-style: solid;
     border-radius: $small;
 
     &:hover {
         min-width: 250px;
+        max-width: 250px;
     }
 }
 
 .fullSize {
     min-width: 250px;
+    max-width: 250px;
 }
 
-.coveredSize {
+.cardFace {
+    overflow: hidden;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+
+    font-weight: bold;
+
+    .info {
+        display: flex;
+        flex-direction: row;
+
+        .text {
+            margin: $medium;
+            font-size: $text-xxlarge;
+        }
+        span:last-child {
+            margin-left: auto;
+        }
+    }
+    .suit {
+        margin: auto;
+        .text {
+            font-size: $text-superLarge;
+        }
+    }
+}
+
+.red {
+    color: $cardRed;
+}
+
+.black {
+    color: $cardBlack;
 }

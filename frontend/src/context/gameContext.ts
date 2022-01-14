@@ -7,6 +7,8 @@ type GameContextType = {
     state: ShanghaiState
     actionResponse: ActionResponse
     setActionResponse: (a: ActionResponse) => void
+    selectedCard?: number,
+    setSelectedCard: (n: number | undefined) => void
 }
 
 const defaultGameContext: GameContextType = {
@@ -31,7 +33,8 @@ const defaultGameContext: GameContextType = {
     actionResponse: {
         success: true
     },
-    setActionResponse: () => { }
+    setActionResponse: () => { },
+    setSelectedCard: () => { }
 }
 
 export const GameContext = React.createContext(

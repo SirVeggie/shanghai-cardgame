@@ -13,6 +13,7 @@ const Game = () => {
     const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
     const [gameState, setGameState] = useState<ShanghaiState>()
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
+    const [selectedCard, setSelectedCard] = useState<number>()
 
     console.log("Player name: " + myPlayerName)
     console.log({ gameOptions, gameState })
@@ -54,7 +55,9 @@ const Game = () => {
             options: gameOptions,
             state: gameState,
             actionResponse,
-            setActionResponse
+            setActionResponse,
+            selectedCard,
+            setSelectedCard
         }}>
             <GameView />
         </GameContext.Provider>

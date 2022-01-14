@@ -14,8 +14,9 @@ export const Playerinfocard = ({ player }: Props) => {
     const isTurn = getCurrentPlayer(state).name === player.name
     const isMe = myPlayerName === player.name
 
-    return <div className={cx(isTurn && style.greenHighlight, !isTurn && isMe && style.greyHighlight, style.card)}>
-        <span className={style.text}>{player.name}</span>
+    return <div className={cx(isMe && style.greenHighlight, style.card)}>
+
+        <span className={style.text}>{isTurn && <span className={style.turnIndicator}>►</span>}{player.name}</span>
         <span className={style.text}>{player.cards.length}</span>
         <span className={style.text}>{player.shanghaiCount}</span>
         <span className={style.text}>{player.points}</span>

@@ -1,3 +1,17 @@
 @import "../shared";
 
+.deckArea {
+    border-style: solid;
+    border-color: $outlineColor;
+    background-color: $lightGrey;
 
+    display: flex;
+    flex-direction: row;
+
+    height: 100%;
+
+    .cardContainer {
+        cursor: pointer;
+        margin: $large;
+    }
+}

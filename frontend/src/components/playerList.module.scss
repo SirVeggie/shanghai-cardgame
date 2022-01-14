@@ -1,5 +1,8 @@
 @import "../shared";
 
 .list {
-    
+    border-style: solid;
+    border-color: $outlineColor;
+    height: 100%;
+    background-color: $lightGrey;
 }

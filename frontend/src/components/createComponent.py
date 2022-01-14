@@ -23,6 +23,8 @@ def main():
     with open(scss, 'w') as f:
         f.write('@import "../shared";\n')
         f.write('\n')
+        f.write(f'.{file} {{\n')
+        f.write('}\n')
         f.write('\n')
         f.close()
 
@@ -31,7 +33,7 @@ def main():
         f.write('\n')
         f.write(f'export const {file.capitalize()} = () => ')
         f.write('{\n')
-        f.write(f'    return <div>{file}</div>\n')
+        f.write(f'    return <div className={{style.{file}}}>\n    {file}\n</div>\n')
         f.write('}\n')
         f.write('\n')
         f.close()

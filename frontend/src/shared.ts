@@ -115,7 +115,7 @@ export const suitFromNumber = (n: number): CSuit => {
 
 export const cardToString = (card: Card) => `${rankToString(card.rank)} of ${card.suit}s`
 
-export const rankToString = (rank: CRank) => {
+export const rankToString = (rank: CRank): string => {
     switch (rank) {
         case 11:
             return "Jack"
@@ -129,6 +129,20 @@ export const rankToString = (rank: CRank) => {
             return "Joker"
         default:
             return `${rank}`
+    }
+}
+
+
+export const suitToString = (rank: CSuit): string => {
+    switch (rank) {
+        case 'heart':
+            return '♥'
+        case 'diamond':
+            return '♦'
+        case 'spade':
+            return '♠'
+        default:
+            return '♣'
     }
 }
 
