@@ -1,5 +1,5 @@
-import { compact, filter, find, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber, getCurrentPlayer, getPlayerByName } from '../../frontend/src/shared'
+import { compact, filter, find, findIndex, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber, getCurrentPlayer, getPlayerByName, CJokerRank } from '../../frontend/src/shared'
 import arrayShuffle from 'shuffle-array'
 
 // NOTE ACE IS NOT 1
@@ -96,7 +96,12 @@ const currentPlayerAction = (action: Action): ActionResponse => {
         return actionDiscard(player, action.discardID)
     }
     if (action.addToMeld) {
-        return actionAddToMeld(player, action.addToMeld)
+        if (action.addToMeld.replaceJoker) {
+            return actionAddToMeldReplaceJoker(player, action.addToMeld)
+        }
+        if (action.addToMeld.targetMeldInsertIndex !== undefined) {
+            return actionAddToMeld(player, action.addToMeld)
+        }
     }
 
     return {
@@ -309,6 +314,13 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
         }
     }
 
+    if (player.cards.some(card => card.mustBeMelded)) {
+        return {
+            success: false,
+            error: 'You must meld the Joker cards in your hand'
+        }
+    }
+
     player.cards = player.cards.filter(c => c.id !== toDiscardId)
     state.discarded.push(cardToDiscard)
 
@@ -373,12 +385,11 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse 
         }
     }
 
-    // todo joker replace
     if (meld.targetMeldInsertIndex === undefined) {
         return {
             response: {
                 success: false,
-                error: 'Replacing joker in a meld is not yet possible'
+                error: 'No action was provided'
             }
         }
     }
@@ -409,11 +420,72 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse 
         cards: targetMeldCards
     }
 }
+
 type MeldAddResponse = {
     response: ActionResponse
     cards?: Card[]
 }
 
+const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): ActionResponse => {
+    // Check if player has card
+    const cardToMeld = find(player.cards, card => card.id == meld.cardToMeldId)
+    if (!cardToMeld) {
+        return {
+            success: false,
+            error: 'You do not have this card'
+        }
+    }
+
+    const targetPlayer = getPlayerByName(state, meld.targetPlayer)
+
+    if (!targetPlayer.melded.length) {
+        return {
+            success: false,
+            error: 'Target player has not melded yet'
+        }
+    }
+
+    const targetMeld = options.rounds[state.roundNumber].melds[meld.targetMeldIndex]
+
+    if (targetMeld.type !== 'straight') {
+        return {
+            success: false,
+            error: 'Cannot replace Joker from a set'
+        }
+    }
+
+    const targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards
+    const jokers = getStraightJokersFromValidStraight(targetMeldCards)
+
+    const matchingJoker = jokers.find(joker => joker.rank === cardToMeld.rank)
+
+    if (!matchingJoker) {
+        return {
+            success: false,
+            error: 'You cannot replace any jokers with this card'
+        }
+    }
+
+
+    const newCards = [...targetMeldCards]
+
+    // Remove card to meld
+    getPlayerCards(player, [cardToMeld.id], true)
+
+    // replace joker
+    newCards[matchingJoker.index] = cardToMeld
+
+    // save new meld
+    targetPlayer.melded[meld.targetMeldIndex] = { cards: newCards }
+
+    // Give new joker
+    giveCard(player, { ...matchingJoker.joker, mustBeMelded: true })
+
+    return {
+        success: true,
+        message: 'Succesfully replaced Joker'
+    }
+}
 
 // NOTE!!! REQUIREMENTS FOR ALL STRAIGHTS MUST HAVE EQUAL LENGTH AND ALL SETS MUST BE OF EQUAL SIZE
 const areMeldsValid = (player: Player, playerMelds: MeldAction): ActionResponse => {
@@ -480,6 +552,10 @@ const isMeldValid = (meld: Meld, cards: Card[]) => {
 
 // Input is ordered by meld order
 const checkSetValidity = (cards: Card[], size: number) => {
+    if (cards.length < size) {
+        return false
+    }
+
     const refCard = minBy(cards, c => c.rank)
 
     // No cards
@@ -489,7 +565,7 @@ const checkSetValidity = (cards: Card[], size: number) => {
     }
 
     // All jokers
-    if (refCard.rank === 25 && cards.length >= size) {
+    if (refCard.rank === 25) {
         console.log('Set success: all jokers')
         return true
     }
@@ -501,11 +577,15 @@ const checkSetValidity = (cards: Card[], size: number) => {
     }
 
     console.log(`return ${cards.length} >= ${size}`)
-    return cards.length >= size
+    return true
 }
 
 // Input is ordered by meld order
 const checkStraightValidity = (cards: Card[], length: number) => {
+    if (cards.length < length) {
+        return false
+    }
+
     const refCard = minBy(cards, c => c.rank)
 
     // No cards
@@ -514,30 +594,121 @@ const checkStraightValidity = (cards: Card[], length: number) => {
         return false
     }
 
-    // All jokers
-    if (refCard.rank === 25 && cards.length >= length) {
+    // not same suit
+    if (cards.some(card => card.suit !== refCard.suit)) {
+        return false
+    }
+
+
+    // All jokers (if minimum rank is joker)
+    if (refCard.rank === 25) {
         return true
     }
 
-    const ordered = orderBy(cards, c => c.id)
+    // corner case when joker is below 1
+    if (cards.length > 2) {
+        // joker followed by ace
+        if (cards[0].rank === 25 && cards[1].rank === 14) {
 
-    let expectedRank: CRank | undefined = refCard.rank
-    for (let card of ordered) {
-        // Straight did not end at an Ace
+        }
+    }
+
+    const firstRank = getFirstExpectedRank(cards)
+
+    // straight starts from below ace
+    if (firstRank === undefined) {
+        return false
+    }
+
+    let expectedRank: CRank | undefined
+
+    if (firstRank === 14) {
+        expectedRank = 2
+    } else {
+        expectedRank = nextRank(firstRank)
+    }
+
+    for (let i = 1; i < cards.length; i++) {
+
+        // straight cannot continue after ace
         if (!expectedRank) {
-            console.log("unexpected rank")
             return false
         }
-        // Card is not joker and card is not the next expected rank
-        // or suit is wrong
-        if (card.rank !== 25 && card.rank !== expectedRank && card.suit !== refCard.suit) {
-            console.log("unexpected suit")
+
+        const rank = cards[i].rank
+
+        // not joker and not expected rank
+        if (rank !== 25 && rank !== expectedRank) {
             return false
         }
+
         expectedRank = nextRank(expectedRank)
     }
 
-    return ordered.length >= length
+    return true
+}
+
+const getFirstExpectedRank = (cards: Card[]): CJokerRank | undefined => {
+    let firstRank = cards[0].rank
+
+    // starts with joker
+    if (firstRank === 25) {
+        const firstNonJokerIndex = findIndex(cards, card => card.rank !== 25)
+        const firstNonJokerRank = cards[firstNonJokerIndex].rank
+        // first card is first non joker - firstJokerCount
+        const firstRankValue = firstNonJokerRank - firstNonJokerIndex
+
+        // straight starts from below ace
+        if (firstRankValue < 1) {
+            return undefined
+        }
+        // straight starts from ace
+        if (firstRankValue === 1) {
+            firstRank = 14
+        } else {
+            firstRank = firstRankValue as CJokerRank
+        }
+    }
+
+    return firstRank
+}
+
+const getStraightJokersFromValidStraight = (cards: Card[]): JokerWithRank[] => {
+    const jokers: JokerWithRank[] = []
+
+    let expectedRank = getFirstExpectedRank(cards)
+
+    // melded straights should be valid
+    if (!expectedRank) {
+        throw "Melded straight was invalid check 1"
+    }
+
+
+    for (let i = 0; i < cards.length; i++) {
+        const card = cards[i]
+
+        if (!expectedRank) {
+            throw "Melded straight was invalid check 2"
+        }
+
+        if (card.rank === 25) {
+            jokers.push({
+                joker: card,
+                index: i,
+                rank: expectedRank
+            })
+        }
+
+        expectedRank = nextRank(expectedRank)
+    }
+
+    return jokers
+}
+
+type JokerWithRank = {
+    joker: Card,
+    index: number,
+    rank: CJokerRank
 }
 
 const playerCanTakeCard = (player: Player) => {

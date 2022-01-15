@@ -58,6 +58,7 @@ export type Card = {
     id: number
     suit: CSuit
     rank: CRank
+    mustBeMelded?: boolean
 }
 
 export type CSuit = "heart" | "spade" | "diamond" | "club"
@@ -148,12 +149,12 @@ export const suitToString = (rank: CSuit): string => {
     }
 }
 
-export const nextRank = (rank: CRank) => {
+export const nextRank = (rank: CJokerRank, loop = false) => {
     let rankAdd = rank + 1
     if (rank > 14) {
-        return undefined
+        return loop ? 2 : undefined
     }
-    return rankAdd as CRank
+    return rankAdd as CJokerRank
 }
 
 export const getCurrentPlayer = (state: ShanghaiState) => state.players[getPlayerTurn(state, state.turn)]
