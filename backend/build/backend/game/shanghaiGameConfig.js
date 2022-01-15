@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testConfig = exports.getDefaultConfiguration = void 0;
 const getDefaultConfiguration = () => ({
-    players: ["Eetu", "Veikka", "Niko", "Johannes"],
+    players: ["Eetu", "Riia", "Mika"],
     deckCount: 2,
     jokerCount: 4,
     shanghaiCount: 3,
@@ -35,11 +35,11 @@ const defaultRounds = [
         melds: [
             {
                 type: "set",
-                length: 1
+                length: 3
             },
             {
                 type: "set",
-                length: 1
+                length: 3
             }
         ]
     },

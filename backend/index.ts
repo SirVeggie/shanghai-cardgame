@@ -6,22 +6,6 @@ import { getDefaultConfiguration, testConfig } from './game/shanghaiGameConfig'
 
 const test = () => {
     startGame({ options: getDefaultConfiguration() })
-    console.log(handleAction({
-        playerName: "Eetu",
-        setReady: true
-    }))
-    console.log(handleAction({
-        playerName: "Niko",
-        setReady: true
-    }))
-    console.log(handleAction({
-        playerName: "Veikka",
-        setReady: true
-    }))
-    console.log(handleAction({
-        playerName: "Johannes",
-        setReady: true
-    }))
 }
 
 test()

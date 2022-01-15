@@ -9,22 +9,6 @@ const shanghaiGameConfig_1 = require("./game/shanghaiGameConfig");
 //dotenv.config()
 const test = () => {
     (0, shanghai_1.startGame)({ options: (0, shanghaiGameConfig_1.getDefaultConfiguration)() });
-    console.log((0, shanghai_1.handleAction)({
-        playerName: "Eetu",
-        setReady: true
-    }));
-    console.log((0, shanghai_1.handleAction)({
-        playerName: "Niko",
-        setReady: true
-    }));
-    console.log((0, shanghai_1.handleAction)({
-        playerName: "Veikka",
-        setReady: true
-    }));
-    console.log((0, shanghai_1.handleAction)({
-        playerName: "Johannes",
-        setReady: true
-    }));
 };
 test();
 const server_1 = __importDefault(require("./server"));

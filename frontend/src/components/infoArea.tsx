@@ -7,6 +7,10 @@ export const Infoarea = () => {
 
     const { state, options } = useContext(GameContext)
 
+    if (state.roundNumber < 0) {
+        return <span>Game not started</span>
+    }
+
     const round = options.rounds[state.roundNumber]
 
     const headerText = state.winner

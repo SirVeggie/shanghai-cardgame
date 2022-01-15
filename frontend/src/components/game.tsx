@@ -4,12 +4,13 @@ import { GameContext } from "../context/gameContext"
 import { getGameOptions, getGameState } from "../services/gameApi"
 import { GameView } from "./gameView"
 import { NameInput } from "./nameInput"
+import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
 let updateInProgress = false
 
 const Game = () => {
-    const [myPlayerNameState, setMyPlayerName] = useState<string | undefined>("Niko")
+    const [myPlayerName, setMyPlayerName] = useState<string | undefined>()
     const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
     const [gameState, setGameState] = useState<ShanghaiState>()
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
@@ -20,7 +21,7 @@ const Game = () => {
     console.log({ gameOptions, gameState })
 
     // debug
-    const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
+    //const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
     console.log("Player name: " + myPlayerName)
 
     if (gameState && gameOptions) {
@@ -64,6 +65,13 @@ const Game = () => {
 
     if (!gameOptions || !gameState) {
         return <div>Loading...</div>
+    }
+
+    // Game not started
+    if (gameState && gameState.roundNumber < 0) {
+        return <div>
+            <button onClick={() => actionSetReady(setActionResponse, myPlayerName)}>Ready</button>
+        </div>
     }
 
     console.log("render game view")
