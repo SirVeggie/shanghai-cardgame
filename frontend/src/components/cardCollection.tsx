@@ -7,13 +7,17 @@ type HandProps = {
     cards: Card[]
     size: CardSize
     order?: Many<ListIterator<Card, unknown>>
+    forceOriginalOrder?: boolean
     dummyCard?: boolean
     overrideOnClick?: (card: Card | undefined) => void
 }
 
 
-export const CardCollection = ({ cards: unorderedCards, order, size, dummyCard, overrideOnClick }: HandProps) => {
+export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrder, size, dummyCard, overrideOnClick }: HandProps) => {
     let cards: (Card | undefined)[] = order ? orderBy(unorderedCards, order) : unorderedCards
+    if (forceOriginalOrder) {
+        cards = [...unorderedCards]
+    }
     cards = dummyCard ? [undefined, ...cards] : cards
 
     return <div>

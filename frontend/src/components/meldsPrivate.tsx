@@ -6,6 +6,7 @@ import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
 import { actionMeld } from './playerActions'
 import cx from 'classnames'
+import { compact } from 'lodash'
 
 export const Meldsprivate = () => {
     const { state, options, selectedCard, setSelectedCard, myPlayerName, hiddenCards, setHiddenCards, setActionResponse } = useContext(GameContext)
@@ -56,7 +57,7 @@ export const Meldsprivate = () => {
 
     const meldRow = (meld: Meld, i: number) => {
         const meldCards = playerMelds[i]
-        const cards = myPlayer.cards.filter(card => meldCards.cardIDs.includes(card.id))
+        const cards = compact(meldCards.cardIDs.map(id => myPlayer.cards.find(c => c.id === id)))
 
         return <div className={style.meldRow}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
@@ -64,7 +65,7 @@ export const Meldsprivate = () => {
                 <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
-            <CardCollection cards={cards} size='normal' />
+            <CardCollection cards={cards} size='normal' forceOriginalOrder={true} />
         </div >
     }
 

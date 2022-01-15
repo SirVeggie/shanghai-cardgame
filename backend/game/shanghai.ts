@@ -866,9 +866,9 @@ const initialState = (players: string[]): ShanghaiState => {
 const createDeck = (deckCount: number, jokerCount: number) => {
     let cardId = 1
     const cards: Card[] = []
-    for (let deck = 0; deck < deckCount; deck++) {
-        for (let suit = 0; suit < 4; suit++) {
-            for (let rank = 2; rank <= 14; rank++) {
+    for (let suit = 0; suit < 4; suit++) {
+        for (let rank = 2; rank <= 14; rank++) {
+            for (let deck = 0; deck < deckCount; deck++) {
                 cards.push({
                     id: cardId++,
                     suit: suitFromNumber(suit),
