@@ -47,10 +47,10 @@ const suitToString = (rank) => {
     }
 };
 exports.suitToString = suitToString;
-const nextRank = (rank) => {
+const nextRank = (rank, loop = false) => {
     let rankAdd = rank + 1;
     if (rank > 14) {
-        return undefined;
+        return loop ? 2 : undefined;
     }
     return rankAdd;
 };

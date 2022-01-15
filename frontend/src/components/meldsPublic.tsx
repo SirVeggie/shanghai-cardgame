@@ -31,8 +31,8 @@ export const Meldspublic = () => {
         actionAddToMeld(setActionResponse, myPlayerName, {
             targetPlayer,
             targetMeldIndex: meldIndex,
-            replaceJoker: true,
-            cardToMeldId: selectedCard
+            cardToMeldId: selectedCard,
+            replaceJoker: true
         })
     }
 
