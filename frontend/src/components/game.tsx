@@ -8,7 +8,7 @@ import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
 let updateInProgress = false
-const debugMode = true
+const debugMode = false
 
 const Game = () => {
     const [myPlayerName, setMyPlayerName] = useState<string | undefined>()
