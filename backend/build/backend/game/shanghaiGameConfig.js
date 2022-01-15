@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.testConfig = exports.getDefaultConfiguration = void 0;
 const getDefaultConfiguration = () => ({
-    players: ["Eetu", "Riia", "Mika"],
+    players: ["Eetu", "Veikka"],
     deckCount: 2,
     jokerCount: 4,
     shanghaiCount: 3,
