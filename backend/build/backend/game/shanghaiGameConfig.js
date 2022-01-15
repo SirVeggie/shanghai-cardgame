@@ -6,7 +6,7 @@ const getDefaultConfiguration = () => ({
     deckCount: 2,
     jokerCount: 4,
     shanghaiCount: 3,
-    rounds: defaultRounds
+    rounds: testRounds
 });
 exports.getDefaultConfiguration = getDefaultConfiguration;
 const testConfig = () => ({
@@ -28,6 +28,18 @@ const testConfig = () => ({
     ]
 });
 exports.testConfig = testConfig;
+const testRounds = [
+    {
+        description: "Two sets",
+        cardCount: 11,
+        melds: [
+            {
+                type: "straight",
+                length: 2
+            }
+        ]
+    },
+];
 const defaultRounds = [
     {
         description: "Two sets",

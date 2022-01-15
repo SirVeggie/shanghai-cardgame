@@ -26,6 +26,7 @@ export type ShanghaiState = {
     shanghaiFor: string | null
     deck: Card[]
     discarded: Card[]
+    discardTopOwner?: string
     roundIsOn: boolean
     winner?: string
     message?: string
@@ -94,7 +95,7 @@ export type AddToMeldAction = {
     targetMeldIndex: number
     cardToMeldId: number
     replaceJoker?: boolean
-    targetMeldInsertIndex?: number
+    insertBehind?: boolean
 }
 
 // Single meld array, where each index corresponds to a players card
@@ -152,7 +153,7 @@ export const suitToString = (rank: CSuit): string => {
 
 export const nextRank = (rank: CJokerRank, loop = false) => {
     let rankAdd = rank + 1
-    if (rank > 14) {
+    if (rankAdd > 14) {
         return loop ? 2 : undefined
     }
     return rankAdd as CJokerRank

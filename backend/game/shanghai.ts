@@ -99,9 +99,7 @@ const currentPlayerAction = (action: Action): ActionResponse => {
         if (action.addToMeld.replaceJoker) {
             return actionAddToMeldReplaceJoker(player, action.addToMeld)
         }
-        if (action.addToMeld.targetMeldInsertIndex !== undefined) {
-            return actionAddToMeld(player, action.addToMeld)
-        }
+        return actionAddToMeld(player, action.addToMeld)
     }
 
     return {
@@ -152,6 +150,12 @@ const actionCallShanghai = (playerName: string): ActionResponse => {
             error: "You have already called Shanghai maximum amount of times"
         }
     }
+    if (player.name === state.discardTopOwner) {
+        return {
+            success: false,
+            error: 'You cannot call Shanghai on your own discard card'
+        }
+    }
 
     if (!state.shanghaiFor) {
         state.shanghaiFor = player.name
@@ -193,6 +197,7 @@ const actionAllowShanghaiCall = (): ActionResponse => {
     giveCard(player, penalty)
 
     state.shanghaiIsAllowed = false
+    state.discardTopOwner = undefined
     state.shanghaiFor = null
     player.shanghaiCount++
 
@@ -221,6 +226,7 @@ const actionRevealDeck = (player: Player): ActionResponse => {
     const card = popDeck()
     state.discarded.push(card)
     state.shanghaiIsAllowed = true
+    state.discardTopOwner = undefined
 
     message(`${player.name} revealed ${cardToString(card)}`)
     return {
@@ -251,6 +257,7 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
 
     state.shanghaiIsAllowed = false
     state.shanghaiFor = null
+    state.discardTopOwner = undefined
 
     message(`${player.name} picked up ${cardToString(card)} from the discard pile`)
     return {
@@ -336,6 +343,7 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
 
     player.cards = player.cards.filter(c => c.id !== toDiscardId)
     state.discarded.push(cardToDiscard)
+    state.discardTopOwner = player.name
 
     endPlayerTurn(player)
 
@@ -401,20 +409,14 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse 
         }
     }
 
-    if (meld.targetMeldInsertIndex === undefined) {
-        return {
-            response: {
-                success: false,
-                error: 'No action was provided'
-            }
-        }
-    }
-
     const round = options.rounds[state.roundNumber]
     const targetMeld = round.melds[meld.targetMeldIndex]
     const targetMeldCards = [...targetPlayer.melded[meld.targetMeldIndex].cards]
+
+    const insertIndex = meld.insertBehind ? targetMeldCards.length : 0
+
     console.log("first: ", { targetMeldCards })
-    targetMeldCards.splice(meld.targetMeldInsertIndex, 0, cardToMeld)
+    targetMeldCards.splice(insertIndex, 0, cardToMeld)
 
     console.log({
         round, targetMeld, targetMeldCards
@@ -611,23 +613,14 @@ const checkStraightValidity = (cards: Card[], length: number) => {
         return false
     }
 
-    // not same suit
-    if (cards.some(card => card.suit !== refCard.suit)) {
-        return false
-    }
-
-
     // All jokers (if minimum rank is joker)
     if (refCard.rank === 25) {
         return true
     }
 
-    // corner case when joker is below 1
-    if (cards.length > 2) {
-        // joker followed by ace
-        if (cards[0].rank === 25 && cards[1].rank === 14) {
-
-        }
+    // not same suit (card is not joker and different suit)
+    if (cards.some(card => card.rank !== 25 && card.suit !== refCard.suit)) {
+        return false
     }
 
     const firstRank = getFirstExpectedRank(cards)

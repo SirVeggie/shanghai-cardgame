@@ -27,6 +27,19 @@ export const testConfig = (): ShanghaiOptions => ({
     ]
 })
 
+const testRounds: RoundConfig[] = [
+    {
+        description: "Two sets",
+        cardCount: 11,
+        melds: [
+            {
+                type: "straight",
+                length: 2
+            }
+        ]
+    },
+]
+
 const defaultRounds: RoundConfig[] = [
     {
         description: "Two sets",

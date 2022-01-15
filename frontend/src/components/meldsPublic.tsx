@@ -41,17 +41,13 @@ export const Meldspublic = () => {
             if (!selectedCard) {
                 return
             }
-            const insertIndex = card ? meld.cards.indexOf(card) + 1 : 0
-
-            if (insertIndex < 0) {
-                return
-            }
+            const insertBehind = card ? true : false
 
             actionAddToMeld(setActionResponse, myPlayerName, ({
                 targetPlayer: owner,
                 targetMeldIndex: meldIndex,
                 cardToMeldId: selectedCard,
-                targetMeldInsertIndex: insertIndex
+                insertBehind
             }))
         }
 
