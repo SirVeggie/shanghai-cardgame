@@ -28,6 +28,7 @@ export type ShanghaiState = {
     discarded: Card[]
     roundIsOn: boolean
     winner?: string
+    message?: string
 }
 
 export type Action = {

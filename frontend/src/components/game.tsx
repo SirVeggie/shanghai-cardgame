@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ActionResponse, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
+import { ActionResponse, getCurrentPlayer, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
 import { GameContext } from "../context/gameContext"
 import { getGameOptions, getGameState } from "../services/gameApi"
 import { GameView } from "./gameView"
@@ -8,6 +8,7 @@ import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
 let updateInProgress = false
+const debugMode = false
 
 const Game = () => {
     const [myPlayerName, setMyPlayerName] = useState<string | undefined>()
@@ -16,9 +17,12 @@ const Game = () => {
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
+    const [smallTheme, setSmallTheme] = useState(false)
+
     const [prevTurn, setPrevTurn] = useState(-1)
 
     console.log({ gameOptions, gameState })
+
 
     // debug
     //const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
@@ -34,6 +38,14 @@ const Game = () => {
             const json = JSON.stringify(game)
             localStorage.setItem("game", json)
             setPrevTurn(gameState.turn)
+        }
+
+        const currentPlayer = getCurrentPlayer(gameState).name
+        if (debugMode && myPlayerName !== currentPlayer) {
+            setMyPlayerName(currentPlayer)
+        }
+        if (debugMode && gameState.players.some(p => !p.isReady)) {
+            gameState.players.forEach(p => actionSetReady(setActionResponse, p.name))
         }
     }
 
@@ -85,7 +97,9 @@ const Game = () => {
             selectedCard,
             setSelectedCard,
             hiddenCards,
-            setHiddenCards
+            setHiddenCards,
+            smallTheme,
+            setSmallTheme
         }}>
             <GameView />
         </GameContext.Provider>

@@ -1,8 +1,21 @@
 @import "../shared";
 
-.list {
+.status {
     border-style: solid;
-    border-color: $outlineColor;
-    height: 100%;
     background-color: $lightGrey;
+    display: flex;
+    border-color: $outlineColor;
+    flex-direction: column;
+
+    height: 100%;
+
+    .list {
+        margin-top: auto;
+        padding-bottom: $medium;
+    }
+
+    .message {
+        padding: $medium;
+        font-size: large;
+    }
 }

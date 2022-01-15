@@ -13,7 +13,7 @@ const express_1 = require("express");
 const shanghai_1 = require("../game/shanghai");
 const shanghaiGameConfig_1 = require("../game/shanghaiGameConfig");
 const router = (0, express_1.Router)();
-const UPDATE_INTERVAL = 3000;
+const UPDATE_INTERVAL = 1000;
 const SYNC_ACCURACY = 100;
 router.get('/options', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return res.json((0, shanghai_1.getGame)());

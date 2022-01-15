@@ -146,6 +146,7 @@ const actionCallShanghai = (playerName) => {
     }
     if (!state.shanghaiFor) {
         state.shanghaiFor = player.name;
+        message(`${player.name} called Shanghai!`);
         return {
             success: true,
         };
@@ -170,13 +171,17 @@ const actionAllowShanghaiCall = () => {
         };
     }
     const penalty = popDeck();
+    const current = (0, shared_1.getCurrentPlayer)(state);
     const player = (0, shared_1.getPlayerByName)(state, state.shanghaiFor);
     giveCard(player, discard);
     giveCard(player, penalty);
     state.shanghaiIsAllowed = false;
+    state.shanghaiFor = null;
+    player.shanghaiCount++;
+    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${(0, shared_1.cardToString)(discard)}`);
     return {
         success: true,
-        message: `Succesfully called Shanghai for ${(0, shared_1.cardToString)(discard)} and received ${(0, shared_1.cardToString)(penalty)} as penalty`
+        message: `Succesfully allowed Shanghai for ${(0, shared_1.cardToString)(discard)}`
     };
 };
 const actionRevealDeck = (player) => {
@@ -194,6 +199,8 @@ const actionRevealDeck = (player) => {
     }
     const card = popDeck();
     state.discarded.push(card);
+    state.shanghaiIsAllowed = true;
+    message(`${player.name} revealed ${(0, shared_1.cardToString)(card)}`);
     return {
         success: true,
         message: `Revealed ${(0, shared_1.cardToString)(card)}`
@@ -216,6 +223,8 @@ const actionTakeDiscard = (player) => {
     giveCard(player, card);
     player.canTakeCard = false;
     state.shanghaiIsAllowed = false;
+    state.shanghaiFor = null;
+    message(`${player.name} picked up ${(0, shared_1.cardToString)(card)} from the discard pile`);
     return {
         success: true,
         message: `Picked up ${(0, shared_1.cardToString)(card)}`
@@ -231,6 +240,8 @@ const actionTakeDeck = (player) => {
     const card = popDeck();
     giveCard(player, card);
     player.canTakeCard = false;
+    state.shanghaiIsAllowed = false;
+    message(`${player.name} picked up a card from the deck`);
     return {
         success: true,
         message: `Picked up ${(0, shared_1.cardToString)(card)}`
@@ -258,6 +269,7 @@ const actionMeld = (player, meld) => {
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
+    message(`${player.name} melded cards`);
     return {
         success: true,
         message: "Succesfully melded cards"
@@ -287,6 +299,7 @@ const actionDiscard = (player, toDiscardId) => {
     state.discarded.push(cardToDiscard);
     endPlayerTurn(player);
     state.shanghaiIsAllowed = true;
+    message(`${player.name} discarded ${(0, shared_1.cardToString)(cardToDiscard)}`);
     return {
         success: true,
         message: `Discarded ${(0, shared_1.cardToString)(cardToDiscard)}`
@@ -304,12 +317,13 @@ const actionAddToMeld = (player, meld) => {
         };
     }
     // remove card from player
-    getPlayerCards(player, [meld.cardToMeldId], true);
+    const [meldedCard] = getPlayerCards(player, [meld.cardToMeldId], true);
     // save target meld
     (0, shared_1.getPlayerByName)(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards };
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
+    message(`${player.name} melded ${(0, shared_1.cardToString)(meldedCard)} into ${meld.targetPlayer}'s table`);
     return {
         success: true,
     };
@@ -408,6 +422,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
     targetPlayer.melded[meld.targetMeldIndex] = { cards: newCards };
     // Give new joker
     giveCard(player, Object.assign(Object.assign({}, matchingJoker.joker), { mustBeMelded: true }));
+    message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${(0, shared_1.cardToString)(cardToMeld)}`);
     return {
         success: true,
         message: 'Succesfully replaced Joker'
@@ -683,6 +698,7 @@ const giveCard = (player, card) => {
 const shuffle = (cards) => {
     return (0, shuffle_array_1.default)(cards);
 };
+const message = (msg) => state.message = msg;
 const initialState = (players) => {
     return {
         players: players.map(createPlayer),

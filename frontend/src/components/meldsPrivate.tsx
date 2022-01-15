@@ -5,6 +5,7 @@ import { CardCollection } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
 import { actionMeld } from './playerActions'
+import cx from 'classnames'
 
 export const Meldsprivate = () => {
     const { state, options, selectedCard, setSelectedCard, myPlayerName, hiddenCards, setHiddenCards, setActionResponse } = useContext(GameContext)
@@ -12,6 +13,7 @@ export const Meldsprivate = () => {
     const myPlayer = getPlayerByName(state, myPlayerName)
 
     const [playerMelds, setPlayerMelds] = useState<MeldCards[]>(defaultMelds(requiredMelds.length))
+    const [activeMeld, setActiveMeld] = useState<number>()
 
     const getHidden = (playerMelds: MeldCards[]) => {
         const hidden: number[] = []
@@ -31,6 +33,16 @@ export const Meldsprivate = () => {
         setHiddenCards(hiddenCards.concat([selectedCard]))
         meldCards[index].cardIDs.push(selectedCard)
     }
+
+    const startAdding = (index: number) => {
+        setSelectedCard(undefined)
+        if (activeMeld === index) {
+            setActiveMeld(undefined)
+        } else {
+            setActiveMeld(index)
+        }
+    }
+
     const clear = (index: number) => {
         const newMelds = playerMelds.map((meld, i) => index === i ? {
             cardIDs: []
@@ -49,7 +61,7 @@ export const Meldsprivate = () => {
         return <div className={style.meldRow}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
             <div className={style.buttons}>
-                <button onClick={() => addCard(i)}>Add card</button>
+                <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
             <CardCollection cards={cards} size='normal' />
@@ -59,6 +71,10 @@ export const Meldsprivate = () => {
     const clearAll = () => {
         setPlayerMelds(defaultMelds(requiredMelds.length))
         setHiddenCards([])
+    }
+
+    if (activeMeld !== undefined && selectedCard !== undefined) {
+        addCard(activeMeld)
     }
 
     return <div className={style.meldsPrivate}>

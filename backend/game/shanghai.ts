@@ -155,6 +155,7 @@ const actionCallShanghai = (playerName: string): ActionResponse => {
 
     if (!state.shanghaiFor) {
         state.shanghaiFor = player.name
+        message(`${player.name} called Shanghai!`)
         return {
             success: true,
         }
@@ -185,16 +186,20 @@ const actionAllowShanghaiCall = (): ActionResponse => {
 
     const penalty = popDeck()
 
+    const current = getCurrentPlayer(state)
     const player = getPlayerByName(state, state.shanghaiFor)
 
     giveCard(player, discard)
     giveCard(player, penalty)
 
     state.shanghaiIsAllowed = false
+    state.shanghaiFor = null
+    player.shanghaiCount++
 
+    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${cardToString(discard)}`)
     return {
         success: true,
-        message: `Succesfully called Shanghai for ${cardToString(discard)} and received ${cardToString(penalty)} as penalty`
+        message: `Succesfully allowed Shanghai for ${cardToString(discard)}`
     }
 }
 
@@ -215,7 +220,9 @@ const actionRevealDeck = (player: Player): ActionResponse => {
 
     const card = popDeck()
     state.discarded.push(card)
+    state.shanghaiIsAllowed = true
 
+    message(`${player.name} revealed ${cardToString(card)}`)
     return {
         success: true,
         message: `Revealed ${cardToString(card)}`
@@ -243,6 +250,9 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     player.canTakeCard = false
 
     state.shanghaiIsAllowed = false
+    state.shanghaiFor = null
+
+    message(`${player.name} picked up ${cardToString(card)} from the discard pile`)
     return {
         success: true,
         message: `Picked up ${cardToString(card)}`
@@ -260,7 +270,9 @@ const actionTakeDeck = (player: Player): ActionResponse => {
     const card = popDeck()
     giveCard(player, card)
     player.canTakeCard = false
+    state.shanghaiIsAllowed = false
 
+    message(`${player.name} picked up a card from the deck`)
     return {
         success: true,
         message: `Picked up ${cardToString(card)}`
@@ -292,6 +304,7 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
         endPlayerTurn(player)
     }
 
+    message(`${player.name} melded cards`)
     return {
         success: true,
         message: "Succesfully melded cards"
@@ -327,6 +340,8 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
     endPlayerTurn(player)
 
     state.shanghaiIsAllowed = true
+
+    message(`${player.name} discarded ${cardToString(cardToDiscard)}`)
     return {
         success: true,
         message: `Discarded ${cardToString(cardToDiscard)}`
@@ -346,7 +361,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
     }
 
     // remove card from player
-    getPlayerCards(player, [meld.cardToMeldId], true)
+    const [meldedCard] = getPlayerCards(player, [meld.cardToMeldId], true)
 
     // save target meld
     getPlayerByName(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards }
@@ -355,6 +370,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
         endPlayerTurn(player)
     }
 
+    message(`${player.name} melded ${cardToString(meldedCard)} into ${meld.targetPlayer}'s table`)
     return {
         success: true,
     }
@@ -481,6 +497,7 @@ const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): Act
     // Give new joker
     giveCard(player, { ...matchingJoker.joker, mustBeMelded: true })
 
+    message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${cardToString(cardToMeld)}`)
     return {
         success: true,
         message: 'Succesfully replaced Joker'
@@ -829,6 +846,8 @@ const giveCard = (player: Player, card: Card) => {
 const shuffle = (cards: Card[]): Card[] => {
     return arrayShuffle(cards)
 }
+
+const message = (msg: string) => state.message = msg
 
 const initialState = (players: string[]): ShanghaiState => {
     return {

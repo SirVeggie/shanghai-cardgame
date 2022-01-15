@@ -11,6 +11,8 @@ type GameContextType = {
     setSelectedCard: (n: number | undefined) => void
     hiddenCards: number[],
     setHiddenCards: (n: number[]) => void
+    smallTheme: boolean,
+    setSmallTheme: (n: boolean) => void
 }
 
 const defaultGameContext: GameContextType = {
@@ -38,7 +40,9 @@ const defaultGameContext: GameContextType = {
     setActionResponse: () => { },
     setSelectedCard: () => { },
     hiddenCards: [],
-    setHiddenCards: () => { }
+    setHiddenCards: () => { },
+    smallTheme: false,
+    setSmallTheme: () => { }
 }
 
 export const GameContext = React.createContext(

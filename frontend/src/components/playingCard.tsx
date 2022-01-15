@@ -24,8 +24,10 @@ export type CardSize = 'large' | 'normal'
 
 type CardColor = 'red' | 'black'
 
-export const PlayingCard = ({ card, expanded, overrideOnClick, size }: CardProps) => {
-    const { selectedCard, setSelectedCard } = useContext(GameContext)
+export const PlayingCard = ({ card, expanded, overrideOnClick, size: sizeParam }: CardProps) => {
+    const { selectedCard, setSelectedCard, smallTheme } = useContext(GameContext)
+
+    const size = smallTheme ? 'normal' : sizeParam
 
     const classSize = size === 'normal' ? style.normalCard : style.largeCard
     const classExpanded = size === 'normal' ? style.normalCardFull : style.largeCardFull

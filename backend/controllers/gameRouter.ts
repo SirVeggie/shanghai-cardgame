@@ -5,7 +5,7 @@ import { ShanghaiGame, Action } from '../../frontend/src/shared'
 
 const router = Router()
 
-const UPDATE_INTERVAL = 3000
+const UPDATE_INTERVAL = 1000
 const SYNC_ACCURACY = 100
 
 router.get('/options', async (req, res) => {
