@@ -119,6 +119,8 @@ export type MeldCards = {
     cardIDs: number[]
 }
 
+export const cardOrderIndex = (card: Card): number =>  card.suit * 1000 + card.rank * 10 + card.deck
+
 export const getCurrentPlayer = (state: ShanghaiState) => state.players[getPlayerTurn(state, state.turn)]
 
 export const getPlayerByName = (state: ShanghaiState, name: string) => state.players.filter(p => p.name === name)[0]
