@@ -736,6 +736,9 @@ const getPlayerTargetCardCount = (player: Player) => {
 const endPlayerTurn = (player: Player) => {
     if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false
+        state.discarded = []
+        state.shanghaiFor = null
+        state.message = 'Round ended'
         addPlayerPoints()
         unreadyPlayers()
 
