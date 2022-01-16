@@ -11,7 +11,7 @@ type ButtonConfig = {
 }
 
 export const PlayerActions = () => {
-    const { myPlayerName, setActionResponse, selectedCard, smallTheme, setSmallTheme } = useContext(GameContext)
+    const { myPlayerName, setActionResponse, selectedCard } = useContext(GameContext)
 
     const buttons: ButtonConfig[] = [
         {
@@ -37,10 +37,6 @@ export const PlayerActions = () => {
         {
             label: "Set ready",
             onClick: () => actionSetReady(setActionResponse, myPlayerName)
-        },
-        {
-            label: "Toggle card size",
-            onClick: () => setSmallTheme(!smallTheme)
         }
     ]
 

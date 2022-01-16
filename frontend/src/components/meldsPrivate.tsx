@@ -65,7 +65,7 @@ export const Meldsprivate = () => {
                 <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
-            <CardCollection cards={cards} size='normal' forceOriginalOrder={true} />
+            <CardCollection cards={cards} forceOriginalOrder={true} />
         </div >
     }
 

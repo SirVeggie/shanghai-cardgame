@@ -17,7 +17,6 @@ const Game = () => {
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
-    const [smallTheme, setSmallTheme] = useState(false)
 
     const [prevTurn, setPrevTurn] = useState(-1)
 
@@ -97,9 +96,7 @@ const Game = () => {
             selectedCard,
             setSelectedCard,
             hiddenCards,
-            setHiddenCards,
-            smallTheme,
-            setSmallTheme
+            setHiddenCards
         }}>
             <GameView />
         </GameContext.Provider>

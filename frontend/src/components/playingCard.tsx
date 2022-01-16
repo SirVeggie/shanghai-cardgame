@@ -1,77 +1,80 @@
 import style from './playingCard.module.scss'
 import cx from 'classnames'
-import { Card, CColor } from "../shared"
-import { useContext } from 'react'
+import { Card } from "../shared"
+import { CSSProperties, useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import cards from '../tools/CardTools';
+import ctool from '../tools/CardTools';
 
 type CardProps = {
     card?: Card
-    expanded?: boolean
+    fan?: FanValues
     overrideOnClick?: (card: Card | undefined) => void
-    size: CardSize
 }
 
 type FaceProps = {
-    name: string
-    suit: string
-    color: CColor
-    size: CardSize
+    card: Card,
+    isSelected: boolean,
+    fan?: FanValues,
+    onClick: () => unknown
+}
+
+type FanValues = {
+    curve: number,
+    distance: number
 }
 
 export type CardSize = 'large' | 'normal'
 
-export const PlayingCard = ({ card, expanded, overrideOnClick, size: sizeParam }: CardProps) => {
-    const { selectedCard, setSelectedCard, smallTheme } = useContext(GameContext)
+export const PlayingCard = ({ card, fan, overrideOnClick }: CardProps) => {
+    const { selectedCard, setSelectedCard } = useContext(GameContext)
 
-    const size = smallTheme ? 'normal' : sizeParam
-
-    const classSize = size === 'normal' ? style.normalCard : style.largeCard
-    const classExpanded = size === 'normal' ? style.normalCardFull : style.largeCardFull
-
+    const backClick = () => {
+        if (overrideOnClick) {
+            overrideOnClick(undefined)
+        }
+    }
+    
     if (!card) {
-        return <div className={cx(style.playingCard, classSize, expanded && classExpanded)} onClick={() => {
-            if (overrideOnClick) {
-                overrideOnClick(undefined)
-            }
-        }}>
-            <CardBack size={size} />
+        return <div className={cx(style.playingCard)} onClick={backClick}>
+            <CardBack />
         </div>
     }
 
     const isSelected = selectedCard === card.id
-
-    return <div className={cx(style.playingCard, classSize, (expanded || isSelected) && classExpanded, isSelected && style.selected)} onClick={() => {
+    
+    const faceClick = () => {
         if (overrideOnClick) {
             overrideOnClick(card)
             return
         }
-        console.log('Select ' + cards.longName(card))
+        console.log('Select ' + ctool.longName(card))
         if (isSelected) {
             setSelectedCard(undefined)
         } else {
             setSelectedCard(card.id)
         }
-    }}>
-        <CardFace name={cards.rankPrefix(card)} suit={cards.suitName(card)} color={cards.color(card)} size={size} />
-    </div>
+    }
+
+    return <CardFace card={card} isSelected={isSelected} fan={fan} onClick={faceClick} />
 }
 
-const CardFace = ({ name, suit, color, size }: FaceProps) => {
-    const sizeClass = size === 'normal' ? style.cardFaceNormal : style.cardFaceLarge
-    return <div className={cx(style.cardFace, sizeClass, color == 'red' ? style.red : style.black)}>
-        <div className={style.info}>
-            <span className={style.text}>{name}</span>
-            <span className={style.text}>{suit}</span>
-        </div>
-        <div className={style.suit}>
-            <span className={style.text}>{suit}</span>
-        </div>
+const CardFace = ({ card, isSelected, fan, onClick }: FaceProps) => {
+    const isRed = ctool.color(card) === 'red';
+    const dist = fan ? fan.distance / Math.sin(fan.curve * (Math.PI/180)) * 2 : undefined
+    const inline = fan ? {
+        '--angle-amount': `${fan.curve}deg`,
+        '--dist': `${dist}px`,
+        '--offset-amount': `${fan.curve / 2}deg`
+    } as CSSProperties : undefined
+    
+    return <div className={cx(style.card, isRed && style.red, isSelected && style.selected)} onClick={onClick} style={inline}>
+        <div>{ctool.rankPrefix(card)}</div>
+        <div>{ctool.suitIcon(card)}</div>
+        <div>{ctool.suitIcon(card)}</div>
+        <div>{ctool.suitIcon(card)}</div>
     </div >
 }
 
-const CardBack = ({ size }: { size: CardSize }) => {
-    const sizeClass = size === 'normal' ? style.cardFaceNormal : style.cardFaceLarge
-    return <div className={cx(style.cardBack, sizeClass)}>
-    </div >
+const CardBack = () => {
+    return <div className={cx(style.cardBack)}></div >
 }

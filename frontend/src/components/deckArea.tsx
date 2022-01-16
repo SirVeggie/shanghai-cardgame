@@ -34,8 +34,8 @@ type Props = {
 }
 
 const CardContainer = ({ card, onClick, defaultCard }: Props) => {
-    const showDefaultCard = () => defaultCard === 'back' ? <PlayingCard size='large' expanded={true} card={undefined} /> : null
+    const showDefaultCard = () => defaultCard === 'back' ? <PlayingCard card={undefined} /> : null
     return <div className={style.cardContainer} onClick={() => onClick(card)}>
-        {card ? <PlayingCard card={card} expanded={true} size='large' /> : showDefaultCard()}
+        {card ? <PlayingCard card={card} /> : showDefaultCard()}
     </div>
 }

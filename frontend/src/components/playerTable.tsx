@@ -29,7 +29,7 @@ export const PlayerTable = () => {
             <button onClick={(s) => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <CardCollection cards={filteredCards} size='large' order={orderByRank ? orderByRankFunc : undefined} />
+            <CardCollection cards={filteredCards} order={orderByRank ? orderByRankFunc : undefined} />
         </div>
         <PlayerActions />
     </div>
