@@ -1,13 +1,13 @@
 import style from './playingCard.module.scss'
 import cx from 'classnames'
-import { Card, cardToString, CRank, rankToString, suitToString } from "../shared"
+import { Card, CColor } from "../shared"
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-
+import cards from '../tools/CardTools';
 
 type CardProps = {
     card?: Card
-    expanded?: Boolean
+    expanded?: boolean
     overrideOnClick?: (card: Card | undefined) => void
     size: CardSize
 }
@@ -15,14 +15,11 @@ type CardProps = {
 type FaceProps = {
     name: string
     suit: string
-    color: CardColor
+    color: CColor
     size: CardSize
 }
 
 export type CardSize = 'large' | 'normal'
-
-
-type CardColor = 'red' | 'black'
 
 export const PlayingCard = ({ card, expanded, overrideOnClick, size: sizeParam }: CardProps) => {
     const { selectedCard, setSelectedCard, smallTheme } = useContext(GameContext)
@@ -43,32 +40,21 @@ export const PlayingCard = ({ card, expanded, overrideOnClick, size: sizeParam }
     }
 
     const isSelected = selectedCard === card.id
-    const color: CardColor = card.suit === 'heart' || card.suit === 'diamond' ? 'red' : 'black'
 
     return <div className={cx(style.playingCard, classSize, (expanded || isSelected) && classExpanded, isSelected && style.selected)} onClick={() => {
         if (overrideOnClick) {
             overrideOnClick(card)
             return
         }
-        console.log('Select ' + cardToString(card))
+        console.log('Select ' + cards.longName(card))
         if (isSelected) {
             setSelectedCard(undefined)
         } else {
             setSelectedCard(card.id)
         }
     }}>
-        <CardFace name={rankPrefix(card.rank)} suit={suitToString(card.suit)} color={color} size={size} />
+        <CardFace name={cards.rankPrefix(card)} suit={cards.suitName(card)} color={cards.color(card)} size={size} />
     </div>
-}
-
-const rankPrefix = (rank: CRank) => {
-    if (rank === 25) {
-        return 'JOKER'
-    }
-    if (rank >= 11) {
-        return rankToString(rank).substring(0, 1)
-    }
-    return rankToString(rank)
 }
 
 const CardFace = ({ name, suit, color, size }: FaceProps) => {

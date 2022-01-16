@@ -60,12 +60,28 @@ export type Card = {
     id: number
     suit: CSuit
     rank: CRank
+    deck: CDeck
     mustBeMelded?: boolean
 }
 
-export type CSuit = "heart" | "spade" | "diamond" | "club"
-export type CJokerRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
-export type CRank = CJokerRank | 25
+export enum CSuit {
+    club,
+    heart,
+    spade,
+    diamond
+}
+
+export enum CSuitIcon {
+    '♣',
+    '♥',
+    '♠',
+    '♦'
+}
+
+export type CNormalRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
+export type CRank = CNormalRank | 25
+export type CDeck = 0 | 1
+export type CColor = 'red' | 'black'
 
 export type RoundConfig = {
     description: string
@@ -101,62 +117,6 @@ export type AddToMeldAction = {
 // Single meld array, where each index corresponds to a players card
 export type MeldCards = {
     cardIDs: number[]
-}
-
-
-export const suitFromNumber = (n: number): CSuit => {
-    const v = n % 4
-    switch (v) {
-        case 0:
-            return "heart"
-        case 1:
-            return "spade"
-        case 2:
-            return "diamond"
-        default:
-            return "club"
-    }
-}
-
-export const cardToString = (card: Card) => `${rankToString(card.rank)} of ${card.suit}s`
-
-export const rankToString = (rank: CRank): string => {
-    switch (rank) {
-        case 11:
-            return "Jack"
-        case 12:
-            return "Queen"
-        case 13:
-            return "King"
-        case 14:
-            return "Ace"
-        case 25:
-            return "Joker"
-        default:
-            return `${rank}`
-    }
-}
-
-
-export const suitToString = (rank: CSuit): string => {
-    switch (rank) {
-        case 'heart':
-            return '♥'
-        case 'diamond':
-            return '♦'
-        case 'spade':
-            return '♠'
-        default:
-            return '♣'
-    }
-}
-
-export const nextRank = (rank: CJokerRank, loop = false) => {
-    let rankAdd = rank + 1
-    if (rankAdd > 14) {
-        return loop ? 2 : undefined
-    }
-    return rankAdd as CJokerRank
 }
 
 export const getCurrentPlayer = (state: ShanghaiState) => state.players[getPlayerTurn(state, state.turn)]

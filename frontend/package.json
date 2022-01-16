@@ -26,7 +26,8 @@
     "create_build": "react-scripts build",
     "build": "npm run create_build && cp -r build ../backend/",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src/**/*.ts src/**/*.tsx"
   },
   "browserslist": {
     "production": [
@@ -42,6 +43,10 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/lodash": "^4.14.178"
+    "@types/lodash": "^4.14.178",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
+    "eslint": "^8.6.0",
+    "eslint-plugin-react": "^7.28.0"
   }
 }
