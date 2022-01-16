@@ -1,5 +1,6 @@
 import { compact, filter, find, findIndex, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, cardToString, nextRank, suitFromNumber, getCurrentPlayer, getPlayerByName, CJokerRank } from '../../frontend/src/shared'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, getCurrentPlayer, getPlayerByName, CNormalRank, CDeck } from '../../frontend/src/shared'
+import ctool from '../../frontend/src/tools/CardTools'
 import arrayShuffle from 'shuffle-array'
 
 // NOTE ACE IS NOT 1
@@ -201,10 +202,10 @@ const actionAllowShanghaiCall = (): ActionResponse => {
     state.shanghaiFor = null
     player.shanghaiCount++
 
-    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${cardToString(discard)}`)
+    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${ctool.longName(discard)}`)
     return {
         success: true,
-        message: `Succesfully allowed Shanghai for ${cardToString(discard)}`
+        message: `Succesfully allowed Shanghai for ${ctool.longName(discard)}`
     }
 }
 
@@ -228,10 +229,10 @@ const actionRevealDeck = (player: Player): ActionResponse => {
     state.shanghaiIsAllowed = true
     state.discardTopOwner = undefined
 
-    message(`${player.name} revealed ${cardToString(card)}`)
+    message(`${player.name} revealed ${ctool.longName(card)}`)
     return {
         success: true,
-        message: `Revealed ${cardToString(card)}`
+        message: `Revealed ${ctool.longName(card)}`
     }
 }
 
@@ -259,10 +260,10 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     state.shanghaiFor = null
     state.discardTopOwner = undefined
 
-    message(`${player.name} picked up ${cardToString(card)} from the discard pile`)
+    message(`${player.name} picked up ${ctool.longName(card)} from the discard pile`)
     return {
         success: true,
-        message: `Picked up ${cardToString(card)}`
+        message: `Picked up ${ctool.longName(card)}`
     }
 }
 
@@ -282,7 +283,7 @@ const actionTakeDeck = (player: Player): ActionResponse => {
     message(`${player.name} picked up a card from the deck`)
     return {
         success: true,
-        message: `Picked up ${cardToString(card)}`
+        message: `Picked up ${ctool.longName(card)}`
     }
 }
 
@@ -349,10 +350,10 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
 
     state.shanghaiIsAllowed = true
 
-    message(`${player.name} discarded ${cardToString(cardToDiscard)}`)
+    message(`${player.name} discarded ${ctool.longName(cardToDiscard)}`)
     return {
         success: true,
-        message: `Discarded ${cardToString(cardToDiscard)}`
+        message: `Discarded ${ctool.longName(cardToDiscard)}`
     }
 }
 
@@ -378,7 +379,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
         endPlayerTurn(player)
     }
 
-    message(`${player.name} melded ${cardToString(meldedCard)} into ${meld.targetPlayer}'s table`)
+    message(`${player.name} melded ${ctool.longName(meldedCard)} into ${meld.targetPlayer}'s table`)
     return {
         success: true,
     }
@@ -499,7 +500,7 @@ const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): Act
     // Give new joker
     giveCard(player, { ...matchingJoker.joker, mustBeMelded: true })
 
-    message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${cardToString(cardToMeld)}`)
+    message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${ctool.longName(cardToMeld)}`)
     return {
         success: true,
         message: 'Succesfully replaced Joker'
@@ -635,7 +636,7 @@ const checkStraightValidity = (cards: Card[], length: number) => {
     if (firstRank === 14) {
         expectedRank = 2
     } else {
-        expectedRank = nextRank(firstRank)
+        expectedRank = ctool.nextRank(firstRank)
     }
 
     for (let i = 1; i < cards.length; i++) {
@@ -652,13 +653,13 @@ const checkStraightValidity = (cards: Card[], length: number) => {
             return false
         }
 
-        expectedRank = nextRank(expectedRank)
+        expectedRank = ctool.nextRank(expectedRank)
     }
 
     return true
 }
 
-const getFirstExpectedRank = (cards: Card[]): CJokerRank | undefined => {
+const getFirstExpectedRank = (cards: Card[]): CNormalRank | undefined => {
     let firstRank = cards[0].rank
 
     // starts with joker
@@ -676,7 +677,7 @@ const getFirstExpectedRank = (cards: Card[]): CJokerRank | undefined => {
         if (firstRankValue === 1) {
             firstRank = 14
         } else {
-            firstRank = firstRankValue as CJokerRank
+            firstRank = firstRankValue as CNormalRank
         }
     }
 
@@ -709,7 +710,7 @@ const getStraightJokersFromValidStraight = (cards: Card[]): JokerWithRank[] => {
             })
         }
 
-        expectedRank = nextRank(expectedRank)
+        expectedRank = ctool.nextRank(expectedRank)
     }
 
     return jokers
@@ -718,7 +719,7 @@ const getStraightJokersFromValidStraight = (cards: Card[]): JokerWithRank[] => {
 type JokerWithRank = {
     joker: Card,
     index: number,
-    rank: CJokerRank
+    rank: CNormalRank
 }
 
 const playerCanTakeCard = (player: Player) => {
@@ -855,29 +856,26 @@ const initialState = (players: string[]): ShanghaiState => {
     }
 }
 
-
 const createDeck = (deckCount: number, jokerCount: number) => {
-    let cardId = 1
+    if (deckCount > 8)
+        throw new Error("Cannot have more than 8 decks");
+    if (jokerCount > 4 * deckCount)
+        throw new Error("Cannot have more than 4*decks of jokers");
+    
     const cards: Card[] = []
+    
     for (let suit = 0; suit < 4; suit++) {
         for (let rank = 2; rank <= 14; rank++) {
             for (let deck = 0; deck < deckCount; deck++) {
-                cards.push({
-                    id: cardId++,
-                    suit: suitFromNumber(suit),
-                    rank: rank as CRank
-                })
+                cards.push(ctool.fromValues(rank as CRank, suit, deck as CDeck));
             }
         }
     }
+    
     for (let i = 0; i < jokerCount; i++) {
-        cards.push({
-            id: cardId++,
-            suit: suitFromNumber(i),
-            rank: 25
-        })
+        cards.push(ctool.fromValues(25, i % 4, (i / 4) as CDeck))
     }
-
+    
     return cards
 }
 
