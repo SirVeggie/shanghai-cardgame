@@ -8,25 +8,6 @@ export const getDefaultConfiguration = (): ShanghaiOptions => ({
     rounds: defaultRounds
 })
 
-export const testConfig = (): ShanghaiOptions => ({
-    players: ["Eetu", "Veikka"],
-    deckCount: 1,
-    jokerCount: 0,
-    shanghaiCount: 3,
-    rounds: [
-        {
-            description: "Two sets",
-            cardCount: 5,
-            melds: [
-                {
-                    type: "straight",
-                    length: 4
-                }
-            ]
-        },
-    ]
-})
-
 const testRounds: RoundConfig[] = [
     {
         description: "Two sets",

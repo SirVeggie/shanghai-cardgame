@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.testConfig = exports.getDefaultConfiguration = void 0;
+exports.getDefaultConfiguration = void 0;
 const getDefaultConfiguration = () => ({
     players: ["Eetu", "Veikka", "Niko", "Johannes"],
     deckCount: 2,
@@ -9,25 +9,6 @@ const getDefaultConfiguration = () => ({
     rounds: defaultRounds
 });
 exports.getDefaultConfiguration = getDefaultConfiguration;
-const testConfig = () => ({
-    players: ["Eetu", "Veikka"],
-    deckCount: 1,
-    jokerCount: 0,
-    shanghaiCount: 3,
-    rounds: [
-        {
-            description: "Two sets",
-            cardCount: 5,
-            melds: [
-                {
-                    type: "straight",
-                    length: 4
-                }
-            ]
-        },
-    ]
-});
-exports.testConfig = testConfig;
 const testRounds = [
     {
         description: "Two sets",
