@@ -61,6 +61,7 @@
     --angle: calc(var(--angle-amount) * var(--children));
     --original-size: 150px;
     --size: var(--original-size);
+    user-select: none;
     position: absolute;
     width: var(--size);
     height: calc(var(--size) * 1.6);
