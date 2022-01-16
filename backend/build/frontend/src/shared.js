@@ -49,7 +49,7 @@ const suitToString = (rank) => {
 exports.suitToString = suitToString;
 const nextRank = (rank, loop = false) => {
     let rankAdd = rank + 1;
-    if (rank > 14) {
+    if (rankAdd > 14) {
         return loop ? 2 : undefined;
     }
     return rankAdd;

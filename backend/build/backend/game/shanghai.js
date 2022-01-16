@@ -142,6 +142,12 @@ const actionCallShanghai = (playerName) => {
             error: "You have already called Shanghai maximum amount of times"
         };
     }
+    if (player.name === state.discardTopOwner) {
+        return {
+            success: false,
+            error: 'You cannot call Shanghai on your own discard card'
+        };
+    }
     if (!state.shanghaiFor) {
         state.shanghaiFor = player.name;
         message(`${player.name} called Shanghai!`);
@@ -174,6 +180,7 @@ const actionAllowShanghaiCall = () => {
     giveCard(player, discard);
     giveCard(player, penalty);
     state.shanghaiIsAllowed = false;
+    state.discardTopOwner = undefined;
     state.shanghaiFor = null;
     player.shanghaiCount++;
     message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${(0, shared_1.cardToString)(discard)}`);
@@ -198,6 +205,7 @@ const actionRevealDeck = (player) => {
     const card = popDeck();
     state.discarded.push(card);
     state.shanghaiIsAllowed = true;
+    state.discardTopOwner = undefined;
     message(`${player.name} revealed ${(0, shared_1.cardToString)(card)}`);
     return {
         success: true,
@@ -222,6 +230,7 @@ const actionTakeDiscard = (player) => {
     player.canTakeCard = false;
     state.shanghaiIsAllowed = false;
     state.shanghaiFor = null;
+    state.discardTopOwner = undefined;
     message(`${player.name} picked up ${(0, shared_1.cardToString)(card)} from the discard pile`);
     return {
         success: true,
@@ -295,6 +304,7 @@ const actionDiscard = (player, toDiscardId) => {
     }
     player.cards = player.cards.filter(c => c.id !== toDiscardId);
     state.discarded.push(cardToDiscard);
+    state.discardTopOwner = player.name;
     endPlayerTurn(player);
     state.shanghaiIsAllowed = true;
     message(`${player.name} discarded ${(0, shared_1.cardToString)(cardToDiscard)}`);
@@ -514,12 +524,6 @@ const checkStraightValidity = (cards, length) => {
     // not same suit (card is not joker and different suit)
     if (cards.some(card => card.rank !== 25 && card.suit !== refCard.suit)) {
         return false;
-    }
-    // corner case when joker is below 1
-    if (cards.length > 2) {
-        // joker followed by ace
-        if (cards[0].rank === 25 && cards[1].rank === 14) {
-        }
     }
     const firstRank = getFirstExpectedRank(cards);
     // straight starts from below ace
