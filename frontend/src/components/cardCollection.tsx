@@ -22,11 +22,13 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
 
     const fan = {
         curve: 2,
-        distance: 25
+        distance: 25,
+        offset: 2,
+        size: 150
     }
     
     return <div>
-        <div className={cx(style.cardFan, 'cardFan')}>
+        <div className={cx(style.fanBase, 'cardFan')}>
             {cards.map(card => <PlayingCard
                 card={card}
                 overrideOnClick={overrideOnClick}
