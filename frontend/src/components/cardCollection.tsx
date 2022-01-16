@@ -1,11 +1,11 @@
-import style from './cardCollection.module.scss'
+import style from './playingCard.module.scss'
 import { Card } from "../shared"
-import { CardSize, PlayingCard } from "./playingCard"
+import { PlayingCard } from "./playingCard"
 import { ListIterator, Many, orderBy } from 'lodash'
+import cx from 'classnames'
 
 type HandProps = {
     cards: Card[]
-    size: CardSize
     order?: Many<ListIterator<Card, unknown>>
     forceOriginalOrder?: boolean
     dummyCard?: boolean
@@ -13,20 +13,24 @@ type HandProps = {
 }
 
 
-export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrder, size, dummyCard, overrideOnClick }: HandProps) => {
+export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrder, dummyCard, overrideOnClick }: HandProps) => {
     let cards: (Card | undefined)[] = order ? orderBy(unorderedCards, order) : unorderedCards
     if (forceOriginalOrder) {
         cards = [...unorderedCards]
     }
     cards = dummyCard ? [undefined, ...cards] : cards
 
+    const fan = {
+        curve: 2,
+        distance: 25
+    }
+    
     return <div>
-        <div className={style.cardRow}>
-            {cards.map((card, index) => <PlayingCard
+        <div className={cx(style.cardFan, 'cardFan')}>
+            {cards.map(card => <PlayingCard
                 card={card}
-                expanded={index === cards.length - 1}
                 overrideOnClick={overrideOnClick}
-                size={size}
+                fan={fan}
                 key={`card-${card?.id ?? 'dummy'}`} />)}
         </div>
     </div>

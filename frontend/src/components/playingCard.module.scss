@@ -1,112 +1,151 @@
 @import "../shared.scss";
 
-.playingCard {
-    cursor: pointer;
-    user-select: none;
-    background-color: $white;
+.card:nth-child(1) { --nth-child: 1 }
+.card:nth-child(2) { --nth-child: 2 }
+.card:nth-child(3) { --nth-child: 3 }
+.card:nth-child(4) { --nth-child: 4 }
+.card:nth-child(5) { --nth-child: 5 }
+.card:nth-child(6) { --nth-child: 6 }
+.card:nth-child(7) { --nth-child: 7 }
+.card:nth-child(8) { --nth-child: 8 }
+.card:nth-child(9) { --nth-child: 9 }
+.card:nth-child(10) { --nth-child: 10 }
+.card:nth-child(11) { --nth-child: 11 }
+.card:nth-child(12) { --nth-child: 12 }
+.card:nth-child(13) { --nth-child: 13 }
+.card:nth-child(14) { --nth-child: 14 }
+.card:nth-child(15) { --nth-child: 15 }
+.card:nth-child(16) { --nth-child: 16 }
+.card:nth-child(17) { --nth-child: 17 }
+.card:nth-child(18) { --nth-child: 18 }
+.card:nth-child(19) { --nth-child: 19 }
+.card:nth-child(20) { --nth-child: 20 }
 
-    border-radius: $medium;
-    border-style: solid;
-    border-radius: $small;
-}
+.card:first-child:nth-last-child(1) { --children: 1 }
+.card:first-child:nth-last-child(2), :first-child:nth-last-child(2) ~ * { --children: 2 }
+.card:first-child:nth-last-child(3), :first-child:nth-last-child(3) ~ * { --children: 3 }
+.card:first-child:nth-last-child(4), :first-child:nth-last-child(4) ~ * { --children: 4 }
+.card:first-child:nth-last-child(5), :first-child:nth-last-child(5) ~ * { --children: 5 }
+.card:first-child:nth-last-child(6), :first-child:nth-last-child(6) ~ * { --children: 6 }
+.card:first-child:nth-last-child(7), :first-child:nth-last-child(7) ~ * { --children: 7 }
+.card:first-child:nth-last-child(8), :first-child:nth-last-child(8) ~ * { --children: 8 }
+.card:first-child:nth-last-child(9), :first-child:nth-last-child(9) ~ * { --children: 9 }
+.card:first-child:nth-last-child(10), :first-child:nth-last-child(10) ~ * { --children: 10 }
+.card:first-child:nth-last-child(11), :first-child:nth-last-child(11) ~ * { --children: 11 }
+.card:first-child:nth-last-child(12), :first-child:nth-last-child(12) ~ * { --children: 12 }
+.card:first-child:nth-last-child(13), :first-child:nth-last-child(13) ~ * { --children: 13 }
+.card:first-child:nth-last-child(14), :first-child:nth-last-child(14) ~ * { --children: 14 }
+.card:first-child:nth-last-child(15), :first-child:nth-last-child(15) ~ * { --children: 15 }
+.card:first-child:nth-last-child(16), :first-child:nth-last-child(16) ~ * { --children: 16 }
+.card:first-child:nth-last-child(17), :first-child:nth-last-child(17) ~ * { --children: 17 }
+.card:first-child:nth-last-child(18), :first-child:nth-last-child(18) ~ * { --children: 18 }
+.card:first-child:nth-last-child(19), :first-child:nth-last-child(19) ~ * { --children: 19 }
+.card:first-child:nth-last-child(20), :first-child:nth-last-child(20) ~ * { --children: 20 }
 
-.largeCard {
-    max-width: 125px;
-    min-height: 350px;
-    max-height: 350px;
+//----------------------------------------------------------------------//
 
-    &:hover {
-        min-width: 250px;
-        max-width: 250px;
-    }
-}
-.largeCardFull {
-    min-width: 250px;
-    max-width: 250px;
-}
-
-.normalCard {
-    max-width: 60px;
-    min-height: 168px;
-    max-height: 168px;
-
-    &:hover {
-        min-width: 120px;
-        max-width: 120px;
-    }
-}
-.normalCardFull {
-    min-width: 120px;
-    max-width: 120px;
-}
-
-.selected {
-    border-color: $green;
-}
-
-.cardFace {
-    overflow: hidden;
+.cardFan {
     display: flex;
-    flex-direction: column;
-
-    font-weight: bold;
+    justify-content: center;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-.cardFaceNormal {
-    min-width: 120px;
-    min-height: 168px;
-
-    .info {
-        display: flex;
-        flex-direction: row;
-
-        .text {
-            margin: $medium;
-            font-size: $text-large;
-        }
-        span:last-child {
-            margin-left: auto;
-        }
-    }
-    .suit {
-        margin: auto;
-        .text {
-            font-size: $text-xlarge;
-        }
-    }
+.card {
+    --delta: 0px;
+    --dist: 600px;
+    --offset: 0deg;
+    --offset-amount: 2deg;
+    --angle-amount: 5deg;
+    --angle: calc(var(--angle-amount) * var(--children));
+    --original-size: 150px;
+    --size: var(--original-size);
+    position: absolute;
+    width: var(--size);
+    height: calc(var(--size) * 1.6);
+    border: 1px solid #0003;
+    border-radius: 10px;
+    transform-origin: bottom;
+    background: #ddd;
+    overflow: hidden;
+    transition: border 200ms ease, transform 200ms ease, width 200ms ease, height 200ms ease;
+    background-clip: content-box;
+    
+    filter: drop-shadow(4px 4px 5px #0009);
+    cursor: pointer;
+    
+    transform:
+        translateY(var(--dist))
+        rotate(calc(var(--angle) / -2 + (var(--angle) / (var(--children) - 1) * (var(--nth-child) - 1)) + var(--offset)))
+        translateY(calc(var(--dist) * -1 + var(--delta)));
 }
 
-.cardFaceLarge {
-    min-width: 250px;
-
-    .info {
-        display: flex;
-        flex-direction: row;
-
-        .text {
-            margin: $medium;
-            font-size: $text-xxlarge;
-        }
-        span:last-child {
-            margin-left: auto;
-        }
-    }
-    .suit {
-        margin: auto;
-        .text {
-            font-size: $text-superLarge;
-        }
-    }
+.card::after {
+    content: '';
+    border: 1px dashed #0003;
+    position: absolute;
+    top: 0.5em;
+    bottom: 0.5em;
+    left: 0.5em;
+    right: 0.5em;
+    border-radius: 5px;
 }
 
-.red {
-    color: $cardRed;
+.card:hover {
+    --delta: -40px;
+    --size: calc(var(--original-size) * 1.2);
+    border: 1px solid #fffd;
 }
 
-.black {
-    color: $cardBlack;
+.card.red div {
+    color: red;
 }
 
-.cardBack {
-    background-color: $navyBlue;
+.card.selected {
+    --delta: -60px;
+}
+
+// card styling
+.card div {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 0px;
+    width: 0px;
+    transition: font-size 200ms ease, top 200ms ease, right 200ms ease, bottom 200ms ease, left 200ms ease;
+}
+
+.card div:nth-child(1) {
+    font-size: calc(var(--size) * 0.2);
+    top: calc(var(--size) * 0.18);
+    left: calc(var(--size) * 0.18);
+}
+
+.card div:nth-child(2) {
+    font-size: var(--size);
+    top: 48%;
+    left: 50%;
+}
+
+.card div:nth-child(3) {
+    font-size: calc(var(--size) * 0.25);
+    top: calc(var(--size) * 0.18);
+    right: calc(var(--size) * 0.18);
+}
+
+.card div:nth-child(4) {
+    font-size: calc(var(--size) * 0.25);
+    bottom: calc(var(--size) * 0.18);
+    left: calc(var(--size) * 0.18);
+}
+
+// extra hover effects
+.card:hover ~ .card {
+    --offset: var(--offset-amount);
+}
+
+.cardFan:hover .card:not(.card:hover, .card:hover ~ .card) {
+    --offset: calc(var(--offset-amount) * -1);
 }

@@ -56,7 +56,7 @@ export const Meldspublic = () => {
             <div className={style.buttons}>
                 <button onClick={() => replaceJoker(owner, meldIndex)}>Replace joker</button>
             </div>
-            <CardCollection cards={meld.cards} size='normal' overrideOnClick={onClick} dummyCard={true} />
+            <CardCollection cards={meld.cards} overrideOnClick={onClick} dummyCard={true} />
         </div >
     }
 
