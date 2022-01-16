@@ -5,6 +5,7 @@ import { CardCollection } from "./cardCollection"
 import { ActionResponse, Card } from '../shared'
 import { PlayerActions } from './playerActions'
 import { filter } from 'lodash'
+import { FanValues } from './playingCard'
 
 export const PlayerTable = () => {
     const [orderByRank, setOrderByRank] = useState(false)
@@ -22,6 +23,13 @@ export const PlayerTable = () => {
     const orderByRankFunc = (card: Card) => card.rank
 
     const filteredCards = filter(myPlayer.cards, card => !hiddenCards.includes(card.id))
+    
+    const fan: FanValues = {
+        curve: 2,
+        distance: 25,
+        offset: 2,
+        size: 150
+    }
 
     return <div className={style.playerArea}>
         <div className={style.cardContainer}>
@@ -29,7 +37,7 @@ export const PlayerTable = () => {
             <button onClick={(s) => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <CardCollection cards={filteredCards} order={orderByRank ? orderByRankFunc : undefined} />
+            <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} />
         </div>
         <PlayerActions />
     </div>
