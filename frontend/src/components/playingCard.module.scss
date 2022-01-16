@@ -44,42 +44,31 @@
 
 //----------------------------------------------------------------------//
 
-.cardFan {
+.fanBase {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow-x: auto;
-    overflow-y: hidden;
 }
 
 .card {
+    --size: 150px;
     --delta: 0px;
-    --dist: 600px;
-    --offset: 0deg;
-    --offset-amount: 2deg;
-    --angle-amount: 5deg;
-    --angle: calc(var(--angle-amount) * var(--children));
-    --original-size: 150px;
-    --size: var(--original-size);
-    user-select: none;
-    position: absolute;
+    
     width: var(--size);
     height: calc(var(--size) * 1.6);
     border: 1px solid #0003;
     border-radius: 10px;
-    transform-origin: bottom;
     background: #ddd;
     overflow: hidden;
-    transition: border 200ms ease, transform 200ms ease, width 200ms ease, height 200ms ease;
     background-clip: content-box;
+    color: $cardBlack;
+    user-select: none;
+    transition: transform 200ms ease, border 200ms ease;
     
     filter: drop-shadow(4px 4px 5px #0009);
     cursor: pointer;
     
-    transform:
-        translateY(var(--dist))
-        rotate(calc(var(--angle) / -2 + (var(--angle) / (var(--children) - 1) * (var(--nth-child) - 1)) + var(--offset)))
-        translateY(calc(var(--dist) * -1 + var(--delta)));
+    transform: translateY(var(--delta)) scale(var(--scale));
 }
 
 .card::after {
@@ -93,18 +82,63 @@
     border-radius: 5px;
 }
 
-.card:hover {
-    --delta: -40px;
-    --size: calc(var(--original-size) * 1.2);
-    border: 1px solid #fffd;
+.card.fan {
+    --dist: 600px;
+    --offset-amount: 5deg;
+    --offset: 0deg;
+    --angle-amount: 5deg;
+    --angle: calc(var(--angle-amount) * var(--children));
+    --scale: 1;
+    
+    position: absolute;
+    transform-origin: bottom;
+    
+    transform:
+        translateY(var(--dist))
+        rotate(calc(var(--angle) / -2 + (var(--angle) / (var(--children) - 1) * (var(--nth-child) - 1)) + var(--offset)))
+        translateY(calc(var(--dist) * -1 + var(--delta)))
+        scale(var(--scale));
+}
+
+.card.back {
+    $color1: #445;
+    $color2: #99a;
+    $color3: #556;
+    background:
+        linear-gradient(30deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
+        linear-gradient(150deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
+        linear-gradient(30deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
+        linear-gradient(150deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
+        linear-gradient(60deg, $color2 25%, transparent 25.5%, transparent 75%, $color2 75%, $color2),
+        linear-gradient(60deg, $color2 25%, transparent 25.5%, transparent 75%, $color2 75%, $color2),
+        $color3;
+    background-size: 40px 70px;
+    background-position: 0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px;
 }
 
 .card.red div {
-    color: red;
+    color: $cardRed;
 }
 
-.card.selected {
+.card:hover {
+    --scale: 1.05;
+    border: 1px solid #fffd;
+}
+
+.card.fan:hover {
+    --scale: 1.2;
+    --delta: -20px;
+}
+
+.card.fan.selected,
+.card.fan.selected:hover {
     --delta: -60px;
+}
+
+.card.follow {
+    top: calc(var(--mouse-y) * 1px - var(--size) / 2 * 1.6);
+    left: calc(var(--mouse-x) * 1px - var(--size) / 2);
+    transform: none;
 }
 
 // card styling
@@ -132,21 +166,21 @@
 
 .card div:nth-child(3) {
     font-size: calc(var(--size) * 0.25);
-    top: calc(var(--size) * 0.18);
+    top: calc(var(--size) * 0.17);
     right: calc(var(--size) * 0.18);
 }
 
 .card div:nth-child(4) {
     font-size: calc(var(--size) * 0.25);
-    bottom: calc(var(--size) * 0.18);
+    bottom: calc(var(--size) * 0.20);
     left: calc(var(--size) * 0.18);
 }
 
 // extra hover effects
-.card:hover ~ .card {
+.card.fan:hover ~ .card {
     --offset: var(--offset-amount);
 }
 
-.cardFan:hover .card:not(.card:hover, .card:hover ~ .card) {
+.fanBase:hover .card.fan:not(.card:hover, .card:hover ~ .card) {
     --offset: calc(var(--offset-amount) * -1);
 }
