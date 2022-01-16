@@ -7,6 +7,7 @@ import style from './meldsPrivate.module.scss'
 import { actionMeld } from './playerActions'
 import cx from 'classnames'
 import { compact } from 'lodash'
+import { FanValues } from './playingCard'
 
 export const Meldsprivate = () => {
     const { state, options, selectedCard, setSelectedCard, myPlayerName, hiddenCards, setHiddenCards, setActionResponse } = useContext(GameContext)
@@ -59,13 +60,19 @@ export const Meldsprivate = () => {
         const meldCards = playerMelds[i]
         const cards = compact(meldCards.cardIDs.map(id => myPlayer.cards.find(c => c.id === id)))
 
+        const fan: FanValues = {
+            curve: 0.1,
+            distance: 10,
+            size: 100
+        }
+        
         return <div className={style.meldRow}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
             <div className={style.buttons}>
                 <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
-            <CardCollection cards={cards} forceOriginalOrder={true} />
+            <CardCollection cards={cards} fan={fan} forceOriginalOrder={true} />
         </div >
     }
 

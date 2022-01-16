@@ -47,7 +47,8 @@
 .fanBase {
     display: flex;
     justify-content: center;
-    align-items: center;
+    margin-top: 10px;
+    height: 100%;
 }
 
 .card {
@@ -75,10 +76,7 @@
     content: '';
     border: 1px dashed #0003;
     position: absolute;
-    top: 0.5em;
-    bottom: 0.5em;
-    left: 0.5em;
-    right: 0.5em;
+    inset: 0.5em;
     border-radius: 5px;
 }
 
@@ -101,9 +99,9 @@
 }
 
 .card.back {
-    $color1: #445;
-    $color2: #99a;
-    $color3: #556;
+    $color1: #9caea9;
+    $color2: #788585;
+    $color3: #38302e;
     background:
         linear-gradient(30deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
         linear-gradient(150deg, $color1 12%, transparent 12.5%, transparent 87%, $color1 87.5%, $color1),
@@ -127,17 +125,18 @@
 
 .card.fan:hover {
     --scale: 1.2;
-    --delta: -20px;
+    --delta: calc(var(--size) * -0.1);
 }
 
 .card.fan.selected,
 .card.fan.selected:hover {
-    --delta: -60px;
+    --delta: calc(var(--size) * -0.3);
 }
 
 .card.follow {
     top: calc(var(--mouse-y) * 1px - var(--size) / 2 * 1.6);
     left: calc(var(--mouse-x) * 1px - var(--size) / 2);
+    z-index: 10;
     transform: none;
 }
 
@@ -149,13 +148,13 @@
     align-items: center;
     height: 0px;
     width: 0px;
-    transition: font-size 200ms ease, top 200ms ease, right 200ms ease, bottom 200ms ease, left 200ms ease;
 }
 
 .card div:nth-child(1) {
+    justify-content: left;
     font-size: calc(var(--size) * 0.2);
     top: calc(var(--size) * 0.18);
-    left: calc(var(--size) * 0.18);
+    left: calc(var(--size) * 0.10);
 }
 
 .card div:nth-child(2) {

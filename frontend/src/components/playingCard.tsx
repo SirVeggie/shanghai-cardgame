@@ -18,7 +18,7 @@ type FaceProps = {
     onClick: () => unknown;
 };
 
-type FanValues = {
+export type FanValues = {
     curve: number,
     distance: number,
     size?: number,
@@ -66,7 +66,7 @@ const CardFace = ({ card, isSelected, fan, onClick }: FaceProps) => {
     const inline = fan ? {
         '--angle-amount': `${fan.curve}deg`,
         '--dist': `${dist}px`,
-        '--offset-amount': fan.offset ? `${fan.offset}deg` : `${fan.curve / 2}deg`,
+        '--offset-amount': fan.offset != undefined ? `${fan.offset}deg` : `${fan.curve / 2}deg`,
         '--size': fan?.size ? `${fan.size}px` : undefined
     } as CSSProperties : undefined
 
