@@ -1,6 +1,6 @@
 //import dotenv from 'dotenv'
 import { getGame, getState, startGame, handleAction } from './game/shanghai'
-import { getDefaultConfiguration, testConfig } from './game/shanghaiGameConfig'
+import { getDefaultConfiguration } from './game/shanghaiGameConfig'
 
 //dotenv.config()
 

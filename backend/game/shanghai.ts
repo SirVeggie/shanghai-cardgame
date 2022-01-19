@@ -253,6 +253,13 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
         }
     }
 
+    if (state.shanghaiFor && player.melded.length) {
+        return {
+            success: false,
+            error: 'You cannot prevent a Shanghai call after melding'
+        }
+    }
+
     giveCard(player, card)
     player.canTakeCard = false
 
@@ -698,6 +705,7 @@ const getStraightJokersFromValidStraight = (cards: Card[]): JokerWithRank[] => {
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i]
 
+        // WHYYYYY
         if (!expectedRank) {
             throw "Melded straight was invalid check 2"
         }
@@ -737,6 +745,9 @@ const getPlayerTargetCardCount = (player: Player) => {
 const endPlayerTurn = (player: Player) => {
     if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false
+        state.discarded = []
+        state.shanghaiFor = null
+        state.message = 'Round ended'
         addPlayerPoints()
         unreadyPlayers()
 
@@ -791,6 +802,8 @@ const initializeRound = () => {
     state.players.forEach(resetPlayer)
 
     state.deck = shuffle(createDeck(options.deckCount, options.jokerCount))
+    state.discarded = []
+    state.shanghaiFor = null
 
     // deal
     for (let p = 0; p < state.players.length; p++) {

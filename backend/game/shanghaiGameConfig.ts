@@ -1,30 +1,11 @@
 import { RoundConfig, ShanghaiOptions } from "../../frontend/src/shared"
 
 export const getDefaultConfiguration = (): ShanghaiOptions => ({
-    players: ["Eetu", "Veikka"],
+    players: ["Eetu", "Veikka", "Niko", "Johannes"],
     deckCount: 2,
     jokerCount: 4,
     shanghaiCount: 3,
     rounds: defaultRounds
-})
-
-export const testConfig = (): ShanghaiOptions => ({
-    players: ["Eetu", "Veikka"],
-    deckCount: 1,
-    jokerCount: 0,
-    shanghaiCount: 3,
-    rounds: [
-        {
-            description: "Two sets",
-            cardCount: 5,
-            melds: [
-                {
-                    type: "straight",
-                    length: 4
-                }
-            ]
-        },
-    ]
 })
 
 const testRounds: RoundConfig[] = [
