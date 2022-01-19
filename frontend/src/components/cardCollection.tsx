@@ -20,10 +20,11 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
         cards = [...unorderedCards]
     }
     cards = dummyCard ? [undefined, ...cards] : cards
-
+    const inline = fan?.size && cards.length ? { marginBottom: fan.size * 1.6 + 10 } : undefined
+    
     return (
         <div style={{ overflow: 'hidden' }}>
-            <div className={cx(style.fanBase, 'cardFan')}>
+            <div className={cx(style.fanBase, 'cardFan')} style={inline}>
                 {cards.map(card => <PlayingCard
                     card={card}
                     overrideOnClick={overrideOnClick}

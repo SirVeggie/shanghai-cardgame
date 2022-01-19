@@ -11,8 +11,8 @@ function App() {
 }
 
 function mousePos(x: number, y: number) {
-  document.documentElement.style.setProperty('--mouse-x', `${x}`)
-  document.documentElement.style.setProperty('--mouse-y', `${y}`)
+  // document.documentElement.style.setProperty('--mouse-x', `${x}`)
+  // document.documentElement.style.setProperty('--mouse-y', `${y}`)
 }
 
 export default App
