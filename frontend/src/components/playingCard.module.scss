@@ -1,46 +1,46 @@
 @import "../shared.scss";
 
-.card:nth-child(1) { --nth-child: 1 }
-.card:nth-child(2) { --nth-child: 2 }
-.card:nth-child(3) { --nth-child: 3 }
-.card:nth-child(4) { --nth-child: 4 }
-.card:nth-child(5) { --nth-child: 5 }
-.card:nth-child(6) { --nth-child: 6 }
-.card:nth-child(7) { --nth-child: 7 }
-.card:nth-child(8) { --nth-child: 8 }
-.card:nth-child(9) { --nth-child: 9 }
-.card:nth-child(10) { --nth-child: 10 }
-.card:nth-child(11) { --nth-child: 11 }
-.card:nth-child(12) { --nth-child: 12 }
-.card:nth-child(13) { --nth-child: 13 }
-.card:nth-child(14) { --nth-child: 14 }
-.card:nth-child(15) { --nth-child: 15 }
-.card:nth-child(16) { --nth-child: 16 }
-.card:nth-child(17) { --nth-child: 17 }
-.card:nth-child(18) { --nth-child: 18 }
-.card:nth-child(19) { --nth-child: 19 }
-.card:nth-child(20) { --nth-child: 20 }
+.card.fan:nth-child(1) { --nth-child: 1 }
+.card.fan:nth-child(2) { --nth-child: 2 }
+.card.fan:nth-child(3) { --nth-child: 3 }
+.card.fan:nth-child(4) { --nth-child: 4 }
+.card.fan:nth-child(5) { --nth-child: 5 }
+.card.fan:nth-child(6) { --nth-child: 6 }
+.card.fan:nth-child(7) { --nth-child: 7 }
+.card.fan:nth-child(8) { --nth-child: 8 }
+.card.fan:nth-child(9) { --nth-child: 9 }
+.card.fan:nth-child(10) { --nth-child: 10 }
+.card.fan:nth-child(11) { --nth-child: 11 }
+.card.fan:nth-child(12) { --nth-child: 12 }
+.card.fan:nth-child(13) { --nth-child: 13 }
+.card.fan:nth-child(14) { --nth-child: 14 }
+.card.fan:nth-child(15) { --nth-child: 15 }
+.card.fan:nth-child(16) { --nth-child: 16 }
+.card.fan:nth-child(17) { --nth-child: 17 }
+.card.fan:nth-child(18) { --nth-child: 18 }
+.card.fan:nth-child(19) { --nth-child: 19 }
+.card.fan:nth-child(20) { --nth-child: 20 }
 
-.card:first-child:nth-last-child(1) { --children: 1 }
-.card:first-child:nth-last-child(2), :first-child:nth-last-child(2) ~ * { --children: 2 }
-.card:first-child:nth-last-child(3), :first-child:nth-last-child(3) ~ * { --children: 3 }
-.card:first-child:nth-last-child(4), :first-child:nth-last-child(4) ~ * { --children: 4 }
-.card:first-child:nth-last-child(5), :first-child:nth-last-child(5) ~ * { --children: 5 }
-.card:first-child:nth-last-child(6), :first-child:nth-last-child(6) ~ * { --children: 6 }
-.card:first-child:nth-last-child(7), :first-child:nth-last-child(7) ~ * { --children: 7 }
-.card:first-child:nth-last-child(8), :first-child:nth-last-child(8) ~ * { --children: 8 }
-.card:first-child:nth-last-child(9), :first-child:nth-last-child(9) ~ * { --children: 9 }
-.card:first-child:nth-last-child(10), :first-child:nth-last-child(10) ~ * { --children: 10 }
-.card:first-child:nth-last-child(11), :first-child:nth-last-child(11) ~ * { --children: 11 }
-.card:first-child:nth-last-child(12), :first-child:nth-last-child(12) ~ * { --children: 12 }
-.card:first-child:nth-last-child(13), :first-child:nth-last-child(13) ~ * { --children: 13 }
-.card:first-child:nth-last-child(14), :first-child:nth-last-child(14) ~ * { --children: 14 }
-.card:first-child:nth-last-child(15), :first-child:nth-last-child(15) ~ * { --children: 15 }
-.card:first-child:nth-last-child(16), :first-child:nth-last-child(16) ~ * { --children: 16 }
-.card:first-child:nth-last-child(17), :first-child:nth-last-child(17) ~ * { --children: 17 }
-.card:first-child:nth-last-child(18), :first-child:nth-last-child(18) ~ * { --children: 18 }
-.card:first-child:nth-last-child(19), :first-child:nth-last-child(19) ~ * { --children: 19 }
-.card:first-child:nth-last-child(20), :first-child:nth-last-child(20) ~ * { --children: 20 }
+.card.fan:first-child:nth-last-child(1) { --children: 1 }
+.card.fan:first-child:nth-last-child(2), :first-child:nth-last-child(2) ~ * { --children: 2 }
+.card.fan:first-child:nth-last-child(3), :first-child:nth-last-child(3) ~ * { --children: 3 }
+.card.fan:first-child:nth-last-child(4), :first-child:nth-last-child(4) ~ * { --children: 4 }
+.card.fan:first-child:nth-last-child(5), :first-child:nth-last-child(5) ~ * { --children: 5 }
+.card.fan:first-child:nth-last-child(6), :first-child:nth-last-child(6) ~ * { --children: 6 }
+.card.fan:first-child:nth-last-child(7), :first-child:nth-last-child(7) ~ * { --children: 7 }
+.card.fan:first-child:nth-last-child(8), :first-child:nth-last-child(8) ~ * { --children: 8 }
+.card.fan:first-child:nth-last-child(9), :first-child:nth-last-child(9) ~ * { --children: 9 }
+.card.fan:first-child:nth-last-child(10), :first-child:nth-last-child(10) ~ * { --children: 10 }
+.card.fan:first-child:nth-last-child(11), :first-child:nth-last-child(11) ~ * { --children: 11 }
+.card.fan:first-child:nth-last-child(12), :first-child:nth-last-child(12) ~ * { --children: 12 }
+.card.fan:first-child:nth-last-child(13), :first-child:nth-last-child(13) ~ * { --children: 13 }
+.card.fan:first-child:nth-last-child(14), :first-child:nth-last-child(14) ~ * { --children: 14 }
+.card.fan:first-child:nth-last-child(15), :first-child:nth-last-child(15) ~ * { --children: 15 }
+.card.fan:first-child:nth-last-child(16), :first-child:nth-last-child(16) ~ * { --children: 16 }
+.card.fan:first-child:nth-last-child(17), :first-child:nth-last-child(17) ~ * { --children: 17 }
+.card.fan:first-child:nth-last-child(18), :first-child:nth-last-child(18) ~ * { --children: 18 }
+.card.fan:first-child:nth-last-child(19), :first-child:nth-last-child(19) ~ * { --children: 19 }
+.card.fan:first-child:nth-last-child(20), :first-child:nth-last-child(20) ~ * { --children: 20 }
 
 //----------------------------------------------------------------------//
 

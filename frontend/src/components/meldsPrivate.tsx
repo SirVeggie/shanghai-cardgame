@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
-import { getPlayerByName, Meld, MeldAction, MeldCards } from '../shared'
+import { getPlayerByName, Meld, MeldCards } from '../shared'
 import { CardCollection } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
