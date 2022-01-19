@@ -21,6 +21,7 @@ const Game = () => {
 
     const [prevTurn, setPrevTurn] = useState(-1)
 
+    console.log({ selectedCard })
     console.log({ gameOptions, gameState })
 
     // debug

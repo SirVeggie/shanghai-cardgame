@@ -829,6 +829,7 @@ const getPlayerCards = (player: Player, cardIDs: number[], removeCards: boolean)
 
     if (removeCards) {
         console.log("removing cards...", { player, cardsToTake })
+        player.actionRelatedCardID = undefined
         player.cards = filter(player.cards, card => !cardsToTake.includes(card))
         console.log(player)
     }
