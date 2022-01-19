@@ -18,8 +18,6 @@ export const PlayerTable = () => {
         return <div>Error</div>
     }
 
-    console.log({ orderByRank })
-
     const orderByRankFunc = (card: Card) => card.rank
 
     const filteredCards = filter(myPlayer.cards, card => !hiddenCards.includes(card.id))
@@ -37,7 +35,7 @@ export const PlayerTable = () => {
             <button onClick={() => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} />
+            <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} allowCardSelect={true} />
         </div>
         <PlayerActions />
     </div>
@@ -46,7 +44,6 @@ export const PlayerTable = () => {
 
 const InfoMessage = ({ success, message, error }: ActionResponse) => {
     const messageText = message ?? (success ? "Succesfully completed action" : undefined)
-    console.log({ message, error })
     return <div className={style.infoMessage}>
         {!!messageText && <span className={style.message}>{messageText}</span>}
         {!!error && <span className={style.error}>{error}</span>}

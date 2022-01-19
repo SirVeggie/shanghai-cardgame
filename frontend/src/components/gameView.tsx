@@ -6,7 +6,6 @@ import { Playerlist } from './playerList'
 import { PlayerTable } from './playerTable'
 
 export const GameView = () => {
-    console.log("Game view")
     return <div>
         <div className={style.mainArea}>
             <div className={style.publicTable}>

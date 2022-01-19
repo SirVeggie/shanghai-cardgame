@@ -23,17 +23,14 @@ export const Meldsprivate = () => {
         return hidden
     }
 
-    const addCard = (index: number) => {
-        if (!selectedCard) {
-            return
-        }
+    const addCard = (index: number, cardID: number) => {
         const meldCards = [...playerMelds]
-        if (meldCards[index].cardIDs.includes(selectedCard)) {
+        if (meldCards[index].cardIDs.includes(cardID)) {
             return
         }
         setSelectedCard(undefined)
-        setHiddenCards(hiddenCards.concat([selectedCard]))
-        meldCards[index].cardIDs.push(selectedCard)
+        setHiddenCards(hiddenCards.concat([cardID]))
+        meldCards[index].cardIDs.push(cardID)
     }
 
     const startAdding = (index: number) => {
@@ -65,7 +62,7 @@ export const Meldsprivate = () => {
             distance: 10,
             size: 100
         }
-        
+
         return <div className={style.meldRow}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
             <div className={style.buttons}>
@@ -81,8 +78,8 @@ export const Meldsprivate = () => {
         setHiddenCards([])
     }
 
-    if (activeMeld !== undefined && selectedCard !== undefined) {
-        addCard(activeMeld)
+    if (activeMeld !== undefined && selectedCard.selectedCardID) {
+        addCard(activeMeld, selectedCard.selectedCardID)
     }
 
     return <div className={style.meldsPrivate}>

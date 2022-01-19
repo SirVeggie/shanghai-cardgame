@@ -29,9 +29,11 @@ export const PlayerActions = () => {
         {
             label: "Discard card",
             onClick: () => {
-                if (selectedCard) {
-                    actionDiscardCard(setActionResponse, myPlayerName, selectedCard)
+                const cardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+                if (!cardID) {
+                    return
                 }
+                actionDiscardCard(setActionResponse, myPlayerName, cardID)
             }
         },
         {
@@ -39,8 +41,6 @@ export const PlayerActions = () => {
             onClick: () => actionSetReady(setActionResponse, myPlayerName)
         }
     ]
-
-    console.log({ buttons })
 
     return <div className={style.buttons}>
         {buttons.map((button, i) =>

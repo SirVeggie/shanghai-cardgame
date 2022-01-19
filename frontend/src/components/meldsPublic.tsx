@@ -25,20 +25,22 @@ export const Meldspublic = () => {
     const round = options.rounds[state.roundNumber]
 
     const replaceJoker = (targetPlayer: string, meldIndex: number) => {
-        if (!selectedCard) {
+        const cardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+        if (!cardID) {
             return
         }
         actionAddToMeld(setActionResponse, myPlayerName, {
             targetPlayer,
             targetMeldIndex: meldIndex,
-            cardToMeldId: selectedCard,
+            cardToMeldId: cardID,
             replaceJoker: true
         })
     }
 
     const meldRow = (owner: string, meld: MeldedMeld, meldIndex: number) => {
         const onClick = (card: Card | undefined) => {
-            if (!selectedCard) {
+            const cardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+            if (!cardID) {
                 return
             }
             const insertBehind = card ? true : false
@@ -46,7 +48,7 @@ export const Meldspublic = () => {
             actionAddToMeld(setActionResponse, myPlayerName, ({
                 targetPlayer: owner,
                 targetMeldIndex: meldIndex,
-                cardToMeldId: selectedCard,
+                cardToMeldId: cardID,
                 insertBehind
             }))
         }

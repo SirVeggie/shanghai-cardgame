@@ -1,11 +1,12 @@
 import style from './playingCard.module.scss'
 import cx from 'classnames'
-import { Card } from "../shared"
+import { Card, getPlayerByName } from "../shared"
 import { CSSProperties, useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
 import ctool from '../tools/CardTools'
 
 type CardProps = {
+    allowSelect: boolean
     card?: Card
     fan?: FanValues
     overrideOnClick?: (card: Card | undefined) => void
@@ -27,8 +28,9 @@ export type FanValues = {
 
 export type CardSize = 'large' | 'normal';
 
-export const PlayingCard = ({ card, fan, overrideOnClick }: CardProps) => {
-    const { selectedCard, setSelectedCard } = useContext(GameContext)
+export const PlayingCard = ({ card, fan, allowSelect, overrideOnClick }: CardProps) => {
+    const { selectedCard, setSelectedCard, state, myPlayerName } = useContext(GameContext)
+    const myPlayer = getPlayerByName(state, myPlayerName)
 
     const backClick = () => {
         if (overrideOnClick) {
@@ -40,15 +42,17 @@ export const PlayingCard = ({ card, fan, overrideOnClick }: CardProps) => {
         return <CardBack onClick={backClick} />
     }
 
-    const isSelected = selectedCard === card.id
+    const selectedCardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+
+    const isSelected = allowSelect && selectedCardID === card.id
+    const isProperSelected = card.id === selectedCard.selectedCardID
 
     const faceClick = () => {
         if (overrideOnClick) {
             overrideOnClick(card)
             return
         }
-        console.log('Select ' + ctool.longName(card))
-        if (isSelected) {
+        if (isProperSelected) {
             setSelectedCard(undefined)
         } else {
             setSelectedCard(card.id)

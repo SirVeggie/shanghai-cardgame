@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { ActionResponse, getCurrentPlayer, getPlayerByName, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
-import { GameContext } from "../context/gameContext"
+import { GameContext, SelectedCard } from "../context/gameContext"
 import { getGameOptions, getGameState } from "../services/gameApi"
 import { GameView } from "./gameView"
 import { NameInput } from "./nameInput"
@@ -8,7 +8,7 @@ import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
 let updateInProgress = false
-const debugMode = false
+const debugMode = true
 
 const Game = () => {
     const [myPlayerName, setMyPlayerName] = useState<string | undefined>()
@@ -18,18 +18,11 @@ const Game = () => {
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
 
-
     const [prevTurn, setPrevTurn] = useState(-1)
 
     console.log({ selectedCard })
-    console.log({ gameOptions, gameState })
-
-    // debug
-    //const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
-    console.log("Player name: " + myPlayerName)
 
     if (gameState && gameOptions) {
-        console.log(getPlayerByName(gameState, myPlayerName!).cards)
         if (prevTurn !== gameState.turn) {
             const game: ShanghaiGame = {
                 state: gameState,
@@ -58,7 +51,6 @@ const Game = () => {
             updateInProgress = true
 
             getGameState().then(state => {
-                console.log("Updated game state")
                 updateInProgress = false
                 setGameState(state)
             })
@@ -89,8 +81,6 @@ const Game = () => {
 
     const myPlayer = getPlayerByName(gameState, myPlayerName)
 
-
-    console.log("render game view")
     return (
         <GameContext.Provider value={{
             myPlayerName,
@@ -98,7 +88,10 @@ const Game = () => {
             state: gameState,
             actionResponse,
             setActionResponse,
-            selectedCard: selectedCard ?? myPlayer.actionRelatedCardID,
+            selectedCard: {
+                selectedCardID: selectedCard,
+                actionHighlightCardID: myPlayer.actionRelatedCardID
+            },
             setSelectedCard,
             hiddenCards,
             setHiddenCards

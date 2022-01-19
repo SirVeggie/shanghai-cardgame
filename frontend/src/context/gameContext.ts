@@ -7,10 +7,15 @@ type GameContextType = {
     state: ShanghaiState
     actionResponse: ActionResponse
     setActionResponse: (a: ActionResponse) => void
-    selectedCard?: number,
+    selectedCard: SelectedCard,
     setSelectedCard: (n: number | undefined) => void
     hiddenCards: number[],
     setHiddenCards: (n: number[]) => void
+}
+
+export type SelectedCard = {
+    selectedCardID?: number,
+    actionHighlightCardID?: number
 }
 
 const defaultGameContext: GameContextType = {
@@ -36,6 +41,7 @@ const defaultGameContext: GameContextType = {
         success: true
     },
     setActionResponse: () => { },
+    selectedCard: {},
     setSelectedCard: () => { },
     hiddenCards: [],
     setHiddenCards: () => { }
