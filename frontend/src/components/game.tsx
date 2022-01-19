@@ -22,6 +22,12 @@ const Game = () => {
 
     console.log({ gameOptions, gameState })
 
+    const actionResponseHandler = (res: ActionResponse) => {
+        if (res.referenceCardID !== undefined) {
+            setSelectedCard(res.referenceCardID)
+        }
+        setActionResponse(res)
+    }
 
     // debug
     //const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
@@ -60,9 +66,9 @@ const Game = () => {
                 updateInProgress = false
                 setGameState(state)
             })
-        }, 200);
-        return () => clearInterval(interval);
-    }, []);
+        }, 200)
+        return () => clearInterval(interval)
+    }, [])
 
     if (!myPlayerName?.length) {
         return <NameInput setName={setMyPlayerName} />
@@ -92,7 +98,7 @@ const Game = () => {
             options: gameOptions,
             state: gameState,
             actionResponse,
-            setActionResponse,
+            setActionResponse: actionResponseHandler,
             selectedCard,
             setSelectedCard,
             hiddenCards,

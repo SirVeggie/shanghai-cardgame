@@ -8,6 +8,7 @@ export type ActionResponse = {
     success: boolean
     error?: string
     message?: string
+    referenceCardID?: number
 }
 
 export type ShanghaiOptions = {
