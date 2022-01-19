@@ -270,7 +270,8 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     message(`${player.name} picked up ${ctool.longName(card)} from the discard pile`)
     return {
         success: true,
-        message: `Picked up ${ctool.longName(card)}`
+        message: `Picked up ${ctool.longName(card)}`,
+        referenceCardID: card.id
     }
 }
 
@@ -290,7 +291,8 @@ const actionTakeDeck = (player: Player): ActionResponse => {
     message(`${player.name} picked up a card from the deck`)
     return {
         success: true,
-        message: `Picked up ${ctool.longName(card)}`
+        message: `Picked up ${ctool.longName(card)}`,
+        referenceCardID: card.id
     }
 }
 
