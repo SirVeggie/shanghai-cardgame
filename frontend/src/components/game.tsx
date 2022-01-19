@@ -23,13 +23,6 @@ const Game = () => {
 
     console.log({ gameOptions, gameState })
 
-    const actionResponseHandler = (res: ActionResponse) => {
-        if (res.referenceCardID !== undefined) {
-            setSelectedCard(res.referenceCardID)
-        }
-        setActionResponse(res)
-    }
-
     // debug
     //const myPlayerName = gameState?.players[gameState.turn % 4]?.name ?? ''
     console.log("Player name: " + myPlayerName)
@@ -93,6 +86,9 @@ const Game = () => {
         </div>
     }
 
+    const myPlayer = getPlayerByName(gameState, myPlayerName)
+
+
     console.log("render game view")
     return (
         <GameContext.Provider value={{
@@ -100,8 +96,8 @@ const Game = () => {
             options: gameOptions,
             state: gameState,
             actionResponse,
-            setActionResponse: actionResponseHandler,
-            selectedCard,
+            setActionResponse,
+            selectedCard: selectedCard ?? myPlayer.actionRelatedCardID,
             setSelectedCard,
             hiddenCards,
             setHiddenCards
