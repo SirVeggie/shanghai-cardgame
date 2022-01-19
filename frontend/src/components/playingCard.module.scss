@@ -71,7 +71,7 @@
     transform: translateY(var(--delta)) scale(var(--scale));
 }
 
-.card::after {
+.card:not(.back)::after {
     content: '';
     border: 1px dashed #0003;
     position: absolute;
