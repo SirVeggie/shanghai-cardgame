@@ -8,7 +8,6 @@ export type ActionResponse = {
     success: boolean
     error?: string
     message?: string
-    referenceCardID?: number
 }
 
 export type ShanghaiOptions = {
@@ -55,6 +54,7 @@ export type Player = {
     melded: MeldedMeld[]
     shanghaiCount: number
     canTakeCard: boolean
+    actionRelatedCardID?: number
 }
 
 export type Card = {

@@ -264,7 +264,6 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     return {
         success: true,
         message: `Picked up ${ctool.longName(card)}`,
-        referenceCardID: card.id
     }
 }
 
@@ -285,7 +284,6 @@ const actionTakeDeck = (player: Player): ActionResponse => {
     return {
         success: true,
         message: `Picked up ${ctool.longName(card)}`,
-        referenceCardID: card.id
     }
 }
 
@@ -758,6 +756,7 @@ const enablePlayerTurn = () => {
     state.players.forEach(p => p.canTakeCard = false)
     const player = getCurrentPlayer(state)
     player.canTakeCard = true
+    player.actionRelatedCardID = undefined
 }
 
 const addPlayerPoints = () => {
@@ -837,6 +836,7 @@ const popDeck = (): Card => {
 const giveCard = (player: Player, card: Card) => {
     player.cards.push(card)
     player.cards = orderBy(player.cards, cardOrderIndex)
+    player.actionRelatedCardID = card.id
 }
 
 const shuffle = (cards: Card[]): Card[] => {
