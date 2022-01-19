@@ -3,6 +3,7 @@ import { Card } from "../shared"
 import { FanValues, PlayingCard } from "./playingCard"
 import { ListIterator, Many, orderBy } from 'lodash'
 import cx from 'classnames'
+import { CSSProperties } from 'react'
 
 type HandProps = {
     cards: Card[]
@@ -20,7 +21,10 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
         cards = [...unorderedCards]
     }
     cards = dummyCard ? [undefined, ...cards] : cards
-    const inline = fan?.size && cards.length ? { marginBottom: fan.size * 1.6 + 10 } : undefined
+    
+    const inline = fan?.size && cards.length ? {
+        marginBottom: fan.size * 1.6 + 10
+    } as CSSProperties : undefined
     
     return (
         <div style={{ overflow: 'hidden' }}>
