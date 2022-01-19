@@ -1,5 +1,5 @@
-import React from "react";
-import { ActionResponse, ShanghaiOptions, ShanghaiState } from "../shared";
+import React from 'react'
+import { ActionResponse, ShanghaiOptions, ShanghaiState } from '../shared'
 
 type GameContextType = {
     myPlayerName: string
