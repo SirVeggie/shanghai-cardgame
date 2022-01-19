@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ActionResponse, getCurrentPlayer, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
+import { ActionResponse, getCurrentPlayer, getPlayerByName, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
 import { GameContext } from "../context/gameContext"
 import { getGameOptions, getGameState } from "../services/gameApi"
 import { GameView } from "./gameView"
@@ -18,6 +18,7 @@ const Game = () => {
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
 
+
     const [prevTurn, setPrevTurn] = useState(-1)
 
     console.log({ gameOptions, gameState })
@@ -34,6 +35,7 @@ const Game = () => {
     console.log("Player name: " + myPlayerName)
 
     if (gameState && gameOptions) {
+        console.log(getPlayerByName(gameState, myPlayerName!).cards)
         if (prevTurn !== gameState.turn) {
             const game: ShanghaiGame = {
                 state: gameState,
