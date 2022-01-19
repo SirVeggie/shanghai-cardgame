@@ -1,4 +1,4 @@
-import { compact, filter, find, findIndex, flatMap, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
+import { compact, filter, find, findIndex, flatMap, floor, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
 import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, getCurrentPlayer, getPlayerByName, CNormalRank, CDeck, cardOrderIndex } from '../../frontend/src/shared'
 import ctool from '../../frontend/src/tools/CardTools'
 import arrayShuffle from 'shuffle-array'
@@ -888,7 +888,7 @@ const createDeck = (deckCount: number, jokerCount: number) => {
     }
 
     for (let i = 0; i < jokerCount; i++) {
-        cards.push(ctool.fromValues(25, i % 4, (i / 4) as CDeck))
+        cards.push(ctool.fromValues(25, i % 4, floor(i / 4) as CDeck))
     }
 
     return cards
