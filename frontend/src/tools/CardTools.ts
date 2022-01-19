@@ -1,19 +1,19 @@
 import { Card, CRank, CSuit, CDeck, CSuitIcon, CColor, CNormalRank } from '../shared'
 
-const rankMask = (2 ** 4 - 1)
-const suitMask = (2 ** 2 - 1) << 4
-const deckMask = (2 ** 3 - 1) << 6
+const rankMask = (2 ** 10 - 1)
+const suitMask = (2 ** 10 - 1) << 10
+const deckMask = (2 ** 10 - 1) << 20
 
 const fromId = (id: number): Card => {
     const rank = (id & rankMask) as CRank
-    const suit = (id & suitMask) >> 4
-    const deck = ((id & deckMask) >> 6) as CDeck
+    const suit = (id & suitMask) >> 10
+    const deck = ((id & deckMask) >> 20) as CDeck
     return fromValues(rank, suit, deck)
 }
 
 const fromValues = (rank: CRank, suit: CSuit, deck: CDeck): Card => {
     return {
-        id: rank + (suit << 4) + (deck << 6),
+        id: rank + (suit << 10) + (deck << 20),
         rank: rank,
         suit: suit,
         deck: deck
