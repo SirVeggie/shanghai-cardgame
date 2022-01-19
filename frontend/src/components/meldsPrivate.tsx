@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
-import { getPlayerByName, Meld, MeldCards } from '../shared'
+import { Card, getPlayerByName, Meld, MeldCards } from '../shared'
 import { CardCollection } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
@@ -63,13 +63,26 @@ export const Meldsprivate = () => {
             size: 100
         }
 
+        const clickCard = (card: Card | undefined) => {
+            if (!card) {
+                return
+            }
+
+            const newMeldCards = [...playerMelds]
+            newMeldCards[i].cardIDs = newMeldCards[i].cardIDs.filter(id => id !== card.id)
+            const newHiddenCards = hiddenCards.filter(id => id !== card.id)
+
+            setPlayerMelds(newMeldCards)
+            setHiddenCards(newHiddenCards)
+        }
+
         return <div className={style.meldRow}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
             <div className={style.buttons}>
                 <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
-            <CardCollection cards={cards} fan={fan} forceOriginalOrder={true} />
+            <CardCollection cards={cards} fan={fan} forceOriginalOrder={true} overrideOnClick={clickCard} />
         </div >
     }
 
