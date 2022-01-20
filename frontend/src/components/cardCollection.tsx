@@ -25,7 +25,7 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
 
     const inline = fan?.size && cards.length ? {
         marginBottom: fan.size * 1.6 + 10,
-        width: fan.size + (cards.length + 1) * fan.distance
+        width: fanWidthCalc(cards.length, fan)
     } as CSSProperties : undefined
 
     return (
@@ -41,3 +41,5 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
         </div>
     )
 }
+
+export const fanWidthCalc = (cards: number, fan: FanValues) => (fan.size ?? 0) + (cards + 1) * fan.distance

@@ -7,27 +7,40 @@
     width: 100%;
     height: 100%;
     background-color: $lightGrey;
-
+    padding-bottom: 5px;
+    
     display: flex;
     flex-direction: column;
-
-    .meldRow {
+    
+    .meldRowGroup {
         display: flex;
-        flex-direction: column;
-
-        .greenHighlight {
-            border-style: solid;
-            border-color: $green;
-        }
-
-        .buttons {
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 5px;
+        
+        .meldRow {
             display: flex;
-            flex-direction: row;
-            justify-content: center;
-            height: 100%;
-
-            > button {
-                padding: $medium;
+            flex-direction: column;
+            
+            .cardsInner {
+                display: flex;
+                justify-content: center;
+            }
+            
+            .greenHighlight {
+                border-style: solid;
+                border-color: $green;
+            }
+            
+            .buttons {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                margin-top: 5px;
+                
+                > button {
+                    padding: $medium;
+                }
             }
         }
     }

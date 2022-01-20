@@ -35,7 +35,7 @@ export const PlayerTable = () => {
             <button onClick={() => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <div className={style.cardInner}>
+            <div className={style.cardsInner}>
                 <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} allowCardSelect={true} />
             </div>
         </div>

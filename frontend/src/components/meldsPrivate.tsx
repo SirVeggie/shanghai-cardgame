@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
 import { Card, getPlayerByName, Meld, MeldCards } from '../shared'
-import { CardCollection } from './cardCollection'
+import { CardCollection, fanWidthCalc } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
 import { actionMeld } from './playerActions'
@@ -76,13 +76,15 @@ export const Meldsprivate = () => {
             setHiddenCards(newHiddenCards)
         }
 
-        return <div className={style.meldRow}>
+        return <div className={style.meldRow} style={{ minWidth: fanWidthCalc(4, fan) }}>
             {meldInfo({ meld, meldIndex: i, noDiv: true })}
             <div className={style.buttons}>
                 <button className={cx(activeMeld === i && style.greenHighlight)} onClick={() => startAdding(i)}>Add cards</button>
                 <button onClick={() => clear(i)}>Clear</button>
             </div>
-            <CardCollection cards={cards} fan={fan} forceOriginalOrder={true} overrideOnClick={clickCard} />
+            <div className={style.cardsInner}>
+                <CardCollection cards={cards} fan={fan} forceOriginalOrder={true} overrideOnClick={clickCard} />
+            </div>
         </div >
     }
 
@@ -98,7 +100,9 @@ export const Meldsprivate = () => {
     return <div className={style.meldsPrivate}>
         <button onClick={onClickMeld}>Meld</button>
         <button onClick={clearAll}>Clear</button>
-        {requiredMelds.map((meld, i) => meldRow(meld, i))}
+        <div className={style.meldRowGroup}>
+            {requiredMelds.map((meld, i) => meldRow(meld, i))}
+        </div>
     </div>
 }
 
