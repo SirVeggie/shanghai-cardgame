@@ -15,10 +15,6 @@ export const PlayerActions = () => {
 
     const buttons: ButtonConfig[] = [
         {
-            label: "Call Shanghai!",
-            onClick: () => actionCallShanghai(setActionResponse, myPlayerName)
-        },
-        {
             label: "Reveal card from deck",
             onClick: () => actionRevealDeck(setActionResponse, myPlayerName)
         },
