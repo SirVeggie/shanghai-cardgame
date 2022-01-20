@@ -1,21 +1,11 @@
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card, MeldCards, MeldedMeld, Player } from '../shared'
+import { Card, MeldedMeld, Player } from '../shared'
 import { CardCollection } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPublic.module.scss'
 import { actionAddToMeld } from './playerActions'
-
-type PlayerTableMeld = {
-    player: string
-    meld: MeldedMeld[]
-}
-
-type TargetMeld = {
-    player: string
-    meld: MeldedMeld
-    meldIndex: number
-}
+import { FanValues } from './playingCard'
 
 export const Meldspublic = () => {
     const { state, options, setActionResponse, myPlayerName, selectedCard, hiddenCards, setHiddenCards } = useContext(GameContext)
@@ -51,6 +41,12 @@ export const Meldspublic = () => {
                 cardToMeldId: cardID,
                 insertBehind
             }))
+        }
+        
+        const fan: FanValues = {
+            curve: 0.1,
+            distance: 10,
+            size: 100
         }
 
         return <div className={style.meldRow}>
