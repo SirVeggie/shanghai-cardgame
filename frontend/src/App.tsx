@@ -4,15 +4,17 @@ import './App.css'
 
 function App() {
   return (
-    <div className="App" onMouseMove={event => mousePos(event.clientX, event.clientY)}>
+    <div className="App" onMouseMove={mousePos}>
       <Game />
     </div>
   )
 }
 
-function mousePos(x: number, y: number) {
-  // document.documentElement.style.setProperty('--mouse-x', `${x}`)
-  // document.documentElement.style.setProperty('--mouse-y', `${y}`)
+// function mousePos(x: number, y: number) {
+function mousePos(event: any) {
+  return
+  document.documentElement.style.setProperty('--mouse-x', `${event.clientX}`)
+  document.documentElement.style.setProperty('--mouse-y', `${event.clientY}`)
 }
 
 export default App

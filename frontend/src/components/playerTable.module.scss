@@ -11,6 +11,11 @@
     flex-direction: column;
 }
 
+.cardInner {
+    display: flex;
+    justify-content: center;
+}
+
 .infoMessage {
     display: flex;
     flex-direction: column;

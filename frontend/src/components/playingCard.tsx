@@ -1,7 +1,7 @@
 import style from './playingCard.module.scss'
 import cx from 'classnames'
-import { Card, getPlayerByName } from "../shared"
-import { CSSProperties, useContext, useState } from 'react'
+import { Card } from "../shared"
+import { CSSProperties, useContext } from 'react'
 import { GameContext } from '../context/gameContext'
 import ctool from '../tools/CardTools'
 
@@ -31,8 +31,7 @@ export type FanValues = {
 export type CardSize = 'large' | 'normal';
 
 export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: CardProps) => {
-    const { selectedCard, setSelectedCard, state, myPlayerName } = useContext(GameContext)
-    const myPlayer = getPlayerByName(state, myPlayerName)
+    const { selectedCard, setSelectedCard } = useContext(GameContext)
 
     const backClick = () => {
         if (overrideOnClick) {
@@ -41,7 +40,7 @@ export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: C
     }
 
     if (!card) {
-        return <CardBack onClick={backClick} noMouse={noMouse} />
+        return <CardBack fan={fan} onClick={backClick} noMouse={noMouse} />
     }
 
     const selectedCardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
@@ -64,22 +63,16 @@ export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: C
     return <CardFace card={card} isSelected={isSelected} noMouse={noMouse} fan={fan} onClick={faceClick} />
 }
 
-const CardBack = ({ onClick, noMouse }: { onClick: () => unknown, noMouse?: boolean }) => {
-    return <div className={cx(style.card, style.back, noMouse && style.noMouse)} onClick={onClick} />
+const CardBack = ({ fan, onClick, noMouse }: { fan?: FanValues, onClick: () => unknown, noMouse?: boolean }) => {
+    const inline = getCardInline(fan)
+    return <div className={cx(style.card, style.back, fan && style.fan, noMouse && style.noMouse)} onClick={onClick} style={inline} />
 }
 
 const CardFace = ({ card, isSelected, noMouse, fan, onClick }: FaceProps) => {
     // const [follow, setFollow] = useState(false)
     const follow = false
-
     const isRed = ctool.color(card) === 'red'
-    const dist = fan ? fan.distance / Math.sin(fan.curve * (Math.PI / 180)) * 2 : undefined
-    const inline = fan ? {
-        '--angle-amount': `${fan.curve}deg`,
-        '--dist': `${dist}px`,
-        '--offset-amount': fan.offset != undefined ? `${fan.offset}deg` : `${fan.curve / 2}deg`,
-        '--size': fan?.size ? `${fan.size}px` : undefined
-    } as CSSProperties : undefined
+    const inline = getCardInline(fan)
 
     return (
         <div className={cx(style.card, fan && style.fan, isRed && style.red, isSelected && style.selected, follow && style.follow, noMouse && style.noMouse)}
@@ -94,4 +87,14 @@ const CardFace = ({ card, isSelected, noMouse, fan, onClick }: FaceProps) => {
             <div>{ctool.suitIcon(card)}</div>
         </div >
     )
+}
+
+
+const getCardInline = (fan: FanValues | undefined) => {
+    return fan ? {
+        '--angle-amount': `${fan.curve}deg`,
+        '--dist': `${(fan.distance / 2) / (Math.sin(fan.curve * (Math.PI / 180)) / 2)}px`,
+        '--offset-amount': fan.offset != undefined ? `${fan.offset}deg` : `${fan.curve / 2}deg`,
+        '--size': fan?.size ? `${fan.size}px` : undefined
+    } as CSSProperties : undefined
 }

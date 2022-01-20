@@ -24,7 +24,8 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
     cards = dummyCard ? [undefined, ...cards] : cards
 
     const inline = fan?.size && cards.length ? {
-        marginBottom: fan.size * 1.6 + 10
+        marginBottom: fan.size * 1.6 + 10,
+        width: fan.size + (cards.length + 1) * fan.distance
     } as CSSProperties : undefined
 
     return (

@@ -59,7 +59,7 @@ export const Meldsprivate = () => {
 
         const fan: FanValues = {
             curve: 0.1,
-            distance: 10,
+            distance: 25,
             size: 100
         }
 

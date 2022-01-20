@@ -12,15 +12,23 @@
     border-color: $outlineColor;
 }
 
+.meldRowGroup {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    // background-color: red;
+}
+
 .meldRow {
+    position: relative;
     display: flex;
     flex-direction: column;
-
+    margin-bottom: 10px;
+    
     .buttons {
         display: flex;
         justify-content: center;
         flex-direction: row;
-        height: 100%;
 
         > button {
             padding: $medium;

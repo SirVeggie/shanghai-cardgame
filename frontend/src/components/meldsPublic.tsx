@@ -45,31 +45,33 @@ export const Meldspublic = () => {
         
         const fan: FanValues = {
             curve: 0.1,
-            distance: 10,
+            distance: 25,
             size: 100
         }
         
         const currentMeld = options.rounds[state.roundNumber].melds[meldIndex]
         const showJokerButton = currentMeld.type === 'straight' && meld.cards.some(x => x.rank === 25)
 
-        return <div className={style.meldRow} style={{ position: 'relative' }}>
+        return <div className={style.meldRow}>
             {meldInfo({ meld: round.melds[meldIndex], meldIndex, noDiv: true })}
-            <div className={style.buttons}>
-                { showJokerButton ? <button onClick={() => replaceJoker(owner, meldIndex)}>Replace joker</button> : undefined }
-            </div>
             <CardCollection cards={meld.cards} fan={fan} overrideOnClick={onClick} dummyCard={true} />
+            <div className={style.buttons}>
+                { showJokerButton ? <button onClick={() => replaceJoker(owner, meldIndex)} style={{ marginTop: 5 }} >Replace joker</button> : undefined }
+            </div>
         </div >
     }
 
-    const playerRow = (player: Player, index: number) => {
+    const playerRow = (player: Player) => {
         return <div className={style.playerRow}>
-            <span>{player.name}</span>
-            {player.melded.map((m, i) => meldRow(player.name, m, i))}
+            <div>{player.name}</div>
+            <div className={style.meldRowGroup}>
+                {player.melded.map((m, i) => meldRow(player.name, m, i))}
+            </div>
         </div>
     }
 
     return <div className={style.meldsPublic}>
-        {state.players.map((pm, i) => playerRow(pm, i))}
+        {state.players.map(pm => playerRow(pm))}
     </div>
 }
 

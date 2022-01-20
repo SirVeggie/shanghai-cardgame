@@ -24,7 +24,7 @@ export const PlayerTable = () => {
     
     const fan: FanValues = {
         curve: 2,
-        distance: 25,
+        distance: 50,
         offset: 2,
         size: 150
     }
@@ -35,7 +35,9 @@ export const PlayerTable = () => {
             <button onClick={() => setOrderByRank(prev => !prev)}>
                 Toggle order
             </button>
-            <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} allowCardSelect={true} />
+            <div className={style.cardInner}>
+                <CardCollection cards={filteredCards} fan={fan} order={orderByRank ? orderByRankFunc : undefined} allowCardSelect={true} />
+            </div>
         </div>
         <PlayerActions />
     </div>
