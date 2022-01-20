@@ -109,8 +109,10 @@
         linear-gradient(60deg, $color2 25%, transparent 25.5%, transparent 75%, $color2 75%, $color2),
         linear-gradient(60deg, $color2 25%, transparent 25.5%, transparent 75%, $color2 75%, $color2),
         $color3;
-    background-size: 40px 70px;
-    background-position: 0 0, 0 0, 20px 35px, 20px 35px, 0 0, 20px 35px;
+    --size1: calc(20 * var(--size) * 0.008);
+    --size2: calc(35 * var(--size) * 0.008);
+    background-size: calc(var(--size1) * 2) calc(var(--size2) * 2);
+    background-position: 0 0, 0 0, var(--size1) var(--size2), var(--size1) var(--size2), 0 0, var(--size1) var(--size2);
 }
 
 .card.red div {
