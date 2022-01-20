@@ -41,7 +41,7 @@ export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: C
     }
 
     if (!card) {
-        return <CardBack onClick={backClick} />
+        return <CardBack onClick={backClick} noMouse={noMouse} />
     }
 
     const selectedCardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
@@ -64,8 +64,8 @@ export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: C
     return <CardFace card={card} isSelected={isSelected} noMouse={noMouse} fan={fan} onClick={faceClick} />
 }
 
-const CardBack = ({ onClick }: { onClick: () => unknown; }) => {
-    return <div className={cx(style.card, style.back)} onClick={onClick} />
+const CardBack = ({ onClick, noMouse }: { onClick: () => unknown, noMouse?: boolean }) => {
+    return <div className={cx(style.card, style.back, noMouse && style.noMouse)} onClick={onClick} />
 }
 
 const CardFace = ({ card, isSelected, noMouse, fan, onClick }: FaceProps) => {
