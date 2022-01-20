@@ -13,5 +13,12 @@
     .cardContainer {
         cursor: pointer;
         margin: $large;
+        position: relative;
+    }
+    
+    .hidden {
+        position: absolute;
+        top: 0;
+        left: 0;
     }
 }

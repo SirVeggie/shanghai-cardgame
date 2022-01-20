@@ -6,9 +6,10 @@ import { GameContext } from '../context/gameContext'
 import ctool from '../tools/CardTools'
 
 type CardProps = {
-    allowSelect: boolean
     card?: Card
     fan?: FanValues
+    noSelect?: boolean
+    noMouse?: boolean
     overrideOnClick?: (card: Card | undefined) => void
 };
 
@@ -16,6 +17,7 @@ type FaceProps = {
     card: Card
     isSelected: boolean
     fan?: FanValues
+    noMouse?: boolean
     onClick: () => unknown
 };
 
@@ -28,7 +30,7 @@ export type FanValues = {
 
 export type CardSize = 'large' | 'normal';
 
-export const PlayingCard = ({ card, fan, allowSelect, overrideOnClick }: CardProps) => {
+export const PlayingCard = ({ card, fan, noSelect, noMouse, overrideOnClick }: CardProps) => {
     const { selectedCard, setSelectedCard, state, myPlayerName } = useContext(GameContext)
     const myPlayer = getPlayerByName(state, myPlayerName)
 
@@ -44,7 +46,7 @@ export const PlayingCard = ({ card, fan, allowSelect, overrideOnClick }: CardPro
 
     const selectedCardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
 
-    const isSelected = allowSelect && selectedCardID === card.id
+    const isSelected = !noSelect && selectedCardID === card.id
     const isProperSelected = card.id === selectedCard.selectedCardID
 
     const faceClick = () => {
@@ -59,14 +61,14 @@ export const PlayingCard = ({ card, fan, allowSelect, overrideOnClick }: CardPro
         }
     }
 
-    return <CardFace card={card} isSelected={isSelected} fan={fan} onClick={faceClick} />
+    return <CardFace card={card} isSelected={isSelected} noMouse={noMouse} fan={fan} onClick={faceClick} />
 }
 
 const CardBack = ({ onClick }: { onClick: () => unknown; }) => {
     return <div className={cx(style.card, style.back)} onClick={onClick} />
 }
 
-const CardFace = ({ card, isSelected, fan, onClick }: FaceProps) => {
+const CardFace = ({ card, isSelected, noMouse, fan, onClick }: FaceProps) => {
     // const [follow, setFollow] = useState(false)
     const follow = false
 
@@ -80,11 +82,12 @@ const CardFace = ({ card, isSelected, fan, onClick }: FaceProps) => {
     } as CSSProperties : undefined
 
     return (
-        <div className={cx(style.card, fan && style.fan, isRed && style.red, isSelected && style.selected, follow && style.follow)}
+        <div className={cx(style.card, fan && style.fan, isRed && style.red, isSelected && style.selected, follow && style.follow, noMouse && style.noMouse)}
             style={inline}
             // onMouseDown={() => setFollow(true)}
             // onMouseUp={() => setFollow(false)}
             onClick={onClick}>
+            <div>{ctool.rankPrefix(card)}</div>
             <div>{ctool.rankPrefix(card)}</div>
             <div>{ctool.suitIcon(card)}</div>
             <div>{ctool.suitIcon(card)}</div>

@@ -34,7 +34,7 @@ export const CardCollection = ({ cards: unorderedCards, order, forceOriginalOrde
                     card={card}
                     overrideOnClick={overrideOnClick}
                     fan={fan}
-                    allowSelect={!!allowCardSelect}
+                    noSelect={!allowCardSelect}
                     key={`card-${card?.id ?? 'dummy'}`} />)}
             </div>
         </div>

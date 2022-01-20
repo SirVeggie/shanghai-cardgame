@@ -119,6 +119,7 @@
 
 .card:hover {
     --scale: 1.05;
+    --delta: calc(var(--size) * -0.35);
     border: 1px solid #fffd;
 }
 
@@ -139,6 +140,10 @@
     transform: none;
 }
 
+.card.noMouse {
+    pointer-events: none;
+}
+
 // card styling
 .card div {
     position: absolute;
@@ -157,18 +162,25 @@
 }
 
 .card div:nth-child(2) {
+    justify-content: right;
+    font-size: calc(var(--size) * 0.2);
+    bottom: calc(var(--size) * 0.21);
+    right: calc(var(--size) * 0.10);
+}
+
+.card div:nth-child(3) {
     font-size: var(--size);
     top: 48%;
     left: 50%;
 }
 
-.card div:nth-child(3) {
+.card div:nth-child(4) {
     font-size: calc(var(--size) * 0.25);
     top: calc(var(--size) * 0.17);
     right: calc(var(--size) * 0.18);
 }
 
-.card div:nth-child(4) {
+.card div:nth-child(5) {
     font-size: calc(var(--size) * 0.25);
     bottom: calc(var(--size) * 0.20);
     left: calc(var(--size) * 0.18);
