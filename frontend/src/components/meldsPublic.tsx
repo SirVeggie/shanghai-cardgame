@@ -48,13 +48,16 @@ export const Meldspublic = () => {
             distance: 10,
             size: 100
         }
+        
+        const currentMeld = options.rounds[state.roundNumber].melds[meldIndex]
+        const showJokerButton = currentMeld.type === 'straight' && meld.cards.some(x => x.rank === 25)
 
-        return <div className={style.meldRow}>
+        return <div className={style.meldRow} style={{ position: 'relative' }}>
             {meldInfo({ meld: round.melds[meldIndex], meldIndex, noDiv: true })}
             <div className={style.buttons}>
-                <button onClick={() => replaceJoker(owner, meldIndex)}>Replace joker</button>
+                { showJokerButton ? <button onClick={() => replaceJoker(owner, meldIndex)}>Replace joker</button> : undefined }
             </div>
-            <CardCollection cards={meld.cards} overrideOnClick={onClick} dummyCard={true} />
+            <CardCollection cards={meld.cards} fan={fan} overrideOnClick={onClick} dummyCard={true} />
         </div >
     }
 

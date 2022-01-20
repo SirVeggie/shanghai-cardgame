@@ -14,11 +14,12 @@
 
 .meldRow {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 
     .buttons {
         display: flex;
-        flex-direction: column;
+        justify-content: center;
+        flex-direction: row;
         height: 100%;
 
         > button {
