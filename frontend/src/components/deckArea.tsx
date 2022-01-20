@@ -1,8 +1,9 @@
+import { stat } from 'fs'
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
 import { Card, getCurrentPlayer } from '../shared'
 import style from './deckArea.module.scss'
-import { actionCallShanghai, actionTakeDeck, actionTakeDiscard } from './playerActions'
+import { actionCallShanghai, actionRevealDeck, actionTakeDeck, actionTakeDiscard } from './playerActions'
 import { PlayingCard } from './playingCard'
 
 export const Deckarea = () => {
@@ -22,7 +23,11 @@ export const Deckarea = () => {
     }
 
     const clickDeck = () => {
-        actionTakeDeck(setActionResponse, myPlayerName)
+        if (state.discarded.length === 0) {
+            actionRevealDeck(setActionResponse, myPlayerName)
+        } else {
+            actionTakeDeck(setActionResponse, myPlayerName)
+        }
     }
 
     const discardCard = state.discarded.length ? state.discarded[state.discarded.length - 1] : undefined

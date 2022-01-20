@@ -282,6 +282,12 @@ const actionTakeDeck = (player: Player): ActionResponse => {
             error: 'You can only take 1 card per turn'
         }
     }
+    if (state.discarded.length === 0) {
+        return {
+            success: false,
+            error: 'You must reveal the first card from the deck if the disacard pile is empty'
+        }
+    }
 
     const card = popDeck()
     giveCard(player, card)
