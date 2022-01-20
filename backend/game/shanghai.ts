@@ -2,6 +2,7 @@ import { compact, filter, find, findIndex, flatMap, floor, map, minBy, orderBy, 
 import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, getCurrentPlayer, getPlayerByName, CNormalRank, CDeck, cardOrderIndex } from '../../frontend/src/shared'
 import ctool from '../../frontend/src/tools/CardTools'
 import arrayShuffle from 'shuffle-array'
+import CardTools from '../../frontend/src/tools/CardTools'
 
 // NOTE ACE IS NOT 1
 
@@ -481,36 +482,59 @@ const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): Act
     }
 
     const targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards
-    const jokers = getStraightJokersFromValidStraight(targetMeldCards)
+    const jokerIndexes = filter(targetMeldCards, c => c.rank === 25).map((card, index) => index)
 
-    const matchingJoker = jokers.find(joker => joker.rank === cardToMeld.rank)
-
-    if (!matchingJoker) {
+    if (!jokerIndexes.length) {
         return {
             success: false,
-            error: 'You cannot replace any jokers with this card'
+            error: 'There are not any jokers to replace'
         }
     }
 
+    const roundMeld = options.rounds[state.roundNumber].melds[meld.targetMeldIndex]
 
-    const newCards = [...targetMeldCards]
+    for (const jokerIndex of jokerIndexes) {
+        const jokerReplace = tryReplaceJoker(cardToMeld, targetMeldCards, roundMeld, jokerIndex)
 
-    // Remove card to meld
-    getPlayerCards(player, [cardToMeld.id], true)
+        if (jokerReplace) {
+            // Remove card to meld
+            getPlayerCards(player, [cardToMeld.id], true)
 
-    // replace joker
-    newCards[matchingJoker.index] = cardToMeld
+            // Replace joker
+            targetPlayer.melded[meld.targetMeldIndex] = { cards: jokerReplace.newMeldCards }
 
-    // save new meld
-    targetPlayer.melded[meld.targetMeldIndex] = { cards: newCards }
+            // Give new joker
+            giveCard(player, { ...jokerReplace.jokerCard, mustBeMelded: true })
 
-    // Give new joker
-    giveCard(player, { ...matchingJoker.joker, mustBeMelded: true })
+            message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${ctool.longName(cardToMeld)}`)
+            return {
+                success: true,
+                message: 'Succesfully replaced Joker'
+            }
+        }
+    }
 
-    message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${ctool.longName(cardToMeld)}`)
     return {
-        success: true,
-        message: 'Succesfully replaced Joker'
+        success: false,
+        error: `The card ${CardTools.longName(cardToMeld)} cannot replace any Jokers`
+    }
+}
+
+type JokerReplaceResult = {
+    newMeldCards: Card[],
+    jokerCard: Card
+}
+
+const tryReplaceJoker = (cardToMeld: Card, targetMeldCards: Card[], meld: Meld, joker: number): JokerReplaceResult | undefined => {
+    const newMeldCards = [...targetMeldCards]
+    const jokerCard = newMeldCards[joker]
+    newMeldCards[joker] = cardToMeld
+
+    if (checkStraightValidity(newMeldCards, meld.length)) {
+        return {
+            newMeldCards,
+            jokerCard
+        }
     }
 }
 
