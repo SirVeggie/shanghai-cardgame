@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card, getPlayerByName, Meld, MeldCards } from '../shared'
+import { Card, Meld, MeldCards } from '../shared'
 import { CardCollection, fanWidthCalc } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
@@ -10,9 +10,9 @@ import { compact } from 'lodash'
 import { FanValues } from './playingCard'
 
 export const Meldsprivate = () => {
-    const { state, options, selectedCard, setSelectedCard, myPlayerName, hiddenCards, setHiddenCards, setActionResponse } = useContext(GameContext)
+    const { game: { id: gameId, state, options }, selectedCard, setSelectedCard, myPlayerId, getPlayer, hiddenCards, setHiddenCards, setActionResponse } = useContext(GameContext)
     const requiredMelds = options.rounds[state.roundNumber].melds
-    const myPlayer = getPlayerByName(state, myPlayerName)
+    const myPlayer = getPlayer(myPlayerId)
 
     const [playerMelds, setPlayerMelds] = useState<MeldCards[]>(defaultMelds(requiredMelds.length))
     const [activeMeld, setActiveMeld] = useState<number>()
@@ -50,7 +50,7 @@ export const Meldsprivate = () => {
         setPlayerMelds(newMelds)
     }
     const onClickMeld = () => {
-        actionMeld(setActionResponse, myPlayerName, { melds: playerMelds })
+        actionMeld(setActionResponse, gameId, myPlayerId, { melds: playerMelds })
     }
 
     const meldRow = (meld: Meld, i: number) => {

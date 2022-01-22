@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleAction = exports.startGame = exports.getState = exports.getGame = void 0;
+exports.usingGameContext = void 0;
 const lodash_1 = require("lodash");
 const shared_1 = require("../../frontend/src/shared");
 const CardTools_1 = __importDefault(require("../../frontend/src/tools/CardTools"));
@@ -12,28 +12,27 @@ const CardTools_2 = __importDefault(require("../../frontend/src/tools/CardTools"
 // NOTE ACE IS NOT 1
 let options;
 let state;
-const getGame = () => options;
-exports.getGame = getGame;
-const getState = () => state;
-exports.getState = getState;
-const startGame = (game) => {
-    options = game.options;
-    state = game.state ? game.state : initialState(options.players);
+const usingGameContext = (pOptions, pState, callback) => {
+    options = pOptions;
+    state = pState;
+    callback(handleAction, () => state);
+    // Dirty trick but fast
+    options = undefined;
+    state = undefined;
 };
-exports.startGame = startGame;
+exports.usingGameContext = usingGameContext;
 //#region game logic
 const handleAction = (action) => {
     console.log('Action');
     console.log(JSON.stringify(action, null, 2));
-    if (!(0, lodash_1.some)(options.players, n => n === action.playerName)) {
+    if (action.playerId >= options.players.length) {
         return {
             success: false,
-            error: `Player ${action.playerName} is not in the game`
+            error: `Player does not exist`
         };
     }
     if (action.setReady) {
-        const player = (0, shared_1.getPlayerByName)(state, action.playerName);
-        player.isReady = true;
+        getPlayer(action.playerId).isReady = true;
         checkGameContinue();
         return {
             success: true
@@ -45,16 +44,15 @@ const handleAction = (action) => {
             error: "Round hasn't started"
         };
     }
-    const isPlayersTurn = action.playerName === (0, shared_1.getCurrentPlayer)(state).name;
+    const isPlayersTurn = action.playerId === getCurrentPlayer();
     if (!isPlayersTurn) {
         return foreignPlayerAction(action);
     }
     return currentPlayerAction(action);
 };
-exports.handleAction = handleAction;
 const foreignPlayerAction = (action) => {
     if (action.shanghai) {
-        return actionCallShanghai(action.playerName);
+        return actionCallShanghai(action.playerId);
     }
     return {
         success: false,
@@ -62,7 +60,7 @@ const foreignPlayerAction = (action) => {
     };
 };
 const currentPlayerAction = (action) => {
-    if (state.shanghaiFor) {
+    if (state.shanghaiForId !== undefined) {
         return currentPlayerShanghaiAction(action);
     }
     else if (action.allowShanghai) {
@@ -77,7 +75,7 @@ const currentPlayerAction = (action) => {
             error: "You cannot call Shanghai on your turn"
         };
     }
-    const player = (0, shared_1.getCurrentPlayer)(state);
+    const player = getGamePlayer(getCurrentPlayer());
     if (action.revealDeck) {
         return actionRevealDeck(player);
     }
@@ -110,7 +108,7 @@ const currentPlayerShanghaiAction = (action) => {
         return actionAllowShanghaiCall();
     }
     if (action.takeDiscard) {
-        return actionTakeDiscard((0, shared_1.getCurrentPlayer)(state));
+        return actionTakeDiscard(getGamePlayer(getCurrentPlayer()));
     }
     return {
         success: false,
@@ -118,8 +116,8 @@ const currentPlayerShanghaiAction = (action) => {
     };
 };
 //#region  individual actions
-const actionCallShanghai = (playerName) => {
-    const player = (0, shared_1.getPlayerByName)(state, playerName);
+const actionCallShanghai = (playerId) => {
+    const player = getGamePlayer(playerId);
     if (!state.shanghaiIsAllowed) {
         return {
             success: false,
@@ -144,26 +142,26 @@ const actionCallShanghai = (playerName) => {
             error: "You have already called Shanghai maximum amount of times"
         };
     }
-    if (player.name === state.discardTopOwner) {
+    if (player.id === state.discardTopOwnerId) {
         return {
             success: false,
             error: 'You cannot call Shanghai on your own discard card'
         };
     }
-    if (!state.shanghaiFor) {
-        state.shanghaiFor = player.name;
-        message(`${player.name} called Shanghai!`);
+    if (state.shanghaiForId === undefined) {
+        state.shanghaiForId = player.id;
+        message(`${getPlayerName(playerId)} called Shanghai!`);
         return {
             success: true,
         };
     }
     return {
         success: false,
-        error: `Shanghai was already called by ${state.shanghaiFor}`
+        error: `Shanghai was already called by ${getPlayerName(state.shanghaiForId)}`
     };
 };
 const actionAllowShanghaiCall = () => {
-    if (!state.shanghaiFor) {
+    if (state.shanghaiForId === undefined) {
         return {
             success: false,
             error: "No one has called Shanghai"
@@ -177,15 +175,15 @@ const actionAllowShanghaiCall = () => {
         };
     }
     const penalty = popDeck();
-    const current = (0, shared_1.getCurrentPlayer)(state);
-    const player = (0, shared_1.getPlayerByName)(state, state.shanghaiFor);
+    const current = getGamePlayer(getCurrentPlayer());
+    const player = getGamePlayer(state.shanghaiForId);
     giveCard(player, discard);
     giveCard(player, penalty);
     state.shanghaiIsAllowed = false;
-    state.discardTopOwner = undefined;
-    state.shanghaiFor = null;
+    state.discardTopOwnerId = undefined;
+    state.shanghaiForId = undefined;
     player.shanghaiCount++;
-    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${CardTools_1.default.longName(discard)}`);
+    message(`${getPlayerName(current.id)} allowed the Shanghai call for ${getPlayerName(player.id)} with card: ${CardTools_1.default.longName(discard)}`);
     return {
         success: true,
         message: `Succesfully allowed Shanghai for ${CardTools_1.default.longName(discard)}`
@@ -207,8 +205,8 @@ const actionRevealDeck = (player) => {
     const card = popDeck();
     state.discarded.push(card);
     state.shanghaiIsAllowed = true;
-    state.discardTopOwner = undefined;
-    message(`${player.name} revealed ${CardTools_1.default.longName(card)}`);
+    state.discardTopOwnerId = undefined;
+    message(`${getPlayerName(player.id)} revealed ${CardTools_1.default.longName(card)}`);
     return {
         success: true,
         message: `Revealed ${CardTools_1.default.longName(card)}`
@@ -228,7 +226,7 @@ const actionTakeDiscard = (player) => {
             error: "Can't take card from empty discard pile"
         };
     }
-    if (state.shanghaiFor && player.melded.length) {
+    if (state.shanghaiForId !== undefined && player.melded.length) {
         return {
             success: false,
             error: 'You cannot prevent a Shanghai call after melding'
@@ -237,9 +235,9 @@ const actionTakeDiscard = (player) => {
     giveCard(player, card);
     player.canTakeCard = false;
     state.shanghaiIsAllowed = false;
-    state.shanghaiFor = null;
-    state.discardTopOwner = undefined;
-    message(`${player.name} picked up ${CardTools_1.default.longName(card)} from the discard pile`);
+    state.shanghaiForId = undefined;
+    state.discardTopOwnerId = undefined;
+    message(`${getPlayerName(player.id)} picked up ${CardTools_1.default.longName(card)} from the discard pile`);
     return {
         success: true,
         message: `Picked up ${CardTools_1.default.longName(card)}`,
@@ -262,7 +260,7 @@ const actionTakeDeck = (player) => {
     giveCard(player, card);
     player.canTakeCard = false;
     state.shanghaiIsAllowed = false;
-    message(`${player.name} picked up a card from the deck`);
+    message(`${getPlayerName(player.id)} picked up a card from the deck`);
     return {
         success: true,
         message: `Picked up ${CardTools_1.default.longName(card)}`,
@@ -290,7 +288,7 @@ const actionMeld = (player, meld) => {
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
-    message(`${player.name} melded cards`);
+    message(`${getPlayerName(player.id)} melded cards`);
     return {
         success: true,
         message: "Succesfully melded cards"
@@ -318,10 +316,10 @@ const actionDiscard = (player, toDiscardId) => {
     }
     player.cards = player.cards.filter(c => c.id !== toDiscardId);
     state.discarded.push(cardToDiscard);
-    state.discardTopOwner = player.name;
+    state.discardTopOwnerId = player.id;
     endPlayerTurn(player);
     state.shanghaiIsAllowed = true;
-    message(`${player.name} discarded ${CardTools_1.default.longName(cardToDiscard)}`);
+    message(`${getPlayerName(player.id)} discarded ${CardTools_1.default.longName(cardToDiscard)}`);
     return {
         success: true,
         message: `Discarded ${CardTools_1.default.longName(cardToDiscard)}`
@@ -341,11 +339,11 @@ const actionAddToMeld = (player, meld) => {
     // remove card from player
     const [meldedCard] = getPlayerCards(player, [meld.cardToMeldId], true);
     // save target meld
-    (0, shared_1.getPlayerByName)(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards };
+    getGamePlayer(meld.targetPlayerId).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards };
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
-    message(`${player.name} melded ${CardTools_1.default.longName(meldedCard)} into ${meld.targetPlayer}'s table`);
+    message(`${getPlayerName(player.id)} melded ${CardTools_1.default.longName(meldedCard)} into ${getPlayerName(meld.targetPlayerId)}'s table`);
     return {
         success: true,
     };
@@ -363,7 +361,7 @@ const isValidAddMeld = (player, meld) => {
             }
         };
     }
-    const targetPlayer = (0, shared_1.getPlayerByName)(state, meld.targetPlayer);
+    const targetPlayer = getGamePlayer(meld.targetPlayerId);
     if (!targetPlayer.melded.length) {
         return {
             response: {
@@ -405,7 +403,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
             error: 'You do not have this card'
         };
     }
-    const targetPlayer = (0, shared_1.getPlayerByName)(state, meld.targetPlayer);
+    const targetPlayer = getGamePlayer(meld.targetPlayerId);
     if (!targetPlayer.melded.length) {
         return {
             success: false,
@@ -437,7 +435,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
             targetPlayer.melded[meld.targetMeldIndex] = { cards: jokerReplace.newMeldCards };
             // Give new joker
             giveCard(player, Object.assign(Object.assign({}, jokerReplace.jokerCard), { mustBeMelded: true }));
-            message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${CardTools_1.default.longName(cardToMeld)}`);
+            message(`${getPlayerName(player.id)} replaced the Joker from ${getPlayerName(meld.targetPlayerId)}'s table with card ${CardTools_1.default.longName(cardToMeld)}`);
             return {
                 success: true,
                 message: 'Succesfully replaced Joker'
@@ -641,14 +639,14 @@ const endPlayerTurn = (player) => {
     if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false;
         state.discarded = [];
-        state.shanghaiFor = null;
+        state.shanghaiForId = undefined;
         state.message = 'Round ended';
         addPlayerPoints();
         unreadyPlayers();
         /// last round just ended
         if (state.roundNumber === options.rounds.length - 1) {
             const winner = (0, lodash_1.minBy)(state.players, p => p.points);
-            state.winner = winner ? winner.name : "No winner";
+            state.winnerId = winner ? winner.id : -1;
             return;
         }
     }
@@ -657,7 +655,7 @@ const endPlayerTurn = (player) => {
 };
 const enablePlayerTurn = () => {
     state.players.forEach(p => p.canTakeCard = false);
-    const player = (0, shared_1.getCurrentPlayer)(state);
+    const player = getGamePlayer(getCurrentPlayer());
     player.canTakeCard = true;
     player.actionRelatedCardID = undefined;
 };
@@ -669,13 +667,13 @@ const addPlayerPoints = () => {
     });
 };
 const unreadyPlayers = () => {
-    state.players.forEach(player => player.isReady = false);
+    options.players.forEach(player => player.isReady = false);
 };
 const checkGameContinue = () => {
     if (state.roundIsOn) {
         return;
     }
-    if ((0, lodash_1.some)(state.players, p => !p.isReady)) {
+    if ((0, lodash_1.some)(options.players, p => !p.isReady)) {
         return;
     }
     // all ready
@@ -686,9 +684,9 @@ const initializeRound = () => {
     state.roundIsOn = true;
     const round = options.rounds[state.roundNumber];
     state.players.forEach(resetPlayer);
-    state.deck = shuffle(createDeck(options.deckCount, options.jokerCount));
+    state.deck = shuffle(createDeck(round.deckCount, round.jokerCount));
     state.discarded = [];
-    state.shanghaiFor = null;
+    state.shanghaiForId = undefined;
     // deal
     for (let p = 0; p < state.players.length; p++) {
         const player = state.players[p];
@@ -706,6 +704,10 @@ const resetPlayer = (player) => {
     player.canTakeCard = false;
 };
 //#endregion
+const getPlayer = (id) => options.players[id];
+const getGamePlayer = (id) => state.players[id];
+const getPlayerName = (id) => getPlayer(id).name;
+const getCurrentPlayer = () => (0, shared_1.getCurrentPlayerId)({ state, options });
 const getPlayerCards = (player, cardIDs, removeCards) => {
     const cardsToTake = (0, lodash_1.compact)(cardIDs.map(id => (0, lodash_1.find)(player.cards, c => c.id === id)));
     if (removeCards) {
@@ -734,18 +736,6 @@ const shuffle = (cards) => {
     return (0, shuffle_array_1.default)(cards);
 };
 const message = (msg) => state.message = msg;
-const initialState = (players) => {
-    return {
-        players: players.map(createPlayer),
-        roundIsOn: false,
-        roundNumber: -1,
-        turn: 0,
-        shanghaiIsAllowed: false,
-        shanghaiFor: null,
-        deck: createDeck(options.deckCount, options.jokerCount),
-        discarded: [],
-    };
-};
 const createDeck = (deckCount, jokerCount) => {
     if (deckCount > 8)
         throw new Error("Cannot have more than 8 decks");
@@ -764,12 +754,3 @@ const createDeck = (deckCount, jokerCount) => {
     }
     return cards;
 };
-const createPlayer = (name) => ({
-    name,
-    isReady: false,
-    points: 0,
-    cards: [],
-    melded: [],
-    shanghaiCount: 0,
-    canTakeCard: false
-});

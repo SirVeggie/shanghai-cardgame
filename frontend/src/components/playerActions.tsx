@@ -11,16 +11,16 @@ type ButtonConfig = {
 }
 
 export const PlayerActions = () => {
-    const { myPlayerName, setActionResponse, selectedCard } = useContext(GameContext)
+    const { myPlayerId, setActionResponse, selectedCard, game: { id: gameId } } = useContext(GameContext)
 
     const buttons: ButtonConfig[] = [
         {
             label: "Reveal card from deck",
-            onClick: () => actionRevealDeck(setActionResponse, myPlayerName)
+            onClick: () => actionRevealDeck(setActionResponse, gameId, myPlayerId)
         },
         {
             label: "Allow Shanghai",
-            onClick: () => actionAllowShanghai(setActionResponse, myPlayerName)
+            onClick: () => actionAllowShanghai(setActionResponse, gameId, myPlayerId)
         },
         {
             label: "Discard card",
@@ -29,12 +29,12 @@ export const PlayerActions = () => {
                 if (!cardID) {
                     return
                 }
-                actionDiscardCard(setActionResponse, myPlayerName, cardID)
+                actionDiscardCard(setActionResponse, gameId, myPlayerId, cardID)
             }
         },
         {
             label: "Set ready",
-            onClick: () => actionSetReady(setActionResponse, myPlayerName)
+            onClick: () => actionSetReady(setActionResponse, gameId, myPlayerId)
         }
     ]
 
@@ -47,73 +47,82 @@ export const PlayerActions = () => {
     </div>
 }
 
-export const actionSetReady = async (cb: ActionCallback, playerName: string) => {
+export const actionSetReady = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         setReady: true
     })
     cb(res)
 }
 
-export const actionRevealDeck = async (cb: ActionCallback, playerName: string) => {
+export const actionRevealDeck = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         revealDeck: true
     })
     cb(res)
 }
 
-export const actionTakeDiscard = async (cb: ActionCallback, playerName: string) => {
+export const actionTakeDiscard = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         takeDiscard: true
     })
     cb(res)
 }
 
-export const actionTakeDeck = async (cb: ActionCallback, playerName: string) => {
+export const actionTakeDeck = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         takeDeck: true
     })
     cb(res)
 }
 
-export const actionMeld = async (cb: ActionCallback, playerName: string, meldAction: MeldAction) => {
+export const actionMeld = async (cb: ActionCallback, gameId: string, playerId: number, meldAction: MeldAction) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         meld: meldAction
     })
     cb(res)
 }
 
-export const actionAddToMeld = async (cb: ActionCallback, playerName: string, meldAction: AddToMeldAction) => {
+export const actionAddToMeld = async (cb: ActionCallback, gameId: string, playerId: number, meldAction: AddToMeldAction) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         addToMeld: meldAction
     })
     cb(res)
 }
 
-export const actionDiscardCard = async (cb: ActionCallback, playerName: string, discardID: number) => {
+export const actionDiscardCard = async (cb: ActionCallback, gameId: string, playerId: number, discardID: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         discardID
     })
     cb(res)
 }
 
-export const actionCallShanghai = async (cb: ActionCallback, playerName: string) => {
+export const actionCallShanghai = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         shanghai: true
     })
     cb(res)
 }
 
-export const actionAllowShanghai = async (cb: ActionCallback, playerName: string) => {
+export const actionAllowShanghai = async (cb: ActionCallback, gameId: string, playerId: number) => {
     const res = await executePlayerAction({
-        playerName,
+        gameId,
+        playerId,
         allowShanghai: true
     })
     cb(res)

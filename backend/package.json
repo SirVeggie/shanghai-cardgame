@@ -12,12 +12,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/uuid": "^8.3.4",
     "cors": "^2.8.5",
     "express": "^4.17.2",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "shuffle-array": "^1.0.1",
-    "socket.io": "^4.4.1"
+    "socket.io": "^4.4.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.12",

@@ -1,5 +1,5 @@
 import { compact, filter, find, findIndex, flatMap, floor, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, getCurrentPlayer, getPlayerByName, CNormalRank, CDeck, cardOrderIndex } from '../../frontend/src/shared'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, CNormalRank, cardOrderIndex, FullPlayer, GamePlayer, getPlayerTurn } from '../../frontend/src/shared'
 import ctool from '../../frontend/src/tools/CardTools'
 import arrayShuffle from 'shuffle-array'
 import CardTools from '../../frontend/src/tools/CardTools'
@@ -9,28 +9,34 @@ import CardTools from '../../frontend/src/tools/CardTools'
 let options: ShanghaiOptions
 let state: ShanghaiState
 
-export const getGame = () => options
-export const getState = () => state
+type ActionHandler = (act: Action) => ActionResponse
+type StateGetter = () => ShanghaiState
+type ActionDelegate = (i: ActionHandler, getNewState: StateGetter) => void
 
-export const startGame = (game: ShanghaiGame) => {
-    options = game.options
-    state = game.state ? game.state : initialState(options.players)
+export const usingGameContext = (pOptions: ShanghaiOptions, pState: ShanghaiState, callback: ActionDelegate) => {
+    options = pOptions
+    state = pState
+
+    callback(handleAction, () => state)
+
+    // Dirty trick but fast
+    options = undefined as unknown as ShanghaiOptions
+    state = undefined as unknown as ShanghaiState
 }
 
 //#region game logic
-export const handleAction = (action: Action): ActionResponse => {
+const handleAction = (action: Action): ActionResponse => {
     console.log('Action')
     console.log(JSON.stringify(action, null, 2))
-    if (!some(options.players, n => n === action.playerName)) {
+    if (action.playerId >= options.players.length) {
         return {
             success: false,
-            error: `Player ${action.playerName} is not in the game`
+            error: `Player does not exist`
         }
     }
 
     if (action.setReady) {
-        const player = getPlayerByName(state, action.playerName)
-        player.isReady = true
+        getPlayer(action.playerId).isReady = true
         checkGameContinue()
         return {
             success: true
@@ -44,7 +50,7 @@ export const handleAction = (action: Action): ActionResponse => {
         }
     }
 
-    const isPlayersTurn = action.playerName === getCurrentPlayer(state).name
+    const isPlayersTurn = action.playerId === getCurrentPlayer()
 
     if (!isPlayersTurn) {
         return foreignPlayerAction(action)
@@ -55,7 +61,7 @@ export const handleAction = (action: Action): ActionResponse => {
 
 const foreignPlayerAction = (action: Action): ActionResponse => {
     if (action.shanghai) {
-        return actionCallShanghai(action.playerName)
+        return actionCallShanghai(action.playerId)
     }
     return {
         success: false,
@@ -64,7 +70,7 @@ const foreignPlayerAction = (action: Action): ActionResponse => {
 }
 
 const currentPlayerAction = (action: Action): ActionResponse => {
-    if (state.shanghaiFor) {
+    if (state.shanghaiForId !== undefined) {
         return currentPlayerShanghaiAction(action)
     } else if (action.allowShanghai) {
         return {
@@ -80,7 +86,7 @@ const currentPlayerAction = (action: Action): ActionResponse => {
         }
     }
 
-    const player = getCurrentPlayer(state)
+    const player = getGamePlayer(getCurrentPlayer())
 
     if (action.revealDeck) {
         return actionRevealDeck(player)
@@ -116,7 +122,7 @@ const currentPlayerShanghaiAction = (action: Action): ActionResponse => {
         return actionAllowShanghaiCall()
     }
     if (action.takeDiscard) {
-        return actionTakeDiscard(getCurrentPlayer(state))
+        return actionTakeDiscard(getGamePlayer(getCurrentPlayer()))
     }
     return {
         success: false,
@@ -125,8 +131,8 @@ const currentPlayerShanghaiAction = (action: Action): ActionResponse => {
 }
 
 //#region  individual actions
-const actionCallShanghai = (playerName: string): ActionResponse => {
-    const player = getPlayerByName(state, playerName)
+const actionCallShanghai = (playerId: number): ActionResponse => {
+    const player = getGamePlayer(playerId)
     if (!state.shanghaiIsAllowed) {
         return {
             success: false,
@@ -152,16 +158,16 @@ const actionCallShanghai = (playerName: string): ActionResponse => {
             error: "You have already called Shanghai maximum amount of times"
         }
     }
-    if (player.name === state.discardTopOwner) {
+    if (player.id === state.discardTopOwnerId) {
         return {
             success: false,
             error: 'You cannot call Shanghai on your own discard card'
         }
     }
 
-    if (!state.shanghaiFor) {
-        state.shanghaiFor = player.name
-        message(`${player.name} called Shanghai!`)
+    if (state.shanghaiForId === undefined) {
+        state.shanghaiForId = player.id
+        message(`${getPlayerName(playerId)} called Shanghai!`)
         return {
             success: true,
         }
@@ -169,12 +175,12 @@ const actionCallShanghai = (playerName: string): ActionResponse => {
 
     return {
         success: false,
-        error: `Shanghai was already called by ${state.shanghaiFor}`
+        error: `Shanghai was already called by ${getPlayerName(state.shanghaiForId)}`
     }
 }
 
 const actionAllowShanghaiCall = (): ActionResponse => {
-    if (!state.shanghaiFor) {
+    if (state.shanghaiForId === undefined) {
         return {
             success: false,
             error: "No one has called Shanghai"
@@ -192,25 +198,25 @@ const actionAllowShanghaiCall = (): ActionResponse => {
 
     const penalty = popDeck()
 
-    const current = getCurrentPlayer(state)
-    const player = getPlayerByName(state, state.shanghaiFor)
+    const current = getGamePlayer(getCurrentPlayer())
+    const player = getGamePlayer(state.shanghaiForId)
 
     giveCard(player, discard)
     giveCard(player, penalty)
 
     state.shanghaiIsAllowed = false
-    state.discardTopOwner = undefined
-    state.shanghaiFor = null
+    state.discardTopOwnerId = undefined
+    state.shanghaiForId = undefined
     player.shanghaiCount++
 
-    message(`${current.name} allowed the Shanghai call for ${player.name} with card: ${ctool.longName(discard)}`)
+    message(`${getPlayerName(current.id)} allowed the Shanghai call for ${getPlayerName(player.id)} with card: ${ctool.longName(discard)}`)
     return {
         success: true,
         message: `Succesfully allowed Shanghai for ${ctool.longName(discard)}`
     }
 }
 
-const actionRevealDeck = (player: Player): ActionResponse => {
+const actionRevealDeck = (player: GamePlayer): ActionResponse => {
     if (!playerCanTakeCard(player)) {
         return {
             success: false,
@@ -228,16 +234,16 @@ const actionRevealDeck = (player: Player): ActionResponse => {
     const card = popDeck()
     state.discarded.push(card)
     state.shanghaiIsAllowed = true
-    state.discardTopOwner = undefined
+    state.discardTopOwnerId = undefined
 
-    message(`${player.name} revealed ${ctool.longName(card)}`)
+    message(`${getPlayerName(player.id)} revealed ${ctool.longName(card)}`)
     return {
         success: true,
         message: `Revealed ${ctool.longName(card)}`
     }
 }
 
-const actionTakeDiscard = (player: Player): ActionResponse => {
+const actionTakeDiscard = (player: GamePlayer): ActionResponse => {
     if (!playerCanTakeCard(player)) {
         return {
             success: false,
@@ -254,7 +260,7 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
         }
     }
 
-    if (state.shanghaiFor && player.melded.length) {
+    if (state.shanghaiForId !== undefined && player.melded.length) {
         return {
             success: false,
             error: 'You cannot prevent a Shanghai call after melding'
@@ -265,17 +271,17 @@ const actionTakeDiscard = (player: Player): ActionResponse => {
     player.canTakeCard = false
 
     state.shanghaiIsAllowed = false
-    state.shanghaiFor = null
-    state.discardTopOwner = undefined
+    state.shanghaiForId = undefined
+    state.discardTopOwnerId = undefined
 
-    message(`${player.name} picked up ${ctool.longName(card)} from the discard pile`)
+    message(`${getPlayerName(player.id)} picked up ${ctool.longName(card)} from the discard pile`)
     return {
         success: true,
         message: `Picked up ${ctool.longName(card)}`,
     }
 }
 
-const actionTakeDeck = (player: Player): ActionResponse => {
+const actionTakeDeck = (player: GamePlayer): ActionResponse => {
     if (!playerCanTakeCard(player)) {
         return {
             success: false,
@@ -294,14 +300,14 @@ const actionTakeDeck = (player: Player): ActionResponse => {
     player.canTakeCard = false
     state.shanghaiIsAllowed = false
 
-    message(`${player.name} picked up a card from the deck`)
+    message(`${getPlayerName(player.id)} picked up a card from the deck`)
     return {
         success: true,
         message: `Picked up ${ctool.longName(card)}`,
     }
 }
 
-const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
+const actionMeld = (player: GamePlayer, meld: MeldAction): ActionResponse => {
     if (player.melded.length) {
         return {
             success: false,
@@ -326,14 +332,14 @@ const actionMeld = (player: Player, meld: MeldAction): ActionResponse => {
         endPlayerTurn(player)
     }
 
-    message(`${player.name} melded cards`)
+    message(`${getPlayerName(player.id)} melded cards`)
     return {
         success: true,
         message: "Succesfully melded cards"
     }
 }
 
-const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
+const actionDiscard = (player: GamePlayer, toDiscardId: number): ActionResponse => {
     if (!playerCanDiscard(player)) {
         return {
             success: false,
@@ -358,20 +364,20 @@ const actionDiscard = (player: Player, toDiscardId: number): ActionResponse => {
 
     player.cards = player.cards.filter(c => c.id !== toDiscardId)
     state.discarded.push(cardToDiscard)
-    state.discardTopOwner = player.name
+    state.discardTopOwnerId = player.id
 
     endPlayerTurn(player)
 
     state.shanghaiIsAllowed = true
 
-    message(`${player.name} discarded ${ctool.longName(cardToDiscard)}`)
+    message(`${getPlayerName(player.id)} discarded ${ctool.longName(cardToDiscard)}`)
     return {
         success: true,
         message: `Discarded ${ctool.longName(cardToDiscard)}`
     }
 }
 
-const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse => {
+const actionAddToMeld = (player: GamePlayer, meld: AddToMeldAction): ActionResponse => {
     const newMeldCards = isValidAddMeld(player, meld)
     if (!newMeldCards.response.success) {
         return newMeldCards.response
@@ -387,13 +393,13 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
     const [meldedCard] = getPlayerCards(player, [meld.cardToMeldId], true)
 
     // save target meld
-    getPlayerByName(state, meld.targetPlayer).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards }
+    getGamePlayer(meld.targetPlayerId).melded[meld.targetMeldIndex] = { cards: newMeldCards.cards }
 
     if (player.cards.length === 0) {
         endPlayerTurn(player)
     }
 
-    message(`${player.name} melded ${ctool.longName(meldedCard)} into ${meld.targetPlayer}'s table`)
+    message(`${getPlayerName(player.id)} melded ${ctool.longName(meldedCard)} into ${getPlayerName(meld.targetPlayerId)}'s table`)
     return {
         success: true,
     }
@@ -401,7 +407,7 @@ const actionAddToMeld = (player: Player, meld: AddToMeldAction): ActionResponse 
 
 //#endregion
 // Returns the new meld cards if they are valid, undefined otherwise
-const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse => {
+const isValidAddMeld = (player: GamePlayer, meld: AddToMeldAction): MeldAddResponse => {
     // Check if player has card
     const cardToMeld = find(player.cards, card => card.id == meld.cardToMeldId)
     if (!cardToMeld) {
@@ -413,7 +419,7 @@ const isValidAddMeld = (player: Player, meld: AddToMeldAction): MeldAddResponse 
         }
     }
 
-    const targetPlayer = getPlayerByName(state, meld.targetPlayer)
+    const targetPlayer = getGamePlayer(meld.targetPlayerId)
 
     if (!targetPlayer.melded.length) {
         return {
@@ -459,7 +465,7 @@ type MeldAddResponse = {
     cards?: Card[]
 }
 
-const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): ActionResponse => {
+const actionAddToMeldReplaceJoker = (player: GamePlayer, meld: AddToMeldAction): ActionResponse => {
     // Check if player has card
     const cardToMeld = find(player.cards, card => card.id == meld.cardToMeldId)
     if (!cardToMeld) {
@@ -469,7 +475,7 @@ const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): Act
         }
     }
 
-    const targetPlayer = getPlayerByName(state, meld.targetPlayer)
+    const targetPlayer = getGamePlayer(meld.targetPlayerId)
 
     if (!targetPlayer.melded.length) {
         return {
@@ -512,7 +518,7 @@ const actionAddToMeldReplaceJoker = (player: Player, meld: AddToMeldAction): Act
             // Give new joker
             giveCard(player, { ...jokerReplace.jokerCard, mustBeMelded: true })
 
-            message(`${player.name} replaced the Joker from ${meld.targetPlayer}'s table with card ${ctool.longName(cardToMeld)}`)
+            message(`${getPlayerName(player.id)} replaced the Joker from ${getPlayerName(meld.targetPlayerId)}'s table with card ${ctool.longName(cardToMeld)}`)
             return {
                 success: true,
                 message: 'Succesfully replaced Joker'
@@ -545,7 +551,7 @@ const tryReplaceJoker = (cardToMeld: Card, targetMeldCards: Card[], meld: Meld, 
 }
 
 // NOTE!!! REQUIREMENTS FOR ALL STRAIGHTS MUST HAVE EQUAL LENGTH AND ALL SETS MUST BE OF EQUAL SIZE
-const areMeldsValid = (player: Player, playerMelds: MeldAction): ActionResponse => {
+const areMeldsValid = (player: GamePlayer, playerMelds: MeldAction): ActionResponse => {
     if (hasDuplicateMeldCards(playerMelds)) {
         console.log("duplicate meld cards")
         return {
@@ -585,7 +591,7 @@ const hasDuplicateMeldCards = (melds: MeldAction) => {
     return cardIDs.length !== uniq(cardIDs).length
 }
 
-const isPlayerMeldValid = (player: Player, meld: Meld, playerMeld: MeldCards) => {
+const isPlayerMeldValid = (player: GamePlayer, meld: Meld, playerMeld: MeldCards) => {
     const cards = getPlayerCards(player, playerMeld.cardIDs, false)
 
     // Tried to meld cards we don't have
@@ -721,62 +727,29 @@ const getFirstExpectedRank = (cards: Card[]): CNormalRank | undefined => {
     return firstRank
 }
 
-const getStraightJokersFromValidStraight = (cards: Card[]): JokerWithRank[] => {
-    const jokers: JokerWithRank[] = []
-
-    let expectedRank = getFirstExpectedRank(cards)
-
-    // melded straights should be valid
-    if (!expectedRank) {
-        throw "Melded straight was invalid check 1"
-    }
-
-
-    for (let i = 0; i < cards.length; i++) {
-        const card = cards[i]
-
-        // WHYYYYY
-        if (!expectedRank) {
-            throw "Melded straight was invalid check 2"
-        }
-
-        if (card.rank === 25) {
-            jokers.push({
-                joker: card,
-                index: i,
-                rank: expectedRank
-            })
-        }
-
-        expectedRank = ctool.nextRank(expectedRank)
-    }
-
-    return jokers
-}
-
 type JokerWithRank = {
     joker: Card,
     index: number,
     rank: CNormalRank
 }
 
-const playerCanTakeCard = (player: Player) => {
+const playerCanTakeCard = (player: GamePlayer) => {
     return player.canTakeCard
 }
 
-const playerCanDiscard = (player: Player) => {
+const playerCanDiscard = (player: GamePlayer) => {
     return !player.canTakeCard
 }
 
-const getPlayerTargetCardCount = (player: Player) => {
+const getPlayerTargetCardCount = (player: GamePlayer) => {
     return options.rounds[state.roundNumber].cardCount + player.shanghaiCount * 2
 }
 
-const endPlayerTurn = (player: Player) => {
+const endPlayerTurn = (player: GamePlayer) => {
     if (player.cards.length === 0 || state.deck.length === 0) {
         state.roundIsOn = false
         state.discarded = []
-        state.shanghaiFor = null
+        state.shanghaiForId = undefined
         state.message = 'Round ended'
         addPlayerPoints()
         unreadyPlayers()
@@ -784,7 +757,7 @@ const endPlayerTurn = (player: Player) => {
         /// last round just ended
         if (state.roundNumber === options.rounds.length - 1) {
             const winner = minBy(state.players, p => p.points)
-            state.winner = winner ? winner.name : "No winner"
+            state.winnerId = winner ? winner.id : -1
             return
         }
     }
@@ -795,7 +768,7 @@ const endPlayerTurn = (player: Player) => {
 
 const enablePlayerTurn = () => {
     state.players.forEach(p => p.canTakeCard = false)
-    const player = getCurrentPlayer(state)
+    const player = getGamePlayer(getCurrentPlayer())
     player.canTakeCard = true
     player.actionRelatedCardID = undefined
 }
@@ -809,14 +782,14 @@ const addPlayerPoints = () => {
 }
 
 const unreadyPlayers = () => {
-    state.players.forEach(player => player.isReady = false)
+    options.players.forEach(player => player.isReady = false)
 }
 
 const checkGameContinue = () => {
     if (state.roundIsOn) {
         return
     }
-    if (some(state.players, p => !p.isReady)) {
+    if (some(options.players, p => !p.isReady)) {
         return
     }
 
@@ -831,9 +804,9 @@ const initializeRound = () => {
 
     state.players.forEach(resetPlayer)
 
-    state.deck = shuffle(createDeck(options.deckCount, options.jokerCount))
+    state.deck = shuffle(createDeck(round.deckCount, round.jokerCount))
     state.discarded = []
-    state.shanghaiFor = null
+    state.shanghaiForId = undefined
 
     // deal
     for (let p = 0; p < state.players.length; p++) {
@@ -847,14 +820,19 @@ const initializeRound = () => {
     enablePlayerTurn()
 }
 
-const resetPlayer = (player: Player) => {
+const resetPlayer = (player: GamePlayer) => {
     player.cards = []
     player.shanghaiCount = 0
     player.melded = []
     player.canTakeCard = false
 }
 //#endregion
-const getPlayerCards = (player: Player, cardIDs: number[], removeCards: boolean) => {
+const getPlayer = (id: number) => options.players[id]
+const getGamePlayer = (id: number) => state.players[id]
+const getPlayerName = (id: number) => getPlayer(id).name
+const getCurrentPlayer = () => options.players[getPlayerTurn(state, state.turn)].id
+
+const getPlayerCards = (player: GamePlayer, cardIDs: number[], removeCards: boolean) => {
     const cardsToTake = compact(cardIDs.map(id => find(player.cards, c => c.id === id)))
 
     if (removeCards) {
@@ -877,7 +855,7 @@ const popDeck = (): Card => {
     return card
 }
 
-const giveCard = (player: Player, card: Card) => {
+const giveCard = (player: GamePlayer, card: Card) => {
     player.cards.push(card)
     player.cards = orderBy(player.cards, cardOrderIndex)
     player.actionRelatedCardID = card.id
@@ -889,18 +867,6 @@ const shuffle = (cards: Card[]): Card[] => {
 
 const message = (msg: string) => state.message = msg
 
-const initialState = (players: string[]): ShanghaiState => {
-    return {
-        players: players.map(createPlayer),
-        roundIsOn: false,
-        roundNumber: -1,
-        turn: 0,
-        shanghaiIsAllowed: false,
-        shanghaiFor: null,
-        deck: createDeck(options.deckCount, options.jokerCount),
-        discarded: [],
-    }
-}
 
 const createDeck = (deckCount: number, jokerCount: number) => {
     if (deckCount > 8)
@@ -913,25 +879,15 @@ const createDeck = (deckCount: number, jokerCount: number) => {
     for (let suit = 0; suit < 4; suit++) {
         for (let rank = 2; rank <= 14; rank++) {
             for (let deck = 0; deck < deckCount; deck++) {
-                cards.push(ctool.fromValues(rank as CRank, suit, deck as CDeck));
+                cards.push(ctool.fromValues(rank as CRank, suit, deck));
             }
         }
     }
 
     for (let i = 0; i < jokerCount; i++) {
-        cards.push(ctool.fromValues(25, i % 4, floor(i / 4) as CDeck))
+        cards.push(ctool.fromValues(25, i % 4, floor(i / 4)))
     }
 
     return cards
 }
-
-const createPlayer = (name: string): Player => ({
-    name,
-    isReady: false,
-    points: 0,
-    cards: [],
-    melded: [],
-    shanghaiCount: 0,
-    canTakeCard: false
-})
 

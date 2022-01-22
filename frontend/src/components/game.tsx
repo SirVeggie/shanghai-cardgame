@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
-import { ActionResponse, getCurrentPlayer, getPlayerByName, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
-import { GameContext, SelectedCard } from "../context/gameContext"
-import { getGameOptions, getGameState } from "../services/gameApi"
+import { ActionResponse, GameJoinParams, getFullPlayer, getPlayerTurn, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
+import { GameContext } from "../context/gameContext"
+import { getGameState, joinGame, startNewGame } from "../services/gameApi"
 import { GameView } from "./gameView"
-import { NameInput } from "./nameInput"
+import { GameJoinConfig, JoinType } from "./gameJoinConfig"
 import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
@@ -11,81 +11,111 @@ let updateInProgress = false
 const debugMode = false
 
 const Game = () => {
-    const [myPlayerName, setMyPlayerName] = useState<string | undefined>()
-    const [gameOptions, setGameOptions] = useState<ShanghaiOptions>()
-    const [gameState, setGameState] = useState<ShanghaiState>()
+    const [myPlayerId, setMyPlayerId] = useState<number>()
+    const [game, setGame] = useState<ShanghaiGame>()
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
+
+    const getCurrentPlayer = () => {
+        if (!game?.state) {
+            throw "Game not setup"
+        }
+
+        const player = game.options.players[getPlayerTurn(game.state, game.state.turn)]
+        return getFullPlayer(player, game.state)
+    }
+    const getPlayer = (id: number) => {
+        if (!game?.state) {
+            throw "Game not setup"
+        }
+
+        const player = game.options.players[id]
+        return getFullPlayer(player, game.state)
+    }
+
+    console.log({ game })
 
     const [prevTurn, setPrevTurn] = useState(-1)
 
     console.log({ selectedCard })
 
-    if (gameState && gameOptions) {
-        if (prevTurn !== gameState.turn) {
-            const game: ShanghaiGame = {
-                state: gameState,
-                options: gameOptions
-            }
-
+    if (game?.state) {
+        if (prevTurn !== game.state.turn) {
             const json = JSON.stringify(game)
             localStorage.setItem("game", json)
-            setPrevTurn(gameState.turn)
+            setPrevTurn(game.state.turn)
         }
 
-        const currentPlayer = getCurrentPlayer(gameState).name
-        if (debugMode && myPlayerName !== currentPlayer) {
-            setMyPlayerName(currentPlayer)
+        const currentPlayer = getCurrentPlayer()
+        if (debugMode && myPlayerId !== currentPlayer.id) {
+            setMyPlayerId(currentPlayer.id)
         }
-        if (debugMode && gameState.players.some(p => !p.isReady)) {
-            gameState.players.forEach(p => actionSetReady(setActionResponse, p.name))
+        if (debugMode && game.options.players.some(p => !p.isReady)) {
+            game.state.players.forEach(p => actionSetReady(setActionResponse, game.id, p.id))
         }
     }
 
+
     useEffect(() => {
         const interval = setInterval(() => {
-            if (updateInProgress) {
+            if (!game || updateInProgress) {
                 return
             }
             updateInProgress = true
 
-            getGameState().then(state => {
+            getGameState(game.id).then(state => {
                 updateInProgress = false
-                setGameState(state)
+                setGame({ ...game, state })
             })
         }, 200)
         return () => clearInterval(interval)
     }, [])
 
-    if (!myPlayerName?.length) {
-        return <NameInput setName={setMyPlayerName} />
+    const onSubmitJoinOrCreate = (join: JoinType, gameParams: GameJoinParams) => {
+        setMyPlayerId(-1)
+        const onReceiveGame = (newGame: ShanghaiGame | undefined) => {
+            if (game) {
+                return
+            }
+
+            if (newGame) {
+                const player = newGame.options.players.find(p => p.name === gameParams.playerName)
+                // websocket connect here maybe?
+                setMyPlayerId(player?.id)
+                setGame(newGame)
+            } else {
+                setMyPlayerId(undefined)
+            }
+        }
+
+        join === 'create' ? startNewGame(gameParams).then(onReceiveGame) : joinGame(gameParams).then(onReceiveGame)
     }
 
-    if (!gameOptions) {
-        getGameOptions().then(opt => {
-            setGameOptions(opt)
-        })
-    }
-
-    if (!gameOptions || !gameState) {
+    if (myPlayerId === -1) {
         return <div>Loading...</div>
     }
 
-    // Game not started
-    if (gameState && gameState.roundNumber < 0) {
-        return <div>
-            <button onClick={() => actionSetReady(setActionResponse, myPlayerName)}>Ready</button>
-        </div>
+    if (!game) {
+        return <GameJoinConfig onSubmit={onSubmitJoinOrCreate} />
     }
 
-    const myPlayer = getPlayerByName(gameState, myPlayerName)
+    if (myPlayerId === undefined) {
+        return <div>Error, refresh</div>
+    }
+
+    // Game not started
+    if (!game.state || game.state.roundNumber < 0) {
+        return <div>
+            <button onClick={() => actionSetReady(setActionResponse, game.id, myPlayerId)}>Ready</button>
+        </div>
+    }
+    const myPlayer = getPlayer(myPlayerId)
 
     return (
         <GameContext.Provider value={{
-            myPlayerName,
-            options: gameOptions,
-            state: gameState,
+            myPlayerId,
+            game: { ...game, state: game.state },
             actionResponse,
             setActionResponse,
             selectedCard: {
@@ -94,7 +124,9 @@ const Game = () => {
             },
             setSelectedCard,
             hiddenCards,
-            setHiddenCards
+            setHiddenCards,
+            getCurrentPlayer,
+            getPlayer
         }}>
             <GameView />
         </GameContext.Provider>

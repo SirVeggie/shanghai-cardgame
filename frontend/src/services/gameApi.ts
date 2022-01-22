@@ -1,30 +1,47 @@
 import axios from 'axios'
-import { Action, ActionResponse, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
+import { Action, ActionResponse, GameParams, GameJoinParams, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
 
 //const baseURL = 'localhost:3001/api/'
 const baseURL = '/api/game/'
 
-const TIMEOUT = 5000
+const timeout = 5000
 
-export const getGameOptions = async (): Promise<ShanghaiOptions> => {
-    const path = apiPath("options")
-    const res = await axios.get(path, {
-        timeout: TIMEOUT
+export const getGame = async (gameId: string): Promise<ShanghaiGame> => {
+    const url = apiPath("game")
+
+    const data: GameParams = {
+        gameId
+    }
+
+    const res = await axios({
+        method: 'get',
+        url,
+        data,
+        timeout
+
     })
 
     if (res.status === 200) {
-        return res.data as ShanghaiOptions
+        return res.data as ShanghaiGame
     }
 
     throw "Error"
 }
 
-export const getGameState = async (): Promise<ShanghaiState> => {
-    const path = apiPath("state")
-    const res = await axios.get(path, {
-        timeout: TIMEOUT
-    })
+export const getGameState = async (gameId: string): Promise<ShanghaiState> => {
+    const url = apiPath("game/state")
 
+    const data: GameParams = {
+        gameId
+    }
+
+    const res = await axios({
+        method: 'get',
+        url,
+        data,
+        timeout
+
+    })
     if (res.status === 200) {
         return res.data as ShanghaiState
     }
@@ -32,36 +49,59 @@ export const getGameState = async (): Promise<ShanghaiState> => {
     throw "Error"
 }
 
-export const startGame = async (game: ShanghaiGame | undefined) => {
-    const path = apiPath("newgame")
+export const startNewGame = async (game: GameJoinParams): Promise<ShanghaiGame | undefined> => {
+    const url = apiPath("game/new")
 
-    const body = {
-        game
+    const data = {
+        data: game
     }
 
     const res = await axios({
         method: 'post',
-        url: path,
-        data: body,
-        timeout: TIMEOUT
+        url,
+        data,
+        timeout
     })
+
+    if (res.status === 200 && res.data) {
+        return res.data as ShanghaiGame
+    }
+}
+
+export const joinGame = async (game: GameJoinParams): Promise<ShanghaiGame | undefined> => {
+    const url = apiPath("game/join")
+
+    const data = {
+        data: game
+    }
+
+    const res = await axios({
+        method: 'post',
+        url,
+        data,
+        timeout
+    })
+
+    if (res.status === 200 && res.data) {
+        return res.data as ShanghaiGame
+    }
 }
 
 export const executePlayerAction = async (action: Action): Promise<ActionResponse> => {
-    const path = apiPath("action")
+    const url = apiPath("game/action")
 
-    const body = {
-        action
+    const data = {
+        data: action
     }
 
     const res = await axios({
         method: 'post',
-        url: path,
-        data: body,
-        timeout: TIMEOUT
+        url,
+        data,
+        timeout
     })
 
-    if (res.status === 200) {
+    if (res.status === 200 && res.data) {
         return res.data as ActionResponse
     }
 

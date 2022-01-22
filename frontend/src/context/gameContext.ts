@@ -1,16 +1,21 @@
 import React from 'react'
-import { ActionResponse, ShanghaiOptions, ShanghaiState } from '../shared'
+import { ActionResponse, FullPlayer, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
+
+type StartedShanghaiGame = ShanghaiGame & {
+    state: ShanghaiState
+}
 
 type GameContextType = {
-    myPlayerName: string
-    options: ShanghaiOptions
-    state: ShanghaiState
+    myPlayerId: number
+    game: StartedShanghaiGame
     actionResponse: ActionResponse
     setActionResponse: (a: ActionResponse) => void
     selectedCard: SelectedCard,
     setSelectedCard: (n: number | undefined) => void
     hiddenCards: number[],
     setHiddenCards: (n: number[]) => void
+    getCurrentPlayer: () => FullPlayer
+    getPlayer: (id: number) => FullPlayer
 }
 
 export type SelectedCard = {
@@ -19,24 +24,9 @@ export type SelectedCard = {
 }
 
 const defaultGameContext: GameContextType = {
-    myPlayerName: "noname",
-    options: {
-        players: [],
-        shanghaiCount: 0,
-        jokerCount: 0,
-        deckCount: 0,
-        rounds: []
-    },
-    state: {
-        players: [],
-        roundIsOn: false,
-        roundNumber: 0,
-        turn: 0,
-        shanghaiFor: null,
-        shanghaiIsAllowed: false,
-        deck: [],
-        discarded: []
-    },
+    // Dirty trick but Shanghai game does not have a default value but it cannot be undefined either within this context
+    game: undefined as unknown as StartedShanghaiGame,
+    myPlayerId: -1,
     actionResponse: {
         success: true
     },
@@ -44,7 +34,9 @@ const defaultGameContext: GameContextType = {
     selectedCard: {},
     setSelectedCard: () => { },
     hiddenCards: [],
-    setHiddenCards: () => { }
+    setHiddenCards: () => { },
+    getCurrentPlayer: () => undefined as unknown as FullPlayer,
+    getPlayer: (i) => undefined as unknown as FullPlayer
 }
 
 export const GameContext = React.createContext(

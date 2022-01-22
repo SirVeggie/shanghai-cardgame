@@ -1,6 +1,26 @@
+export type GameJoinParams = {
+    lobbyName: string,
+    playerName: string
+    password?: string
+}
+
+export type GameParams = {
+    gameId: string
+}
+
 //#region main export types
+export type Shanghai = {
+    options: ShanghaiOptions,
+    state: ShanghaiState
+}
+
 export interface ShanghaiGame {
+    id: string
+    name: string
+    startedAt: Date
+    updatedAt: Date
     options: ShanghaiOptions
+    password?: string
     state?: ShanghaiState
 }
 
@@ -11,29 +31,28 @@ export type ActionResponse = {
 }
 
 export type ShanghaiOptions = {
-    players: string[]
-    deckCount: number
-    jokerCount: number
+    players: Player[]
     shanghaiCount: number
     rounds: RoundConfig[]
 }
 
 export type ShanghaiState = {
-    players: Player[]
+    players: GamePlayer[]
     roundNumber: number
     turn: number
     shanghaiIsAllowed: boolean
-    shanghaiFor: string | null
+    shanghaiForId?: number
     deck: Card[]
     discarded: Card[]
-    discardTopOwner?: string
+    discardTopOwnerId?: number
     roundIsOn: boolean
-    winner?: string
+    winnerId?: number
     message?: string
 }
 
 export type Action = {
-    playerName: string
+    playerId: number
+    gameId: string
     setReady?: boolean
     revealDeck?: boolean
     takeDiscard?: boolean
@@ -47,8 +66,13 @@ export type Action = {
 //#endregion
 
 export type Player = {
+    id: number
     name: string
     isReady: boolean
+}
+
+export type GamePlayer = {
+    id: number
     points: number
     cards: Card[]
     melded: MeldedMeld[]
@@ -57,11 +81,13 @@ export type Player = {
     actionRelatedCardID?: number
 }
 
+export type FullPlayer = Player & GamePlayer
+
 export type Card = {
     id: number
     suit: CSuit
     rank: CRank
-    deck: CDeck
+    deck: number
     mustBeMelded?: boolean
 }
 
@@ -81,12 +107,13 @@ export enum CSuitIcon {
 
 export type CNormalRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
 export type CRank = CNormalRank | 25
-export type CDeck = 0 | 1
 export type CColor = 'red' | 'black'
 
 export type RoundConfig = {
     description: string
     cardCount: number
+    deckCount: number
+    jokerCount: number
     melds: Meld[]
 }
 
@@ -108,7 +135,7 @@ export type MeldAction = {
 }
 
 export type AddToMeldAction = {
-    targetPlayer: string
+    targetPlayerId: number
     targetMeldIndex: number
     cardToMeldId: number
     replaceJoker?: boolean
@@ -120,10 +147,13 @@ export type MeldCards = {
     cardIDs: number[]
 }
 
-export const cardOrderIndex = (card: Card): number =>  card.suit * 1000 + card.rank * 10 + card.deck
-
-export const getCurrentPlayer = (state: ShanghaiState) => state.players[getPlayerTurn(state, state.turn)]
-
-export const getPlayerByName = (state: ShanghaiState, name: string) => state.players.filter(p => p.name === name)[0]
+export const cardOrderIndex = (card: Card): number => card.suit * 1000 + card.rank * 10 + card.deck
 
 export const getPlayerTurn = (state: ShanghaiState, turnIndex: number) => turnIndex % state.players.length
+
+export const getFullPlayer = (player: Player, state: ShanghaiState) => {
+    return {
+        ...player,
+        ...state.players[player.id]
+    }
+}

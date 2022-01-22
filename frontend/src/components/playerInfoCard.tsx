@@ -1,22 +1,22 @@
 import style from './playerInfoCard.module.scss'
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
-import { getCurrentPlayer, Player } from '../shared'
+import { GamePlayer } from '../shared'
 import cx from 'classnames'
 
 type Props = {
-    player: Player
+    player: GamePlayer
 }
 
 export const Playerinfocard = ({ player }: Props) => {
-    const { myPlayerName, state } = useContext(GameContext)
+    const { myPlayerId, game: { state }, getPlayer, getCurrentPlayer } = useContext(GameContext)
 
-    const isTurn = getCurrentPlayer(state).name === player.name
-    const isMe = myPlayerName === player.name
+    const isTurn = getCurrentPlayer().id === player.id
+    const isMe = myPlayerId === player.id
 
     return <div className={cx(isMe && style.greenHighlight, style.card)}>
 
-        <span className={style.text}>{isTurn && <span className={style.turnIndicator}>►</span>}{player.name}</span>
+        <span className={style.text}>{isTurn && <span className={style.turnIndicator}>►</span>}{getPlayer(player.id).name}</span>
         <span className={style.text}>{player.cards.length}</span>
         <span className={style.text}>{player.shanghaiCount}</span>
         <span className={style.text}>{player.points}</span>

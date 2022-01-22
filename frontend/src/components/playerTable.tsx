@@ -10,9 +10,9 @@ import { FanValues } from './playingCard'
 export const PlayerTable = () => {
     const [orderByRank, setOrderByRank] = useState(false)
 
-    const { myPlayerName, state, actionResponse, hiddenCards } = useContext(GameContext)
+    const { myPlayerId, game: { state }, actionResponse, hiddenCards } = useContext(GameContext)
 
-    const myPlayer = state.players.find(p => p.name === myPlayerName)
+    const myPlayer = state.players.find(p => p.id === myPlayerId)
 
     if (!myPlayer) {
         return <div>Error</div>
@@ -21,7 +21,7 @@ export const PlayerTable = () => {
     const orderByRankFunc = (card: Card) => card.rank
 
     const filteredCards = filter(myPlayer.cards, card => !hiddenCards.includes(card.id))
-    
+
     const fan: FanValues = {
         curve: 2,
         distance: 50,

@@ -5,7 +5,7 @@ import { Meld } from '../shared'
 
 export const Infoarea = () => {
 
-    const { state, options } = useContext(GameContext)
+    const { game: { state, options } } = useContext(GameContext)
 
     if (state.roundNumber < 0) {
         return <span>Game not started</span>
@@ -13,8 +13,8 @@ export const Infoarea = () => {
 
     const round = options.rounds[state.roundNumber]
 
-    const headerText = state.winner
-        ? `${state.winner} wins!`
+    const headerText = state.winnerId !== undefined
+        ? `${state.winnerId} wins!`
         : `Round ${state.roundNumber + 1} / ${options.rounds.length}`
 
     return <div className={style.infoArea}>

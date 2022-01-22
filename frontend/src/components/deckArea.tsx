@@ -1,31 +1,31 @@
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card, getCurrentPlayer } from '../shared'
+import { Card } from '../shared'
 import style from './deckArea.module.scss'
 import { actionCallShanghai, actionRevealDeck, actionTakeDeck, actionTakeDiscard } from './playerActions'
 import { PlayingCard } from './playingCard'
 
 export const Deckarea = () => {
-    const { state, setActionResponse, myPlayerName } = useContext(GameContext)
+    const { game: { id: gameId, state, }, setActionResponse, myPlayerId, getCurrentPlayer } = useContext(GameContext)
 
     const clickDiscard = (card: Card | undefined) => {
         if (!card) {
             return
         }
-        const currentPlayer = getCurrentPlayer(state)
+        const currentPlayer = getCurrentPlayer()
 
-        if (currentPlayer.name === myPlayerName) {
-            actionTakeDiscard(setActionResponse, myPlayerName)
+        if (currentPlayer.id === myPlayerId) {
+            actionTakeDiscard(setActionResponse, gameId, myPlayerId)
         } else {
-            actionCallShanghai(setActionResponse, myPlayerName)
+            actionCallShanghai(setActionResponse, gameId, myPlayerId)
         }
     }
 
     const clickDeck = () => {
         if (state.discarded.length === 0) {
-            actionRevealDeck(setActionResponse, myPlayerName)
+            actionRevealDeck(setActionResponse, gameId, myPlayerId)
         } else {
-            actionTakeDeck(setActionResponse, myPlayerName)
+            actionTakeDeck(setActionResponse, gameId, myPlayerId)
         }
     }
 

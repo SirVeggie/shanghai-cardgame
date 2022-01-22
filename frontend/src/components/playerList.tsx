@@ -5,10 +5,10 @@ import { GameContext } from '../context/gameContext'
 import { LabelCard, Playerinfocard } from './playerInfoCard'
 
 export const Playerlist = () => {
-    const { state } = useContext(GameContext)
+    const { game: { state }, getPlayer } = useContext(GameContext)
     return <div className={style.status}>
         {Boolean(state.message) && <span className={style.message}>{state.message}</span>}
-        {Boolean(state.shanghaiFor) && <span className={style.message}>{state.shanghaiFor} called Shanghai!</span>}
+        {state.shanghaiForId !== undefined && <span className={style.message}>{getPlayer(state.shanghaiForId).id} called Shanghai!</span>}
         <div className={style.list}>
             <LabelCard />
             {state.players.map((p, i) =>
