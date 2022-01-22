@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Action, ActionResponse, GameParams, GameJoinParams, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
+import { Action, ActionResponse, GameParams, GameJoinParams, ShanghaiGame, ShanghaiState } from 'shared'
 
 //const baseURL = 'localhost:3001/api/'
 const baseURL = '/api/game/'

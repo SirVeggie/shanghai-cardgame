@@ -1,7 +1,7 @@
 import style from './playerInfoCard.module.scss'
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { GamePlayer } from '../shared'
+import { GamePlayer } from 'shared'
 import cx from 'classnames'
 
 type Props = {

@@ -1,6 +1,6 @@
 import style from './playingCard.module.scss'
-import { Card } from "../shared"
-import { FanValues, PlayingCard } from "./playingCard"
+import { Card } from 'shared'
+import { FanValues, PlayingCard } from './playingCard'
 import { ListIterator, Many, orderBy } from 'lodash'
 import cx from 'classnames'
 import { CSSProperties } from 'react'

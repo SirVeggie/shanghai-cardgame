@@ -1,5 +1,5 @@
 import React from 'react'
-import { ActionResponse, FullPlayer, ShanghaiGame, ShanghaiOptions, ShanghaiState } from '../shared'
+import { ActionResponse, FullPlayer, ShanghaiGame, ShanghaiState } from 'shared'
 
 type StartedShanghaiGame = ShanghaiGame & {
     state: ShanghaiState

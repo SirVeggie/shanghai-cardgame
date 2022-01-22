@@ -1,7 +1,7 @@
 import style from './playerActions.module.scss'
 import { useContext } from "react"
 import { GameContext } from "../context/gameContext"
-import { ActionResponse, AddToMeldAction, MeldAction } from '../shared'
+import { ActionResponse, AddToMeldAction, MeldAction } from 'shared'
 import { executePlayerAction } from '../services/gameApi'
 
 type ActionCallback = (s: ActionResponse) => void

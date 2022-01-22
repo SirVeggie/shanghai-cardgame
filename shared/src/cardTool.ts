@@ -1,4 +1,4 @@
-import { Card, CRank, CSuit, CSuitIcon, CColor, CNormalRank } from '../shared'
+import { Card, CRank, CSuit, CSuitIcon, CColor, CNormalRank } from '../index'
 
 const rankMask = (2 ** 10 - 1)
 const suitMask = (2 ** 10 - 1) << 10

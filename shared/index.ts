@@ -1,3 +1,7 @@
+import CardTool from './src/cardTool'
+
+export const ctool = CardTool;
+
 export type GameJoinParams = {
     lobbyName: string,
     playerName: string

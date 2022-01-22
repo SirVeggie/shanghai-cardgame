@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card } from '../shared'
+import { Card } from 'shared'
 import style from './deckArea.module.scss'
 import { actionCallShanghai, actionRevealDeck, actionTakeDeck, actionTakeDiscard } from './playerActions'
 import { PlayingCard } from './playingCard'

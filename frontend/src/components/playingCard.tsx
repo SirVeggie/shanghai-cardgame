@@ -1,9 +1,8 @@
 import style from './playingCard.module.scss'
 import cx from 'classnames'
-import { Card } from "../shared"
+import { ctool, Card } from 'shared'
 import { CSSProperties, useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import ctool from '../tools/CardTools'
 
 type CardProps = {
     card?: Card

@@ -1,6 +1,6 @@
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card, MeldedMeld, GamePlayer } from '../shared'
+import { Card, MeldedMeld, GamePlayer } from 'shared'
 import { CardCollection } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPublic.module.scss'
@@ -71,7 +71,7 @@ export const Meldspublic = () => {
     }
 
     return <div className={style.meldsPublic}>
-        {state.players.map(pm => playerRow(pm))}
+        {state.players.map((pm: GamePlayer) => playerRow(pm))}
     </div>
 }
 

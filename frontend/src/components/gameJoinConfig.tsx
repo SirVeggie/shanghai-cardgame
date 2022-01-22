@@ -1,6 +1,5 @@
-import { useState } from "react"
-import { startNewGame } from "../services/gameApi"
-import { GameJoinParams, ShanghaiGame } from "../shared"
+import { useState } from 'react'
+import { GameJoinParams } from 'shared'
 
 export type JoinType = 'create' | 'join'
 type NameInputProps = {

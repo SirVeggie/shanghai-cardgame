@@ -1,7 +1,7 @@
 import style from './infoArea.module.scss'
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Meld } from '../shared'
+import { Meld } from 'shared'
 
 export const Infoarea = () => {
 
@@ -22,7 +22,7 @@ export const Infoarea = () => {
         <h2>{round.description}</h2>
 
         <div className={style.melds}>
-            {round.melds.map((meld, meldIndex) => meldInfo({ meld, meldIndex }))}
+            {round.melds.map((meld: Meld, meldIndex: number) => meldInfo({ meld, meldIndex }))}
         </div>
     </div>
 }

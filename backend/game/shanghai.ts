@@ -1,8 +1,6 @@
 import { compact, filter, find, findIndex, flatMap, floor, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, CNormalRank, cardOrderIndex, FullPlayer, GamePlayer, getPlayerTurn } from '../../frontend/src/shared'
-import ctool from '../../frontend/src/tools/CardTools'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, CNormalRank, cardOrderIndex, FullPlayer, GamePlayer, getPlayerTurn, ctool } from 'shared'
 import arrayShuffle from 'shuffle-array'
-import CardTools from '../../frontend/src/tools/CardTools'
 
 // NOTE ACE IS NOT 1
 
@@ -528,7 +526,7 @@ const actionAddToMeldReplaceJoker = (player: GamePlayer, meld: AddToMeldAction):
 
     return {
         success: false,
-        error: `The card ${CardTools.longName(cardToMeld)} cannot replace any Jokers`
+        error: `The card ${ctool.longName(cardToMeld)} cannot replace any Jokers`
     }
 }
 

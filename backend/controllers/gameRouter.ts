@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { usingGameContext } from '../game/shanghai'
-import { Action, GameJoinParams } from '../../frontend/src/shared'
+import { Action, GameJoinParams } from 'shared';
 import { addPlayerToGame, createNewGame, getGameById, getGameByName, updateGame } from '../game/gameManger'
 
 const router = Router()

@@ -5,10 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.usingGameContext = void 0;
 const lodash_1 = require("lodash");
-const shared_1 = require("../../frontend/src/shared");
-const CardTools_1 = __importDefault(require("../../frontend/src/tools/CardTools"));
+const shared_1 = require("shared");
 const shuffle_array_1 = __importDefault(require("shuffle-array"));
-const CardTools_2 = __importDefault(require("../../frontend/src/tools/CardTools"));
 // NOTE ACE IS NOT 1
 let options;
 let state;
@@ -183,10 +181,10 @@ const actionAllowShanghaiCall = () => {
     state.discardTopOwnerId = undefined;
     state.shanghaiForId = undefined;
     player.shanghaiCount++;
-    message(`${getPlayerName(current.id)} allowed the Shanghai call for ${getPlayerName(player.id)} with card: ${CardTools_1.default.longName(discard)}`);
+    message(`${getPlayerName(current.id)} allowed the Shanghai call for ${getPlayerName(player.id)} with card: ${shared_1.ctool.longName(discard)}`);
     return {
         success: true,
-        message: `Succesfully allowed Shanghai for ${CardTools_1.default.longName(discard)}`
+        message: `Succesfully allowed Shanghai for ${shared_1.ctool.longName(discard)}`
     };
 };
 const actionRevealDeck = (player) => {
@@ -206,10 +204,10 @@ const actionRevealDeck = (player) => {
     state.discarded.push(card);
     state.shanghaiIsAllowed = true;
     state.discardTopOwnerId = undefined;
-    message(`${getPlayerName(player.id)} revealed ${CardTools_1.default.longName(card)}`);
+    message(`${getPlayerName(player.id)} revealed ${shared_1.ctool.longName(card)}`);
     return {
         success: true,
-        message: `Revealed ${CardTools_1.default.longName(card)}`
+        message: `Revealed ${shared_1.ctool.longName(card)}`
     };
 };
 const actionTakeDiscard = (player) => {
@@ -237,10 +235,10 @@ const actionTakeDiscard = (player) => {
     state.shanghaiIsAllowed = false;
     state.shanghaiForId = undefined;
     state.discardTopOwnerId = undefined;
-    message(`${getPlayerName(player.id)} picked up ${CardTools_1.default.longName(card)} from the discard pile`);
+    message(`${getPlayerName(player.id)} picked up ${shared_1.ctool.longName(card)} from the discard pile`);
     return {
         success: true,
-        message: `Picked up ${CardTools_1.default.longName(card)}`,
+        message: `Picked up ${shared_1.ctool.longName(card)}`,
     };
 };
 const actionTakeDeck = (player) => {
@@ -263,7 +261,7 @@ const actionTakeDeck = (player) => {
     message(`${getPlayerName(player.id)} picked up a card from the deck`);
     return {
         success: true,
-        message: `Picked up ${CardTools_1.default.longName(card)}`,
+        message: `Picked up ${shared_1.ctool.longName(card)}`,
     };
 };
 const actionMeld = (player, meld) => {
@@ -319,10 +317,10 @@ const actionDiscard = (player, toDiscardId) => {
     state.discardTopOwnerId = player.id;
     endPlayerTurn(player);
     state.shanghaiIsAllowed = true;
-    message(`${getPlayerName(player.id)} discarded ${CardTools_1.default.longName(cardToDiscard)}`);
+    message(`${getPlayerName(player.id)} discarded ${shared_1.ctool.longName(cardToDiscard)}`);
     return {
         success: true,
-        message: `Discarded ${CardTools_1.default.longName(cardToDiscard)}`
+        message: `Discarded ${shared_1.ctool.longName(cardToDiscard)}`
     };
 };
 const actionAddToMeld = (player, meld) => {
@@ -343,7 +341,7 @@ const actionAddToMeld = (player, meld) => {
     if (player.cards.length === 0) {
         endPlayerTurn(player);
     }
-    message(`${getPlayerName(player.id)} melded ${CardTools_1.default.longName(meldedCard)} into ${getPlayerName(meld.targetPlayerId)}'s table`);
+    message(`${getPlayerName(player.id)} melded ${shared_1.ctool.longName(meldedCard)} into ${getPlayerName(meld.targetPlayerId)}'s table`);
     return {
         success: true,
     };
@@ -435,7 +433,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
             targetPlayer.melded[meld.targetMeldIndex] = { cards: jokerReplace.newMeldCards };
             // Give new joker
             giveCard(player, Object.assign(Object.assign({}, jokerReplace.jokerCard), { mustBeMelded: true }));
-            message(`${getPlayerName(player.id)} replaced the Joker from ${getPlayerName(meld.targetPlayerId)}'s table with card ${CardTools_1.default.longName(cardToMeld)}`);
+            message(`${getPlayerName(player.id)} replaced the Joker from ${getPlayerName(meld.targetPlayerId)}'s table with card ${shared_1.ctool.longName(cardToMeld)}`);
             return {
                 success: true,
                 message: 'Succesfully replaced Joker'
@@ -444,7 +442,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
     }
     return {
         success: false,
-        error: `The card ${CardTools_2.default.longName(cardToMeld)} cannot replace any Jokers`
+        error: `The card ${shared_1.ctool.longName(cardToMeld)} cannot replace any Jokers`
     };
 };
 const tryReplaceJoker = (cardToMeld, targetMeldCards, meld, joker) => {
@@ -564,7 +562,7 @@ const checkStraightValidity = (cards, length) => {
         expectedRank = 2;
     }
     else {
-        expectedRank = CardTools_1.default.nextRank(firstRank);
+        expectedRank = shared_1.ctool.nextRank(firstRank);
     }
     for (let i = 1; i < cards.length; i++) {
         // straight cannot continue after ace
@@ -576,7 +574,7 @@ const checkStraightValidity = (cards, length) => {
         if (rank !== 25 && rank !== expectedRank) {
             return false;
         }
-        expectedRank = CardTools_1.default.nextRank(expectedRank);
+        expectedRank = shared_1.ctool.nextRank(expectedRank);
     }
     return true;
 };
@@ -601,30 +599,6 @@ const getFirstExpectedRank = (cards) => {
         }
     }
     return firstRank;
-};
-const getStraightJokersFromValidStraight = (cards) => {
-    const jokers = [];
-    let expectedRank = getFirstExpectedRank(cards);
-    // melded straights should be valid
-    if (!expectedRank) {
-        throw "Melded straight was invalid check 1";
-    }
-    for (let i = 0; i < cards.length; i++) {
-        const card = cards[i];
-        // WHYYYYY
-        if (!expectedRank) {
-            throw "Melded straight was invalid check 2";
-        }
-        if (card.rank === 25) {
-            jokers.push({
-                joker: card,
-                index: i,
-                rank: expectedRank
-            });
-        }
-        expectedRank = CardTools_1.default.nextRank(expectedRank);
-    }
-    return jokers;
 };
 const playerCanTakeCard = (player) => {
     return player.canTakeCard;
@@ -707,7 +681,7 @@ const resetPlayer = (player) => {
 const getPlayer = (id) => options.players[id];
 const getGamePlayer = (id) => state.players[id];
 const getPlayerName = (id) => getPlayer(id).name;
-const getCurrentPlayer = () => (0, shared_1.getCurrentPlayerId)({ state, options });
+const getCurrentPlayer = () => options.players[(0, shared_1.getPlayerTurn)(state, state.turn)].id;
 const getPlayerCards = (player, cardIDs, removeCards) => {
     const cardsToTake = (0, lodash_1.compact)(cardIDs.map(id => (0, lodash_1.find)(player.cards, c => c.id === id)));
     if (removeCards) {
@@ -745,12 +719,12 @@ const createDeck = (deckCount, jokerCount) => {
     for (let suit = 0; suit < 4; suit++) {
         for (let rank = 2; rank <= 14; rank++) {
             for (let deck = 0; deck < deckCount; deck++) {
-                cards.push(CardTools_1.default.fromValues(rank, suit, deck));
+                cards.push(shared_1.ctool.fromValues(rank, suit, deck));
             }
         }
     }
     for (let i = 0; i < jokerCount; i++) {
-        cards.push(CardTools_1.default.fromValues(25, i % 4, (0, lodash_1.floor)(i / 4)));
+        cards.push(shared_1.ctool.fromValues(25, i % 4, (0, lodash_1.floor)(i / 4)));
     }
     return cards;
 };

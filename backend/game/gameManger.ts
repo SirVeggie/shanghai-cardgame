@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { GameJoinParams, Player, ShanghaiGame } from '../../frontend/src/shared'
+import { GameJoinParams, Player, ShanghaiGame } from 'shared'
 import { getDefaultConfiguration } from './shanghaiGameConfig'
 
 const games = new Map<string, ShanghaiGame>()
@@ -88,7 +88,7 @@ const gameIsStagnated = (game: ShanghaiGame): boolean => {
     }
 
     // Game has ended    
-    if (game.state?.winner && olderThan(game.updatedAt, hoursToMillis(1))) {
+    if (game.state?.winnerId && olderThan(game.updatedAt, hoursToMillis(1))) {
         return true
     }
 

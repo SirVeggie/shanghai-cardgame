@@ -1,4 +1,6 @@
 
+shared/build
+
 # Logs
 logs
 *.log

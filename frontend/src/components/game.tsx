@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ActionResponse, GameJoinParams, getFullPlayer, getPlayerTurn, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../shared"
+import { ActionResponse, GameJoinParams, getFullPlayer, getPlayerTurn, ShanghaiGame } from 'shared'
 import { GameContext } from "../context/gameContext"
 import { getGameState, joinGame, startNewGame } from "../services/gameApi"
 import { GameView } from "./gameView"

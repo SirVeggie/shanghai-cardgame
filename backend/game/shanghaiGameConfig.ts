@@ -1,4 +1,4 @@
-import { GamePlayer, Meld, Player, RoundConfig, ShanghaiGame, ShanghaiOptions, ShanghaiState } from "../../frontend/src/shared"
+import { GamePlayer, Meld, Player, RoundConfig, ShanghaiGame, ShanghaiOptions, ShanghaiState } from 'shared'
 
 export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions => ({
     players: [{

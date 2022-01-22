@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
 import { GameContext } from '../context/gameContext'
-import { Card, Meld, MeldCards } from '../shared'
+import { Card, Meld, MeldCards } from 'shared'
 import { CardCollection, fanWidthCalc } from './cardCollection'
 import { meldInfo } from './infoArea'
 import style from './meldsPrivate.module.scss'
@@ -55,7 +55,7 @@ export const Meldsprivate = () => {
 
     const meldRow = (meld: Meld, i: number) => {
         const meldCards = playerMelds[i]
-        const cards = compact(meldCards.cardIDs.map(id => myPlayer.cards.find(c => c.id === id)))
+        const cards = compact(meldCards.cardIDs.map(id => myPlayer.cards.find((c: Card) => c.id === id)))
 
         const fan: FanValues = {
             curve: 0.1,
@@ -101,7 +101,7 @@ export const Meldsprivate = () => {
         <button onClick={onClickMeld}>Meld</button>
         <button onClick={clearAll}>Clear</button>
         <div className={style.meldRowGroup}>
-            {requiredMelds.map((meld, i) => meldRow(meld, i))}
+            {requiredMelds.map((meld: Meld, i: number) => meldRow(meld, i))}
         </div>
     </div>
 }

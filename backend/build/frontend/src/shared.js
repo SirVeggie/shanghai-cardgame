@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPlayerTurn = exports.getPlayerByName = exports.getCurrentPlayerId = exports.getCurrentPlayer = exports.cardOrderIndex = exports.CSuitIcon = exports.CSuit = void 0;
+exports.getFullPlayer = exports.getPlayerTurn = exports.cardOrderIndex = exports.CSuitIcon = exports.CSuit = void 0;
 var CSuit;
 (function (CSuit) {
     CSuit[CSuit["club"] = 0] = "club";
@@ -17,17 +17,9 @@ var CSuitIcon;
 })(CSuitIcon = exports.CSuitIcon || (exports.CSuitIcon = {}));
 const cardOrderIndex = (card) => card.suit * 1000 + card.rank * 10 + card.deck;
 exports.cardOrderIndex = cardOrderIndex;
-const getCurrentPlayer = (shanghai) => {
-    const player = shanghai.options.players[(0, exports.getPlayerTurn)(shanghai.state, shanghai.state.turn)];
-    return Object.assign(Object.assign({}, player), shanghai.state.players[player.id]);
-};
-exports.getCurrentPlayer = getCurrentPlayer;
-const getCurrentPlayerId = (shanghai) => shanghai.options.players[(0, exports.getPlayerTurn)(shanghai.state, shanghai.state.turn)].id;
-exports.getCurrentPlayerId = getCurrentPlayerId;
-const getPlayerByName = (shanghai, name) => {
-    const player = shanghai.options.players.filter(p => p.name === name)[0];
-    return Object.assign(Object.assign({}, player), shanghai.state.players[player.id]);
-};
-exports.getPlayerByName = getPlayerByName;
 const getPlayerTurn = (state, turnIndex) => turnIndex % state.players.length;
 exports.getPlayerTurn = getPlayerTurn;
+const getFullPlayer = (player, state) => {
+    return Object.assign(Object.assign({}, player), state.players[player.id]);
+};
+exports.getFullPlayer = getFullPlayer;

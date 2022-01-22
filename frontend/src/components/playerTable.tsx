@@ -2,7 +2,7 @@ import style from './playerTable.module.scss'
 import { useContext, useState } from "react"
 import { GameContext } from "../context/gameContext"
 import { CardCollection } from "./cardCollection"
-import { ActionResponse, Card } from '../shared'
+import { ActionResponse, Card, GamePlayer } from 'shared'
 import { PlayerActions } from './playerActions'
 import { filter } from 'lodash'
 import { FanValues } from './playingCard'
@@ -12,7 +12,7 @@ export const PlayerTable = () => {
 
     const { myPlayerId, game: { state }, actionResponse, hiddenCards } = useContext(GameContext)
 
-    const myPlayer = state.players.find(p => p.id === myPlayerId)
+    const myPlayer = state.players.find((p: GamePlayer) => p.id === myPlayerId)
 
     if (!myPlayer) {
         return <div>Error</div>
