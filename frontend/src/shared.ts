@@ -1,7 +1,3 @@
-import CardTool from './src/cardTool'
-
-export const ctool = CardTool
-
 export type GameJoinParams = {
     lobbyName: string,
     playerName: string
@@ -11,12 +7,6 @@ export type GameJoinParams = {
 export type GameParams = {
     gameId: string
 }
-
-export type GamePlayerParams = {
-    gameId: string
-    playerId: number
-}
-
 
 //#region main export types
 export type Shanghai = {
@@ -63,6 +53,7 @@ export type ShanghaiState = {
 export type Action = {
     playerId: number
     gameId: string
+    setReady?: boolean
     revealDeck?: boolean
     takeDiscard?: boolean
     takeDeck?: boolean
@@ -159,10 +150,3 @@ export type MeldCards = {
 export const cardOrderIndex = (card: Card): number => card.suit * 1000 + card.rank * 10 + card.deck
 
 export const getPlayerTurn = (state: ShanghaiState, turnIndex: number) => turnIndex % state.players.length
-
-export const getFullPlayer = (player: Player, state: ShanghaiState) => {
-    return {
-        ...player,
-        ...state.players[player.id]
-    }
-}

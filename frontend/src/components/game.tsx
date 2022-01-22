@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
 import { ActionResponse, GameJoinParams, getFullPlayer, getPlayerTurn, ShanghaiGame } from 'shared'
 import { GameContext } from "../context/gameContext"
-import { getGameState, joinGame, startNewGame } from "../services/gameApi"
+import { getGame, getGameState, joinGame, setPlayerReady, startNewGame } from "../services/gameApi"
 import { GameView } from "./gameView"
 import { GameJoinConfig, JoinType } from "./gameJoinConfig"
-import { actionSetReady } from "./playerActions"
 
 // dumb but ez solution
 let updateInProgress = false
@@ -52,7 +51,9 @@ const Game = () => {
             setMyPlayerId(currentPlayer.id)
         }
         if (debugMode && game.options.players.some(p => !p.isReady)) {
-            game.state.players.forEach(p => actionSetReady(setActionResponse, game.id, p.id))
+            if (myPlayerId !== undefined) {
+                game.state.players.forEach(p => setPlayerReady({ gameId: game.id, playerId: p.id }))
+            }
         }
     }
 
@@ -105,9 +106,15 @@ const Game = () => {
     }
 
     // Game not started
-    if (!game.state || game.state.roundNumber < 0) {
+    if (!game.state) {
         return <div>
-            <button onClick={() => actionSetReady(setActionResponse, game.id, myPlayerId)}>Ready</button>
+            <button onClick={() => setPlayerReady({ gameId: game.id, playerId: myPlayerId }).then(res => {
+                console.log("ready cb, " + res)
+                console.log({ game })
+                if (res) {
+                    getGame(game.id).then(game => setGame(game))
+                }
+            })}>Ready</button>
         </div>
     }
     const myPlayer = getPlayer(myPlayerId)

@@ -1,20 +1,22 @@
 import axios from 'axios'
-import { Action, ActionResponse, GameParams, GameJoinParams, ShanghaiGame, ShanghaiState } from 'shared'
+import { Action, ActionResponse, GameParams, GameJoinParams, ShanghaiGame, ShanghaiState, GamePlayerParams } from 'shared'
 
 //const baseURL = 'localhost:3001/api/'
-const baseURL = '/api/game/'
+const baseURL = '/api/game'
 
 const timeout = 5000
 
 export const getGame = async (gameId: string): Promise<ShanghaiGame> => {
-    const url = apiPath("game")
+    const url = apiPath("")
 
     const data: GameParams = {
         gameId
     }
 
+    console.log({ url, data })
+
     const res = await axios({
-        method: 'get',
+        method: 'post',
         url,
         data,
         timeout
@@ -29,14 +31,14 @@ export const getGame = async (gameId: string): Promise<ShanghaiGame> => {
 }
 
 export const getGameState = async (gameId: string): Promise<ShanghaiState> => {
-    const url = apiPath("game/state")
+    const url = apiPath("/state")
 
     const data: GameParams = {
         gameId
     }
 
     const res = await axios({
-        method: 'get',
+        method: 'post',
         url,
         data,
         timeout
@@ -50,7 +52,7 @@ export const getGameState = async (gameId: string): Promise<ShanghaiState> => {
 }
 
 export const startNewGame = async (game: GameJoinParams): Promise<ShanghaiGame | undefined> => {
-    const url = apiPath("game/new")
+    const url = apiPath("/new")
 
     const data = {
         data: game
@@ -69,7 +71,7 @@ export const startNewGame = async (game: GameJoinParams): Promise<ShanghaiGame |
 }
 
 export const joinGame = async (game: GameJoinParams): Promise<ShanghaiGame | undefined> => {
-    const url = apiPath("game/join")
+    const url = apiPath("/join")
 
     const data = {
         data: game
@@ -87,8 +89,25 @@ export const joinGame = async (game: GameJoinParams): Promise<ShanghaiGame | und
     }
 }
 
+export const setPlayerReady = async (params: GamePlayerParams): Promise<boolean> => {
+    const url = apiPath("/ready")
+
+    const data = {
+        data: params
+    }
+
+    const res = await axios({
+        method: 'post',
+        url,
+        data,
+        timeout
+    })
+
+    return res.status === 200
+}
+
 export const executePlayerAction = async (action: Action): Promise<ActionResponse> => {
-    const url = apiPath("game/action")
+    const url = apiPath("/action")
 
     const data = {
         data: action

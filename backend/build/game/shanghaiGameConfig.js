@@ -22,12 +22,13 @@ const initialState = (players) => {
         roundNumber: -1,
         turn: 0,
         shanghaiIsAllowed: false,
-        shanghaiFor: null,
+        shanghaiForId: undefined,
         deck: [],
         discarded: [],
     };
 };
-const createPlayer = (name) => ({
+const createPlayer = (owner) => ({
+    id: owner.id,
     points: 0,
     cards: [],
     melded: [],

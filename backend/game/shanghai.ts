@@ -9,13 +9,13 @@ let state: ShanghaiState
 
 type ActionHandler = (act: Action) => ActionResponse
 type StateGetter = () => ShanghaiState
-type ActionDelegate = (i: ActionHandler, getNewState: StateGetter) => void
+type ActionDelegate = (handleAction: ActionHandler, checkGameContinue: () => void, getNewState: StateGetter) => void
 
 export const usingGameContext = (pOptions: ShanghaiOptions, pState: ShanghaiState, callback: ActionDelegate) => {
     options = pOptions
     state = pState
 
-    callback(handleAction, () => state)
+    callback(handleAction, checkGameContinue, () => state)
 
     // Dirty trick but fast
     options = undefined as unknown as ShanghaiOptions
@@ -32,15 +32,7 @@ const handleAction = (action: Action): ActionResponse => {
             error: `Player does not exist`
         }
     }
-
-    if (action.setReady) {
-        getPlayer(action.playerId).isReady = true
-        checkGameContinue()
-        return {
-            success: true
-        }
-    }
-
+    
     if (!state.roundIsOn) {
         return {
             success: false,

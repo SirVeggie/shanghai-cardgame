@@ -17,6 +17,7 @@ export const startGame = (game: ShanghaiGame): ShanghaiGame => {
     }
 }
 
+
 const initialState = (players: Player[]): ShanghaiState => {
     return {
         players: players.map(createPlayer),
@@ -24,13 +25,14 @@ const initialState = (players: Player[]): ShanghaiState => {
         roundNumber: -1,
         turn: 0,
         shanghaiIsAllowed: false,
-        shanghaiFor: null,
+        shanghaiForId: undefined,
         deck: [],
         discarded: [],
     }
 }
 
-const createPlayer = (name: Player): GamePlayer => ({
+const createPlayer = (owner: Player): GamePlayer => ({
+    id: owner.id,
     points: 0,
     cards: [],
     melded: [],

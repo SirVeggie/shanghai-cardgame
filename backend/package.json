@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "tsc & node ./build/backend/index.js",
+    "dev": "tsc & node ./build/index.js",
     "start": "node build/backend/index.js",
     "deploy": "cd ..; git subtree push --prefix backend/ heroku master"
   },

@@ -13,7 +13,7 @@ let state;
 const usingGameContext = (pOptions, pState, callback) => {
     options = pOptions;
     state = pState;
-    callback(handleAction, () => state);
+    callback(handleAction, checkGameContinue, () => state);
     // Dirty trick but fast
     options = undefined;
     state = undefined;
@@ -27,13 +27,6 @@ const handleAction = (action) => {
         return {
             success: false,
             error: `Player does not exist`
-        };
-    }
-    if (action.setReady) {
-        getPlayer(action.playerId).isReady = true;
-        checkGameContinue();
-        return {
-            success: true
         };
     }
     if (!state.roundIsOn) {

@@ -16,7 +16,7 @@ const createServer = () => {
     app.use(express_1.default.static('build'));
     app.use((0, cors_1.default)());
     app.use((0, morgan_1.default)('tiny'));
-    app.use('/api/game/', gameRouter_1.default);
+    app.use('/api/game', gameRouter_1.default);
     const server = http_1.default.createServer(app);
     const io = new socket_io_1.Server(server);
     io.on('connection', client => {

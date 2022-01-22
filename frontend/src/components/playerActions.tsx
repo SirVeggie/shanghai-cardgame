@@ -2,7 +2,7 @@ import style from './playerActions.module.scss'
 import { useContext } from "react"
 import { GameContext } from "../context/gameContext"
 import { ActionResponse, AddToMeldAction, MeldAction } from 'shared'
-import { executePlayerAction } from '../services/gameApi'
+import { executePlayerAction, setPlayerReady } from '../services/gameApi'
 
 type ActionCallback = (s: ActionResponse) => void
 type ButtonConfig = {
@@ -34,7 +34,7 @@ export const PlayerActions = () => {
         },
         {
             label: "Set ready",
-            onClick: () => actionSetReady(setActionResponse, gameId, myPlayerId)
+            onClick: () => setPlayerReady({ gameId, playerId: myPlayerId })
         }
     ]
 
@@ -45,15 +45,6 @@ export const PlayerActions = () => {
             </button>
         )}
     </div>
-}
-
-export const actionSetReady = async (cb: ActionCallback, gameId: string, playerId: number) => {
-    const res = await executePlayerAction({
-        gameId,
-        playerId,
-        setReady: true
-    })
-    cb(res)
 }
 
 export const actionRevealDeck = async (cb: ActionCallback, gameId: string, playerId: number) => {

@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const shared_1 = require("../shared");
-const rankMask = (2 ** 10 - 1);
-const suitMask = (2 ** 10 - 1) << 10;
-const deckMask = (2 ** 10 - 1) << 20;
+const index_1 = require("../index");
+const rankMask = (Math.pow(2, 10) - 1);
+const suitMask = (Math.pow(2, 10) - 1) << 10;
+const deckMask = (Math.pow(2, 10) - 1) << 20;
 const fromId = (id) => {
     const rank = (id & rankMask);
     const suit = (id & suitMask) >> 10;
@@ -24,15 +24,15 @@ const color = (card) => {
 const name = (card) => {
     if (card.rank === 25)
         return 'Joker';
-    return shared_1.CSuitIcon[card.suit] + rankPrefix(card);
+    return index_1.CSuitIcon[card.suit] + rankPrefix(card);
 };
 const longName = (card) => {
     if (card.rank === 25)
         return `${color(card)} Joker`;
-    return `${rankName(card)} of ${shared_1.CSuit[card.suit]}s`;
+    return `${rankName(card)} of ${index_1.CSuit[card.suit]}s`;
 };
-const suitName = (card) => shared_1.CSuit[card.suit];
-const suitIcon = (card) => shared_1.CSuitIcon[card.suit];
+const suitName = (card) => index_1.CSuit[card.suit];
+const suitIcon = (card) => index_1.CSuitIcon[card.suit];
 const rankPrefix = (card) => {
     if (card.rank === 25)
         return 'JOKER';
@@ -75,3 +75,4 @@ exports.default = {
     rankPrefix,
     nextRank
 };
+//# sourceMappingURL=cardTool.js.map

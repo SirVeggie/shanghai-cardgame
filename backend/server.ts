@@ -13,7 +13,7 @@ const createServer = () => {
     app.use(express.static('build'))
     app.use(cors())
     app.use(morgan('tiny'))
-    app.use('/api/game/', gameRouter)
+    app.use('/api/game', gameRouter)
     const server = http.createServer(app)
     const io = new Server(server)
     io.on('connection', client => {

@@ -77,7 +77,7 @@ const gameIsStagnated = (game) => {
         return true;
     }
     // Game has ended    
-    if (((_a = game.state) === null || _a === void 0 ? void 0 : _a.winner) && olderThan(game.updatedAt, hoursToMillis(1))) {
+    if (((_a = game.state) === null || _a === void 0 ? void 0 : _a.winnerId) && olderThan(game.updatedAt, hoursToMillis(1))) {
         return true;
     }
     // No action in 7 days    
