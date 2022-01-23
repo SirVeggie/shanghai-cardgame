@@ -37,6 +37,7 @@ export const createNewGame = ({ lobbyName, playerName, password }: GameJoinParam
     games.set(id, {
         id,
         name: lobbyName,
+        password,
         startedAt: date,
         updatedAt: date,
         options: getDefaultConfiguration(playerName)

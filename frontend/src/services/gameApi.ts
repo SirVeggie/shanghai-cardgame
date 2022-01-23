@@ -13,8 +13,6 @@ export const getGame = async (gameId: string): Promise<ShanghaiGame> => {
         gameId
     }
 
-    console.log({ url, data })
-
     const res = await axios({
         method: 'post',
         url,

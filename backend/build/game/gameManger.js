@@ -31,6 +31,7 @@ const createNewGame = ({ lobbyName, playerName, password }) => {
     games.set(id, {
         id,
         name: lobbyName,
+        password,
         startedAt: date,
         updatedAt: date,
         options: (0, shanghaiGameConfig_1.getDefaultConfiguration)(playerName)

@@ -49,6 +49,8 @@ router.post('/new', async (req, res) => {
     const gameParams = req.body["data"] as GameJoinParams
     const newId = createNewGame(gameParams)
 
+    console.log({ gameParams })
+
     if (!newId) {
         return res.status(400).send()
     }
@@ -66,6 +68,7 @@ router.post('/join', async (req, res) => {
     const gameParams = req.body["data"] as GameJoinParams
 
     const game = getGameByName(gameParams.lobbyName)
+    console.log({ game })
 
     if (!game) {
         console.log('game not found')
@@ -76,10 +79,16 @@ router.post('/join', async (req, res) => {
         return res.status(401).send()
     }
 
-    if (game.state) {
+    const player = game.options.players.find(p => p.name === gameParams.playerName)
+    if (player) {
         return res.json(game)
     }
-  
+
+    // Cannot join after game started
+    if (game.state) {
+        return res.status(400).send()
+    }
+
     const newGame = addPlayerToGame(game.id, gameParams.playerName)
 
     if (!newGame) {
@@ -92,7 +101,6 @@ router.post('/join', async (req, res) => {
 })
 
 router.post('/ready', async (req, res) => {
-    console.log("ready")
     const data = req.body["data"] as GamePlayerParams
     let game = getGameById(data.gameId)
 
@@ -115,8 +123,6 @@ router.post('/ready', async (req, res) => {
         })
     } else {
         const allReady = game.options.players.length > 1 && !game.options.players.some(p => !p.isReady)
-        console.log({ allReady })
-        console.log(JSON.stringify(game, null, 2))
         if (allReady) {
             game = startGame(game)
         }

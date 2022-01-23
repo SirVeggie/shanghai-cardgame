@@ -48,11 +48,7 @@ const Game = () => {
         })
     }
 
-    console.log({ game })
-
     const [prevTurn, setPrevTurn] = useState(-1)
-
-    console.log({ selectedCard })
 
     if (game?.state) {
         if (prevTurn !== game.state.turn) {
@@ -80,17 +76,14 @@ const Game = () => {
             }
             try {
                 updateInProgress = true
-                console.log({ game: game })
 
                 if (!game.state) {
-                    console.log('update game')
                     updateGame(() => { })
                     await sleep(2000)
                     updateInProgress = false
                     return
                 }
 
-                console.log('updte game stte')
                 const state = await getGameState(game.id)
                 updateInProgress = false
                 setGame({ ...game, state })
@@ -107,7 +100,6 @@ const Game = () => {
         setMyPlayerId(-1)
         const onReceiveGame = (newGame: ShanghaiGame | undefined) => {
             if (game) {
-                console.log('game existed')
                 return
             }
 
@@ -116,13 +108,20 @@ const Game = () => {
                 // websocket connect here maybe?
                 setMyPlayerId(player?.id)
                 setGame(newGame)
-                console.log('set new game')
             } else {
                 setMyPlayerId(undefined)
             }
         }
 
-        join === 'create' ? startNewGame(gameParams).then(onReceiveGame) : joinGame(gameParams).then(onReceiveGame)
+        join === 'create'
+            ? startNewGame(gameParams).then(onReceiveGame).catch(e => {
+                setMyPlayerId(undefined)
+                console.log('Could not create new game')
+            })
+            : joinGame(gameParams).then(onReceiveGame).catch(e => {
+                setMyPlayerId(undefined)
+                console.log('Could not join game')
+            })
     }
 
     if (myPlayerId === -1) {
@@ -141,8 +140,6 @@ const Game = () => {
     if (!game.state) {
         return <div>
             <button onClick={() => setPlayerReady({ gameId: game.id, playerId: myPlayerId }).then(res => {
-                console.log("ready cb, " + res)
-                console.log({ game })
                 if (res) {
                     updateGame(() => { })
                 }
