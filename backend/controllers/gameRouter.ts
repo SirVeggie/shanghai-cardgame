@@ -116,16 +116,18 @@ router.post('/ready', async (req, res) => {
 
     player.isReady = true
 
+    if (!game.state) {
+        const allReady = game.options.players.length > 1 && !game.options.players.some(p => !p.isReady)
+        if (allReady) {
+            game = startGame(game)
+        }
+    }
+
     if (game.state) {
         usingGameContext(game.options, game.state, (h, checkGameContinue, getState) => {
             checkGameContinue()
             game!.state = getState()
         })
-    } else {
-        const allReady = game.options.players.length > 1 && !game.options.players.some(p => !p.isReady)
-        if (allReady) {
-            game = startGame(game)
-        }
     }
 
     updateGame(data.gameId, game)

@@ -124,7 +124,7 @@ const Game = () => {
             })
     }
 
-    if (myPlayerId === -1) {
+    if (myPlayerId === -1 || (game?.state && game.state.roundNumber < 0)) {
         return <div>Loading...</div>
     }
 
