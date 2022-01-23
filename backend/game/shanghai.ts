@@ -32,7 +32,7 @@ const handleAction = (action: Action): ActionResponse => {
             error: `Player does not exist`
         }
     }
-    
+
     if (!state.roundIsOn) {
         return {
             success: false,
@@ -484,7 +484,7 @@ const actionAddToMeldReplaceJoker = (player: GamePlayer, meld: AddToMeldAction):
     }
 
     const targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards
-    const jokerIndexes = filter(targetMeldCards, c => c.rank === 25).map((card, index) => index)
+    const jokerIndexes = filter(targetMeldCards.map((card, index) => ({ rank: card.rank, index })), c => c.rank === 25).map(c => c.index)
 
     if (!jokerIndexes.length) {
         return {
