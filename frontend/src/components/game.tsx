@@ -1,3 +1,4 @@
+import style from './game.module.scss'
 import { useEffect, useState } from "react"
 import { ActionResponse, GameJoinParams, getFullPlayer, getPlayerTurn, ShanghaiGame } from 'shared'
 import { GameContext } from "../context/gameContext"
@@ -16,6 +17,8 @@ const Game = () => {
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
 
+    const gameGetter = () => game
+
     const getCurrentPlayer = () => {
         if (!game?.state) {
             throw "Game not setup"
@@ -31,6 +34,18 @@ const Game = () => {
 
         const player = game.options.players[id]
         return getFullPlayer(player, game.state)
+    }
+
+    const updateGame = (cb: (g: ShanghaiGame | undefined) => void) => {
+        if (!game) {
+            cb(undefined)
+            return
+        }
+
+        getGame(game.id).then(game => {
+            setGame(game)
+            cb(game)
+        })
     }
 
     console.log({ game })
@@ -59,24 +74,40 @@ const Game = () => {
 
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        const interval = setInterval(async () => {
             if (!game || updateInProgress) {
                 return
             }
-            updateInProgress = true
+            try {
+                updateInProgress = true
+                console.log({ game: game })
 
-            getGameState(game.id).then(state => {
+                if (!game.state) {
+                    console.log('update game')
+                    updateGame(() => { })
+                    await sleep(2000)
+                    updateInProgress = false
+                    return
+                }
+
+                console.log('updte game stte')
+                const state = await getGameState(game.id)
                 updateInProgress = false
                 setGame({ ...game, state })
-            })
+            } catch (e) {
+                updateInProgress = false
+                await sleep(1000)
+            }
+
         }, 200)
         return () => clearInterval(interval)
-    }, [])
+    }, [game, setGame])
 
     const onSubmitJoinOrCreate = (join: JoinType, gameParams: GameJoinParams) => {
         setMyPlayerId(-1)
         const onReceiveGame = (newGame: ShanghaiGame | undefined) => {
             if (game) {
+                console.log('game existed')
                 return
             }
 
@@ -85,6 +116,7 @@ const Game = () => {
                 // websocket connect here maybe?
                 setMyPlayerId(player?.id)
                 setGame(newGame)
+                console.log('set new game')
             } else {
                 setMyPlayerId(undefined)
             }
@@ -112,9 +144,12 @@ const Game = () => {
                 console.log("ready cb, " + res)
                 console.log({ game })
                 if (res) {
-                    getGame(game.id).then(game => setGame(game))
+                    updateGame(() => { })
                 }
             })}>Ready</button>
+            <div className={style.vert}>
+                {game.options.players.map(p => (<span key={'p-' + p.id}>{p.name}: {p.isReady ? 'Ready' : 'Not ready'}</span>))}
+            </div>
         </div>
     }
     const myPlayer = getPlayer(myPlayerId)
@@ -138,6 +173,10 @@ const Game = () => {
             <GameView />
         </GameContext.Provider>
     )
+}
+
+function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export default Game

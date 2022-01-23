@@ -409,7 +409,7 @@ const actionAddToMeldReplaceJoker = (player, meld) => {
         };
     }
     const targetMeldCards = targetPlayer.melded[meld.targetMeldIndex].cards;
-    const jokerIndexes = (0, lodash_1.filter)(targetMeldCards, c => c.rank === 25).map((card, index) => index);
+    const jokerIndexes = (0, lodash_1.filter)(targetMeldCards.map((card, index) => ({ rank: card.rank, index })), c => c.rank === 25).map(c => c.index);
     if (!jokerIndexes.length) {
         return {
             success: false,
