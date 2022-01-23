@@ -14,12 +14,16 @@ export const Playerinfocard = ({ player }: Props) => {
     const isTurn = getCurrentPlayer().id === player.id
     const isMe = myPlayerId === player.id
 
+    const sum = player.cards.reduce((prev, curr) => prev + curr.rank, 0)
+
+    const additionalPointText = state.roundIsOn && isMe ? `+${sum}` : ''
+
     return <div className={cx(isMe && style.greenHighlight, style.card)}>
 
         <span className={style.text}>{isTurn && <span className={style.turnIndicator}>►</span>}{getPlayer(player.id).name}</span>
         <span className={style.text}>{player.cards.length}</span>
         <span className={style.text}>{player.shanghaiCount}</span>
-        <span className={style.text}>{player.points}</span>
+        <span className={style.text}>{player.points}{additionalPointText}</span>
     </div>
 }
 

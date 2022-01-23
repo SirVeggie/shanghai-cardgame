@@ -50,6 +50,7 @@ export const Meldsprivate = () => {
         setPlayerMelds(newMelds)
     }
     const onClickMeld = () => {
+        setSelectedCard(undefined)
         actionMeld(setActionResponse, gameId, myPlayerId, { melds: playerMelds })
     }
 

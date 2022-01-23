@@ -11,7 +11,7 @@ type ButtonConfig = {
 }
 
 export const PlayerActions = () => {
-    const { myPlayerId, setActionResponse, selectedCard, game: { id: gameId } } = useContext(GameContext)
+    const { myPlayerId, getPlayer, setActionResponse, selectedCard, game: { id: gameId } } = useContext(GameContext)
 
     const buttons: ButtonConfig[] = [
         {
@@ -25,7 +25,12 @@ export const PlayerActions = () => {
         {
             label: "Discard card",
             onClick: () => {
-                const cardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+                let cardID = selectedCard.selectedCardID ?? selectedCard.actionHighlightCardID
+                const myPlayer = getPlayer(myPlayerId)
+                // hotfix
+                if (myPlayer.cards.length === 1) {
+                    cardID = myPlayer.cards[0].id
+                }
                 if (!cardID) {
                     return
                 }

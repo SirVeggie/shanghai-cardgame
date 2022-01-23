@@ -3,7 +3,7 @@ import CardTool from './src/cardTool'
 export const ctool = CardTool
 
 export type GameJoinParams = {
-    lobbyName: string,
+    lobbyName: string
     playerName: string
     password?: string
 }
