@@ -98,6 +98,7 @@ export const Meldsprivate = () => {
     }
 
     return <div className={style.meldsPrivate}>
+        <h2>Your melds</h2>
         <button onClick={onClickMeld}>Meld</button>
         <button onClick={clearAll}>Clear</button>
         <div className={style.meldRowGroup}>

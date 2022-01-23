@@ -1,14 +1,21 @@
 import style from './meldArea.module.scss'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { Meldsprivate } from './meldsPrivate'
 import { Meldspublic } from './meldsPublic'
+import { GameContext } from '../context/gameContext'
 
 export const Meldarea = () => {
-    const [myMelds, setMyMelds] = useState(false)
+    const { myPlayerId, getPlayer, hiddenCards, setHiddenCards } = useContext(GameContext)
+
+    const myPlayerMelded = getPlayer(myPlayerId).melded.length > 0
+
+    if (myPlayerMelded && hiddenCards.length > 0) {
+        setHiddenCards([])
+    }
 
     return <div className={style.meldArea}>
-        <button onClick={() => setMyMelds(prev => !prev)}>{myMelds ? 'Show public melds' : 'Show my melds'}</button>
-        {myMelds ? <Meldsprivate /> : <Meldspublic />}
+        {!myPlayerMelded && <Meldsprivate />}
+        <Meldspublic />
     </div>
 }
 

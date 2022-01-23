@@ -8,10 +8,7 @@ import { actionAddToMeld } from './playerActions'
 import { FanValues } from './playingCard'
 
 export const Meldspublic = () => {
-    const { game: { id: gameId, state, options }, setActionResponse, myPlayerId, getPlayer, selectedCard, hiddenCards, setHiddenCards } = useContext(GameContext)
-    if (hiddenCards.length) {
-        setHiddenCards([])
-    }
+    const { game: { id: gameId, state, options }, setActionResponse, myPlayerId, getPlayer, selectedCard } = useContext(GameContext)
     const round = options.rounds[state.roundNumber]
 
     const replaceJoker = (targetPlayerId: number, meldIndex: number) => {
@@ -61,7 +58,12 @@ export const Meldspublic = () => {
         </div >
     }
 
+    const myPlayerMelded = getPlayer(myPlayerId).melded.length > 0
+
     const playerRow = (player: GamePlayer) => {
+        if (!myPlayerMelded && player.id === myPlayerId) {
+            return
+        }
         return <div className={style.playerRow}>
             <div>{getPlayer(player.id).name}</div>
             <div className={style.meldRowGroup}>
