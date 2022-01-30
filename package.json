@@ -5,7 +5,8 @@
   "main": "./backend/build.index.js",
   "scripts": {
     "heroku-prebuild": "cd shared && npm install && npm run build && cd ../backend && npm install && npm run tsc && cd ../frontend && npm install && npm run build",
-    "start": "cd backend && npm start"
+    "start": "cd backend && npm start",
+    "dev": "npm run heroku-prebuild && npm start"
   },
   "repository": {
     "type": "git",
