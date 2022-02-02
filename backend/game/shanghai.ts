@@ -865,11 +865,6 @@ const message = (msg: string) => state.message = msg
 
 
 const createDeck = (deckCount: number, jokerCount: number) => {
-    if (deckCount > 8)
-        throw new Error("Cannot have more than 8 decks");
-    if (jokerCount > 4 * deckCount)
-        throw new Error("Cannot have more than 4*decks of jokers");
-
     const cards: Card[] = []
 
     for (let suit = 0; suit < 4; suit++) {
