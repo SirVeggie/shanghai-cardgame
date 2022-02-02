@@ -49,7 +49,7 @@ export const Meldspublic = () => {
         }
 
         const currentMeld = options.rounds[state.roundNumber].melds[meldIndex]
-        const showJokerButton = currentMeld.type === 'straight' && meld.cards.some(x => x.rank === 25)
+        const showJokerButton = currentMeld.type !== 'set' && meld.cards.some(x => x.rank === 25)
 
         return <div className={style.meldRow}>
             {meldInfo({ meld: round.melds[meldIndex], meldIndex, noDiv: true })}

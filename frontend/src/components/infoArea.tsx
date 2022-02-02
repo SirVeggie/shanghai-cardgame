@@ -33,7 +33,7 @@ export const meldInfo = ({ meld, meldIndex, noDiv }: MeldProps) => {
         sizeDesc: 'size'
     }
         : {
-            name: 'Straight',
+            name: meld.type === 'straight' ? 'Colored straight' : 'Any straight',
             sizeDesc: 'length'
         }
 

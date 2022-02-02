@@ -142,7 +142,10 @@ const actionCallShanghai = (playerId: number): ActionResponse => {
             error: "You cannot call Shanghai after melding"
         }
     }
-    if (player.shanghaiCount >= options.shanghaiCount) {
+
+    const round = options.rounds[state.roundNumber]
+
+    if (player.shanghaiCount >= round.shanghaiCount) {
         return {
             success: false,
             error: "You have already called Shanghai maximum amount of times"
@@ -476,7 +479,7 @@ const actionAddToMeldReplaceJoker = (player: GamePlayer, meld: AddToMeldAction):
 
     const targetMeld = options.rounds[state.roundNumber].melds[meld.targetMeldIndex]
 
-    if (targetMeld.type !== 'straight') {
+    if (targetMeld.type === 'set') {
         return {
             success: false,
             error: 'Cannot replace Joker from a set'
@@ -532,7 +535,9 @@ const tryReplaceJoker = (cardToMeld: Card, targetMeldCards: Card[], meld: Meld, 
     const jokerCard = newMeldCards[joker]
     newMeldCards[joker] = cardToMeld
 
-    if (checkStraightValidity(newMeldCards, meld.length)) {
+    const colorStraight = meld.type === 'straight'
+
+    if (checkStraightValidity(newMeldCards, meld.length, colorStraight)) {
         return {
             newMeldCards,
             jokerCard
@@ -597,8 +602,9 @@ const isMeldValid = (meld: Meld, cards: Card[]) => {
     if (meld.type === "set") {
         return checkSetValidity(cards, meld.length)
     }
-    if (meld.type === "straight") {
-        return checkStraightValidity(cards, meld.length)
+    if (meld.type === "straight" || meld.type === 'loosestraight') {
+        const colorStraight = meld.type === 'straight'
+        return checkStraightValidity(cards, meld.length, colorStraight)
     }
     throw "Invalid meld type"
 }
@@ -634,7 +640,7 @@ const checkSetValidity = (cards: Card[], size: number) => {
 }
 
 // Input is ordered by meld order
-const checkStraightValidity = (cards: Card[], length: number) => {
+const checkStraightValidity = (cards: Card[], length: number, requireSameSuit: boolean) => {
     if (cards.length < length) {
         return false
     }
@@ -653,7 +659,7 @@ const checkStraightValidity = (cards: Card[], length: number) => {
     }
 
     // not same suit (card is not joker and different suit)
-    if (cards.some(card => card.rank !== 25 && card.suit !== refCard.suit)) {
+    if (requireSameSuit && cards.some(card => card.rank !== 25 && card.suit !== refCard.suit)) {
         return false
     }
 

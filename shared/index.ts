@@ -42,7 +42,6 @@ export type ActionResponse = {
 
 export type ShanghaiOptions = {
     players: Player[]
-    shanghaiCount: number
     rounds: RoundConfig[]
 }
 
@@ -123,6 +122,7 @@ export type RoundConfig = {
     cardCount: number
     deckCount: number
     jokerCount: number
+    shanghaiCount: number
     melds: Meld[]
 }
 
@@ -131,7 +131,7 @@ export type Meld = {
     length: number
 }
 
-export type MeldType = "set" | "straight"
+export type MeldType = "set" | "straight" | "loosestraight"
 
 export type MeldedMeld = {
     cards: Card[]

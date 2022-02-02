@@ -1,4 +1,4 @@
-import { GamePlayer, Meld, Player, RoundConfig, ShanghaiGame, ShanghaiOptions, ShanghaiState } from 'shared'
+import { GamePlayer, Meld, MeldType, Player, RoundConfig, ShanghaiGame, ShanghaiOptions, ShanghaiState } from 'shared'
 
 export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions => ({
     players: [{
@@ -6,8 +6,7 @@ export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions 
         name: initialPlayer,
         isReady: false
     }],
-    shanghaiCount: 3,
-    rounds: defaultRounds
+    rounds: customRounds
 })
 
 export const startGame = (game: ShanghaiGame): ShanghaiGame => {
@@ -40,13 +39,13 @@ const createPlayer = (owner: Player): GamePlayer => ({
     canTakeCard: false
 })
 
-const defaultRound = (description: string, cardCount: number, rounds: number[]): RoundConfig => {
+const defaultRound = (description: string, cardCount: number, rounds: number[], deckCount = 2, jokerCount = 4, shanghaiCount = 3, nonColor = false): RoundConfig => {
     const melds: Meld[] = rounds.map(r => {
         return r > 0 ? {
             type: "set",
             length: r
         } : {
-            type: "straight",
+            type: nonColor ? 'loosestraight' : "straight",
             length: -r
         }
     })
@@ -54,11 +53,22 @@ const defaultRound = (description: string, cardCount: number, rounds: number[]):
     return {
         description,
         cardCount,
-        deckCount: 2,
-        jokerCount: 4,
+        deckCount,
+        jokerCount,
+        shanghaiCount,
         melds
     }
 }
+
+const customRounds: RoundConfig[] = [
+    defaultRound("Test", 11, [-4], 2, 4, 3, true),
+    defaultRound("Set and straight", 11, [3, -4]),
+    defaultRound("Two straights", 11, [-4, -4]),
+    defaultRound("Three sets", 11, [3, 3, 3]),
+    defaultRound("Two sets and a straight", 11, [3, 3, -4]),
+    defaultRound("One set and two straights", 11, [3, -4, -4]),
+    defaultRound("Three straights", 13, [-4, -4, -4]),
+]
 
 const defaultRounds: RoundConfig[] = [
     defaultRound("Two sets", 11, [3, 3]),

@@ -17,6 +17,8 @@ const Game = () => {
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
 
+    console.log(JSON.stringify(game, null, 2))
+
     const gameGetter = () => game
 
     const getCurrentPlayer = () => {
