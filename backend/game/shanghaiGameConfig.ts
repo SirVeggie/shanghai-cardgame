@@ -61,7 +61,7 @@ const defaultRound = (description: string, cardCount: number, rounds: number[], 
 }
 
 const customRounds: RoundConfig[] = [
-    defaultRound("Welcome to SuperShanghai!", 6, [1, 1, 1], 2, 0, 1),
+    defaultRound("Welcome to SuperShanghai!", 9, [1, 1, 1], 2, 0, 1),
     defaultRound("Three sets", 11, [3, 3, 3]),
     defaultRound("Now were getting started!", 2, [2, 3, -4], 2, 8, 10),
     defaultRound("One set and two straights", 11, [3, -4, -4]),
@@ -78,4 +78,14 @@ const defaultRounds: RoundConfig[] = [
     defaultRound("Two sets and a straight", 11, [3, 3, -4]),
     defaultRound("One set and two straights", 11, [3, -4, -4]),
     defaultRound("Three straights", 13, [-4, -4, -4]),
+]
+
+const defaultHarder: RoundConfig[] = [
+    defaultRound("Three sets", 11, [3, 3, 3]),
+    defaultRound("Two sets and a straight", 11, [3, 3, -4]),
+    defaultRound("One set and two straights", 11, [3, -4, -4]),
+    defaultRound("Three straights", 13, [-4, -4, -4]),
+    defaultRound("Long straight and a set", 13, [3, -10]),
+    defaultRound("Three sets and a straight", 15, [3, 3, 3, -5]),
+    defaultRound("Three long straights", 15, [-5, -5, -5]),
 ]

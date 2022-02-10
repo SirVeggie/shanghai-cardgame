@@ -371,6 +371,13 @@ const actionDiscard = (player: GamePlayer, toDiscardId: number): ActionResponse 
 }
 
 const actionAddToMeld = (player: GamePlayer, meld: AddToMeldAction): ActionResponse => {
+    if (player.melded.length == 0) {
+        return {
+            success: false,
+            error: 'You must meld first'
+        }
+    }
+
     const newMeldCards = isValidAddMeld(player, meld)
     if (!newMeldCards.response.success) {
         return newMeldCards.response

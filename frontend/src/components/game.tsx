@@ -16,10 +16,7 @@ const Game = () => {
     const [actionResponse, setActionResponse] = useState<ActionResponse>({ success: true })
     const [selectedCard, setSelectedCard] = useState<number>()
     const [hiddenCards, setHiddenCards] = useState<number[]>([])
-
-    console.log(JSON.stringify(game, null, 2))
-
-    const gameGetter = () => game
+    const [lastMyRound, setLastMyRound] = useState(0)
 
     const getCurrentPlayer = () => {
         if (!game?.state) {
@@ -151,7 +148,17 @@ const Game = () => {
             </div>
         </div>
     }
+
     const myPlayer = getPlayer(myPlayerId)
+    const currentPlayer = getCurrentPlayer()
+
+    // Is my turn
+    if (myPlayer.id === currentPlayer.id) {
+        if (lastMyRound !== game.state.roundNumber) {
+            window.alert("It is your turn")
+            setLastMyRound(game.state.roundNumber)
+        }
+    }
 
     return (
         <GameContext.Provider value={{
