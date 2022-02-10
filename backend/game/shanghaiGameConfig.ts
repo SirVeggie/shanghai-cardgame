@@ -6,7 +6,7 @@ export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions 
         name: initialPlayer,
         isReady: false
     }],
-    rounds: customRounds
+    rounds: defaultHarder
 })
 
 export const startGame = (game: ShanghaiGame): ShanghaiGame => {
