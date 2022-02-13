@@ -9,6 +9,10 @@ export const Meldarea = () => {
 
     const myPlayerMelded = getPlayer(myPlayerId).melded.length > 0
 
+    if (myPlayerMelded && hiddenCards.length) {
+        setHiddenCards([])
+    }
+
     return <div className={style.meldArea}>
         {!myPlayerMelded && <Meldsprivate />}
         <Meldspublic />

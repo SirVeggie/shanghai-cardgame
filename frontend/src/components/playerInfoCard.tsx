@@ -1,7 +1,7 @@
 import style from './playerInfoCard.module.scss'
 import { useContext } from 'react'
 import { GameContext } from '../context/gameContext'
-import { GamePlayer } from 'shared'
+import { GamePlayer, getPlayerRoundPoints } from 'shared'
 import cx from 'classnames'
 
 type Props = {
@@ -9,12 +9,12 @@ type Props = {
 }
 
 export const Playerinfocard = ({ player }: Props) => {
-    const { myPlayerId, game: { state }, getPlayer, getCurrentPlayer } = useContext(GameContext)
+    const { myPlayerId, game: { state, options }, getPlayer, getCurrentPlayer } = useContext(GameContext)
 
     const isTurn = getCurrentPlayer().id === player.id
     const isMe = myPlayerId === player.id
 
-    const sum = player.cards.reduce((prev, curr) => prev + curr.rank, 0)
+    const sum = getPlayerRoundPoints(options, player)
 
     const additionalPointText = state.roundIsOn && isMe ? `+${sum}` : ''
 

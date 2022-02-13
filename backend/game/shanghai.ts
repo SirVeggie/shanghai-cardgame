@@ -1,5 +1,5 @@
 import { compact, filter, find, findIndex, flatMap, floor, map, minBy, orderBy, remove, some, uniq, uniqBy } from 'lodash'
-import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, CNormalRank, cardOrderIndex, FullPlayer, GamePlayer, getPlayerTurn, ctool } from 'shared'
+import { ShanghaiGame, Action, ShanghaiOptions, ShanghaiState, AddToMeldAction, Card, CRank, CSuit, Meld, MeldAction, MeldCards, MeldedMeld, Player, ActionResponse, CNormalRank, cardOrderIndex, FullPlayer, GamePlayer, getPlayerTurn, ctool, getPlayerRoundPoints } from 'shared'
 import arrayShuffle from 'shuffle-array'
 
 // NOTE ACE IS NOT 1
@@ -189,13 +189,16 @@ const actionAllowShanghaiCall = (): ActionResponse => {
         }
     }
 
-    const penalty = popDeck()
+    const round = options.rounds[state.roundNumber]
 
     const current = getGamePlayer(getCurrentPlayer())
     const player = getGamePlayer(state.shanghaiForId)
 
     giveCard(player, discard)
-    giveCard(player, penalty)
+
+    for (let i = 0; i < round.shanghaiPenaltyCount; i++) {
+        giveCard(player, popDeck())
+    }
 
     state.shanghaiIsAllowed = false
     state.discardTopOwnerId = undefined
@@ -300,6 +303,8 @@ const actionTakeDeck = (player: GamePlayer): ActionResponse => {
     }
 }
 
+
+
 const actionMeld = (player: GamePlayer, meld: MeldAction): ActionResponse => {
     if (player.melded.length) {
         return {
@@ -312,12 +317,20 @@ const actionMeld = (player: GamePlayer, meld: MeldAction): ActionResponse => {
         return check
     }
 
+    const isFirstMeld = !some(state.players, p => p.melded.length > 0)
+
+    if (isFirstMeld) {
+        player.points -= options.firstMeldBonusPoints
+    }
+
     const newMeld: MeldedMeld[] = []
     const round = options.rounds[state.roundNumber]
     for (let i = 0; i < round.melds.length; i++) {
         // take and remove cards
         const cards = getPlayerCards(player, meld.melds[i].cardIDs, true)
         newMeld.push({ cards })
+
+        giveBonusMeldPoints(player, round.melds[i], cards)
     }
     player.melded = newMeld
 
@@ -329,6 +342,15 @@ const actionMeld = (player: GamePlayer, meld: MeldAction): ActionResponse => {
     return {
         success: true,
         message: "Succesfully melded cards"
+    }
+}
+
+const giveBonusMeldPoints = (player: GamePlayer, meld: Meld, cards: Card[]) => {
+    let bonus = options.meldBonusStartPoints
+    const bonusCount = cards.length - meld.length
+    for (let i = 0; i < bonusCount; i++) {
+        player.points -= bonus
+        bonus += options.meldBonusIncrementPoints
     }
 }
 
@@ -730,22 +752,12 @@ const getFirstExpectedRank = (cards: Card[]): CNormalRank | undefined => {
     return firstRank
 }
 
-type JokerWithRank = {
-    joker: Card,
-    index: number,
-    rank: CNormalRank
-}
-
 const playerCanTakeCard = (player: GamePlayer) => {
     return player.canTakeCard
 }
 
 const playerCanDiscard = (player: GamePlayer) => {
     return !player.canTakeCard
-}
-
-const getPlayerTargetCardCount = (player: GamePlayer) => {
-    return options.rounds[state.roundNumber].cardCount + player.shanghaiCount * 2
 }
 
 const endPlayerTurn = (player: GamePlayer) => {
@@ -778,9 +790,7 @@ const enablePlayerTurn = () => {
 
 const addPlayerPoints = () => {
     state.players.forEach(player => {
-        player.cards.forEach(card => {
-            player.points += card.rank
-        })
+        player.points += getPlayerRoundPoints(options, player)
     })
 }
 

@@ -6,7 +6,12 @@ export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions 
         name: initialPlayer,
         isReady: false
     }],
-    rounds: defaultHarder
+    rounds: defaultHarder,
+    minimumCardPoints: 5,
+    firstMeldBonusPoints: 15,
+    meldBonusStartPoints: 3,
+    meldBonusIncrementPoints: 1,
+    jokerPenaltyAmount: 7
 })
 
 export const startGame = (game: ShanghaiGame): ShanghaiGame => {
@@ -39,7 +44,7 @@ const createPlayer = (owner: Player): GamePlayer => ({
     canTakeCard: false
 })
 
-const defaultRound = (description: string, cardCount: number, rounds: number[], deckCount = 2, jokerCount = 4, shanghaiCount = 3, nonColor = false): RoundConfig => {
+const defaultRound = (description: string, cardCount: number, rounds: number[], deckCount = 2, jokerCount = 4, shanghaiCount = 3, shanghaiPenaltyCount = 1, nonColor = false): RoundConfig => {
     const melds: Meld[] = rounds.map(r => {
         return r > 0 ? {
             type: "set",
@@ -56,6 +61,7 @@ const defaultRound = (description: string, cardCount: number, rounds: number[], 
         deckCount,
         jokerCount,
         shanghaiCount,
+        shanghaiPenaltyCount,
         melds
     }
 }
@@ -65,9 +71,9 @@ const customRounds: RoundConfig[] = [
     defaultRound("Three sets", 11, [3, 3, 3]),
     defaultRound("Now were getting started!", 2, [2, 3, -4], 2, 8, 10),
     defaultRound("One set and two straights", 11, [3, -4, -4]),
-    defaultRound("Superstraight!", 13, [-13], 2, 4, 3, true),
+    defaultRound("Superstraight!", 13, [-13], 2, 4, 3, 1, true),
     defaultRound("Three straights", 13, [-4, -4, -4]),
-    defaultRound("Superset!", 13, [8, 4], 3, 24, 3, true),
+    defaultRound("Superset!", 13, [8, 4], 3, 24, 3, 1, true),
 ]
 
 const defaultRounds: RoundConfig[] = [

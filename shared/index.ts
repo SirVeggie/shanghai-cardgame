@@ -41,6 +41,11 @@ export type ActionResponse = {
 }
 
 export type ShanghaiOptions = {
+    minimumCardPoints: number
+    firstMeldBonusPoints: number
+    meldBonusStartPoints: number
+    meldBonusIncrementPoints: number
+    jokerPenaltyAmount: number
     players: Player[]
     rounds: RoundConfig[]
 }
@@ -123,6 +128,7 @@ export type RoundConfig = {
     deckCount: number
     jokerCount: number
     shanghaiCount: number
+    shanghaiPenaltyCount: number
     melds: Meld[]
 }
 
@@ -165,4 +171,18 @@ export const getFullPlayer = (player: Player, state: ShanghaiState) => {
         ...player,
         ...state.players[player.id]
     }
+}
+
+export const getPlayerRoundPoints = (options: ShanghaiOptions, player: GamePlayer) => {
+    let points = player.cards.reduce((prev, curr) => {
+        return prev + Math.max(options.minimumCardPoints, curr.rank)
+    }, 0)
+
+    player.melded.forEach(meld => meld.cards.forEach(c => {
+        if (c.rank === 25) {
+            points += options.jokerPenaltyAmount
+        }
+    }))
+
+    return points
 }
