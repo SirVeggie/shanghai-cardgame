@@ -6,7 +6,7 @@ export const getDefaultConfiguration = (initialPlayer: string): ShanghaiOptions 
         name: initialPlayer,
         isReady: false
     }],
-    rounds: defaultHarder,
+    rounds: defaultRounds,
     minimumCardPoints: 5,
     firstMeldBonusPoints: 15,
     meldBonusStartPoints: 2,
