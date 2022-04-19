@@ -859,7 +859,13 @@ const getPlayerCards = (player: GamePlayer, cardIDs: number[], removeCards: bool
 }
 const popDeck = (): Card => {
     if (state.deck.length === 0) {
-        state.deck = shuffle(state.discarded)
+        // edge case, no discarded but deck empty -> create new deck
+        if (state.discarded.length == 0) {
+            const round = options.rounds[state.roundNumber]
+            state.deck = shuffle(createDeck(round.deckCount, round.jokerCount))
+        } else {
+            state.deck = shuffle(state.discarded)
+        }
         state.discarded = []
     }
 
