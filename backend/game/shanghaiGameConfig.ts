@@ -77,8 +77,8 @@ const customRounds: RoundConfig[] = [
 ]
 
 const defaultRounds: RoundConfig[] = [
-    defaultRound("Two sets", 11, [3, 3]),
-    defaultRound("Set and straight", 11, [3, -4]),
+   // defaultRound("Two sets", 11, [3, 3]),
+   // defaultRound("Set and straight", 11, [3, -4]),
     defaultRound("Two straights", 11, [-4, -4]),
     defaultRound("Three sets", 11, [3, 3, 3]),
     defaultRound("Two sets and a straight", 11, [3, 3, -4]),
