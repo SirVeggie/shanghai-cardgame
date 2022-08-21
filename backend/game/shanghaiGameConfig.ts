@@ -91,7 +91,7 @@ const defaultHarder: RoundConfig[] = [
     defaultRound("Two sets and a straight", 11, [3, 3, -4]),
     defaultRound("One set and two straights", 11, [3, -4, -4]),
     defaultRound("Three straights", 13, [-4, -4, -4]),
-    defaultRound("Long straight and a set", 13, [-7, -6]),
+    defaultRound("Long straight and a set", 13, [-7, 5]),
     defaultRound("Three sets and a straight", 15, [3, 3, 3, -5]),
     defaultRound("Three long straights", 15, [-5, -5, -5]),
 ]
