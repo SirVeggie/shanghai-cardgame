@@ -1,7 +1,7 @@
 {
   "name": "web-shanghai",
   "version": "1.0.0",
-  "description": "",
+  "description": "Shanghai cardgame",
   "main": "./backend/build.index.js",
   "scripts": {
     "start": "cd backend && npm start",
