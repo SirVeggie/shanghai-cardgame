@@ -8,7 +8,7 @@
     "stop": "cd backend && npm stop",
     "install": "cd shared && npm i && cd ../backend && npm i && cd ../frontend && npm i",
     "build": "cd shared && npm run build && cd ../backend && npm run build && cd ../frontend && npm run build",
-    "fetch": "git fetch --all && git reset --hard origin/master",
+    "fetch": "git fetch --all && git reset --hard origin/main",
     "prod": "npm i --omit=dev && npm run build && npm start",
     "deploy": "npm run fetch && npm run prod",
     "dev": "npm run heroku-prebuild && npm start"
