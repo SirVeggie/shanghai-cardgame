@@ -19,8 +19,3 @@ jobs:
         script: |
           cd ~/projects/shanghai-cardgame
           npm run deploy
-    - name: Notification
-      uses: fjogeleit/http-request-action@v1
-      with:
-        url: '${{ secrets.NOTIFY_URL }}Shanghai%20deployed'
-        method: 'GET'
