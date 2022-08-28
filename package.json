@@ -4,8 +4,14 @@
   "description": "",
   "main": "./backend/build.index.js",
   "scripts": {
-    "heroku-prebuild": "cd shared && npm install && npm run build && cd ../backend && npm install && npm run tsc && cd ../frontend && npm install && npm run build",
     "start": "cd backend && npm start",
+    "stop": "cd backend && npm stop",
+    "install": "cd shared && npm i && cd ../backend && npm i && cd ../frontend && npm i",
+    "build": "cd shared && npm run build && cd ../backend && npm run build && cd ../frontend && npm run build",
+    "fetch": "git fetch --all && git reset --hard origin/master",
+    "prod": "npm i --omit=dev && npm run build && npm start",
+    "deploy": "npm run fetch && npm run prod",
+    "heroku-prebuild": "cd shared && npm install && npm run build && cd ../backend && npm install && npm run build && cd ../frontend && npm install && npm run build",
     "dev": "npm run heroku-prebuild && npm start"
   },
   "repository": {
