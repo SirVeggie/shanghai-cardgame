@@ -19,3 +19,10 @@ jobs:
         script: |
           cd ~/projects/shanghai-cardgame
           npm run deploy
+    - name: Notification
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: 'http://38.242.159.10:2000'
+        method: 'GET'
+        data: '{"send_main": "New version of Shing Shong is now running"}'
+        
