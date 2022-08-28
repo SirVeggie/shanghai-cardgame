@@ -4,8 +4,9 @@ import express from 'express'
 import morgan from 'morgan'
 import { Server } from 'socket.io'
 import gameRouter from './controllers/gameRouter'
+import { config } from './tools/config';
 
-const port = process.env.PORT || 3001
+const port = config.port || 3001
 
 const createServer = () => {
     const app = express()
