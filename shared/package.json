@@ -10,9 +10,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    
+    "typescript": "^4.5.5"
   },
   "devDependencies": {
-    "typescript": "^4.5.5"
   }
 }
