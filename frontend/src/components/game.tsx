@@ -137,15 +137,17 @@ const Game = () => {
 
     // Game not started
     if (!game.state) {
-        return <div>
-            <button onClick={() => setPlayerReady({ gameId: game.id, playerId: myPlayerId }).then(res => {
+        const buttonDisabled = game.options.players.find(p => p.id === myPlayerId)?.isReady
+        
+        return <div style={{ marginTop: 50 }}>
+            <div className={style.vert}>
+                {game.options.players.map(p => (<span style={{ marginBottom: 5 }} key={'p-' + p.id}>{p.name}: {p.isReady ? 'Ready' : 'Not ready'}</span>))}
+            </div>
+            <button disabled={buttonDisabled} className={style.button} style={{ marginTop: 10 }} onClick={() => setPlayerReady({ gameId: game.id, playerId: myPlayerId }).then(res => {
                 if (res) {
                     updateGame(() => { })
                 }
             })}>Ready</button>
-            <div className={style.vert}>
-                {game.options.players.map(p => (<span key={'p-' + p.id}>{p.name}: {p.isReady ? 'Ready' : 'Not ready'}</span>))}
-            </div>
         </div>
     }
 

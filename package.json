@@ -11,7 +11,9 @@
     "fetch": "git fetch --all && git reset --hard origin/main",
     "prod": "npm i --omit=dev && npm run build && npm start",
     "deploy": "npm run fetch && npm run prod",
-    "dev": "npm run heroku-prebuild && npm start"
+    "dev:i": "npm i && cd shared && npm run build && cd .. && npm run dev",
+    "dev": "cd backend && npm run dev",
+    "front": "cd frontend && npm start"
   },
   "repository": {
     "type": "git",
