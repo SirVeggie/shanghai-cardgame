@@ -25,5 +25,5 @@ jobs:
         url: 'http://38.242.159.10:2000/'
         method: 'POST'
         customHeaders: '{"Content-Type": "application/json"}'
-        data: '{"send_main": "New version of Shanghai is now running"}'
+        data: '{"shanghai": ""}'
         
