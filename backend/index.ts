@@ -1,8 +1,6 @@
+import { createServer } from './src/networking/server';
+import { createSocket } from './src/networking/socket';
+import { config } from './src/tools/config';
 
-import createServer from './server';
-import { config } from './tools/config';
-
-console.log('Started application')
-console.log("Cache all: ", config.cacheAll)
-
-createServer()
+const server = createServer(config.PORT);
+createSocket(server);

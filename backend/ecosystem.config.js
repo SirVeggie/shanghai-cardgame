@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'shanghai-cardgame',
+    name: 'template-app',
     script: 'build/index.js'
   }]
 };
