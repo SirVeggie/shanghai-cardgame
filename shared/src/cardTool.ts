@@ -77,7 +77,7 @@ function nextRank (rank: NormalRank, loop = false) {
     return rankAdd as NormalRank;
 }
 
-export default {
+export const ctool = {
     fromId,
     fromValues,
     color,

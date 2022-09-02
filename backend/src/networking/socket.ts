@@ -1,7 +1,7 @@
 import { Server } from 'http';
-import { GameEvent, GAME_EVENT, WebEvent, wsError, wsMessage } from 'shared';
+import { FatalError, fatalError, GameEvent, GAME_EVENT, UserError, uuid, WebEvent, wsError, wsMessage } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
-import { sessions } from '../logic/controller';
+import { addSession, sessions } from '../logic/controller';
 
 type Actor = { playerId: string, ws: WebSocket; };
 let wss: WebSocketServer = null as any;
@@ -20,11 +20,21 @@ function createSocketBase() {
     wss.on('connection', ws => {
         console.log('client connected');
 
-        ws.onmessage = event => handleMessage(event.data as string, ws);
-        ws.onclose = () => {
-            console.log('client disconnected');
-            removeWsConnection(ws);
+        ws.onmessage = event => {
+            try {
+                handleMessage(event.data as string, ws);
+            } catch (e) {
+                if (e instanceof UserError)
+                    return sendError(ws, e.message);
+                if (e instanceof FatalError) {
+                    sendError(ws, e.message);
+                    return ws.close();
+                }
+                throw e;
+            }
         };
+
+        ws.onclose = () => handleDisconnect(ws);
     });
 }
 
@@ -44,45 +54,88 @@ function handleMessage(message: string, ws: WebSocket) {
     const event = JSON.parse(message) as WebEvent;
     console.log(`Incoming event: ${event.type} ${(event as any).action ? `action: ${(event as any).action}` : ''}`);
 
+    handleCreate(event, ws);
     handleJoin(event, ws);
-    // handleLeave(event, ws);
+    handleReConnect(event, ws);
     actions[event.type]?.forEach(x => x(event, ws));
 }
 
-function handleJoin(event: WebEvent, ws: WebSocket): void {
-    if (event.type !== GAME_EVENT || event.action !== 'join')
+function handleCreate(event: WebEvent, _ws: WebSocket): void {
+    if (event.type !== GAME_EVENT || event.action !== 'create')
         return;
     if (!event.join)
-        return;
-    const session = Object.values(sessions).find(x => x.name === event.join!.lobbyName);
-    if (!session)
-        return;
-
-    if (session.password !== event.join.password) {
-        sendError(ws, 'Wrong password');
-        return ws.close();
-    }
-
-    if (session.state !== 'waiting-players') {
-        sendError(ws, 'Cannot join an ongoing game');
-        return ws.close();
-    }
-
-    if (session.players.some(x => x.name === event.join!.playerName)) {
-        sendError(ws, 'A player by that name is already in the lobby');
-        return ws.close();
-    }
-
-    if (!clients[event.sessionId])
-        clients[event.sessionId] = [];
-    clients[event.sessionId].push({ playerId: event.playerId, ws });
+        throw fatalError('Missing join params');
+    addSession(event.join);
 }
 
-// function handleLeave(event: WebEvent, ws: WebSocket) {
-//     if (event.type !== SESSION_EVENT || event.action !== 'leave')
-//         return;
-//     removeWsConnection(ws);
-// }
+function handleJoin(event: WebEvent, ws: WebSocket): void {
+    if (event.type !== GAME_EVENT || (event.action !== 'join' && event.action !== 'create'))
+        return;
+    if (!event.join)
+        throw fatalError('Missing join params');
+
+    const session = Object.values(sessions).find(x => x.name === event.join.lobbyName);
+    if (!session)
+        throw fatalError('Did not find lobby by that name');
+    if (session.password !== event.join.password)
+        throw fatalError('Wrong password');
+    if (session.state !== 'waiting-players')
+        throw fatalError('Cannot join an ongoing game');
+    if (session.players.some(x => x.name === event.join!.playerName))
+        throw fatalError('A player by that name is already in the lobby');
+
+    event.playerId = uuid();
+
+    if (!clients[session.id])
+        clients[session.id] = [];
+    clients[session.id].push({ playerId: event.playerId, ws });
+}
+
+function handleReConnect(event: WebEvent, ws: WebSocket): void {
+    if (event.type !== GAME_EVENT || event.action !== 'connect')
+        return;
+    if (!event.join)
+        throw fatalError('Missing join params');
+
+    const session = Object.values(sessions).find(x => x.name === event.join.lobbyName);
+    if (!session)
+        throw fatalError('Did not find lobby by that name');
+    if (session.password !== event.join.password)
+        throw fatalError('Wrong password');
+    const existing = session.players.find(x => x.name === event.join.playerName);
+    if (!existing)
+        throw fatalError('A player by that name does not exist in the lobby');
+    if (clients[session.id]?.some(x => x.playerId === existing.id))
+        throw fatalError('That player is already connected');
+    
+    event.playerId = existing.id;
+    event.sessionId = session.id;
+    
+    if (!clients[session.id])
+        clients[session.id] = [];
+    clients[session.id].push({ playerId: existing.id, ws });
+}
+
+function handleDisconnect(ws: WebSocket) {
+    console.log('client disconnected');
+
+    let event: GameEvent | undefined = undefined;
+    for (const [key, value] of Object.entries(clients)) {
+        const actor = value.find(x => x.ws === ws);
+        if (actor) {
+            event = {
+                type: GAME_EVENT,
+                action: 'disconnect',
+                playerId: actor.playerId,
+                sessionId: key
+            };
+        }
+    }
+
+    if (event)
+        actions[event.type]?.forEach(x => x(event!, ws));
+    removeWsConnection(ws);
+}
 
 export function subscribeEvent<T extends WebEvent>(event: T['type'], func: (event: T, ws: WebSocket) => void): void {
     if (!actions[event])

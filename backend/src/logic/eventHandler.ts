@@ -1,5 +1,5 @@
 import { minBy } from 'lodash';
-import { assertNever, GameEvent, generateDeck, getNextPlayer, getPrevPlayer, Player, Session, shuffle, uuid, validateMelds } from 'shared';
+import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPrevPlayer, isJoker, Player, Session, shuffle, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
 import { sendError, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
@@ -29,17 +29,25 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             case 'add-to-meld': return handleAddMeld();
             case 'discard': return handleDiscard();
 
-            default: return assertNever(event.action);
+            default: return sendError(ws, 'Event was not handled properly');
         }
     }
 
     //#region handlers
+    function handleCreate() {
+        handleJoin();
+    }
+
+    function handleDelete() {
+        return;
+    }
+    
     function handleJoin() {
-        if (event.action !== 'join')
+        if (event.action !== 'join' && event.action !== 'create')
             return sendError(ws, 'Invalid action');
         const player: Player = {
-            id: uuid(),
-            name: event.join!.playerName,
+            id: event.playerId,
+            name: event.join.playerName,
             cards: [],
             isReady: false,
             melds: [],
@@ -68,14 +76,6 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         sendMessage(`Player ${player.name} disconnected`, event);
     }
 
-    function handleCreate() {
-        return;
-    }
-
-    function handleDelete() {
-        return;
-    }
-
 
 
     function handleSetReady() {
@@ -100,7 +100,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Cannot reveal a card right now');
         if (session.currentPlayerId !== event.playerId)
             return sendError(ws, 'Cannot reveal on someone else\'s turn');
-
+        
+        // Reset shanghai when new card revealed
         session.state = 'turn-start';
         const card = session.deck.splice(0, 1)[0];
         session.discard.push(card);
@@ -115,6 +116,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Current player cannot call shanghai');
         if (event.playerId === getPrevPlayer(session.currentPlayerId, session.players).id)
             return sendError(ws, 'Can\'t call shanghai on a card you discarded');
+        if (session.discard.length === 0)
+            return sendError(ws, 'Discard pile empty, can\'t call shanghai');
 
         const p = session.players.find(x => x.id === event.playerId)!;
         if (p.melds.length)
@@ -138,12 +141,17 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Cannot draw on opponent\'s turn');
         if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
             return sendError(ws, 'Cannot draw a card right now');
-        if (session.deck.length === 0 && session.discard.length === 0)
-            return sendError(ws, 'Deck and discard pile are empty');
-        if (session.deck.length === 0) {
-            session.deck = shuffle(session.discard);
-            session.discard = [];
+        
+        if (session.pendingShanghai)
+            allowShanghai('message');
+        
+        if (session.deck.length === 0 && session.discard.length === 0) {
+            sendError(ws, 'Deck and discard pile are empty, card drawing skipped');
+            return session.state = 'card-drawn';
         }
+        
+        if (session.deck.length === 0)
+            reshuffleDeck();
 
         const player = session.players.find(x => x.id === event.playerId)!;
         const card = session.deck.splice(0, 1)[0];
@@ -158,8 +166,16 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Cannot draw on opponent\'s turn');
         if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
             return sendError(ws, 'Cannot draw from the discard pile right now');
+        if (session.discard.length === 0 && session.deck.length === 0) {
+            sendError(ws, 'Deck and discard pile are empty, card drawing skipped');
+            return session.state = 'card-drawn';
+        }
+        
         if (session.discard.length === 0)
             return sendError(ws, 'Discard pile is empty');
+        
+        if (session.pendingShanghai)
+            rejectShanghai();
 
         const player = session.players.find(x => x.id === event.playerId)!;
         const card = session.discard.pop()!;
@@ -213,10 +229,45 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (player.melds.length === 0)
             return sendError(ws, 'You must meld before adding cards');
 
-        if (player.cards.findIndex(x => x.id === event.meldAdd.card.id) === -1)
+        const card = event.meldAdd.card;
+        if (player.cards.findIndex(x => x.id === card.id) === -1)
             return sendError(ws, 'You do not have that card');
 
-        asdasasdasd;
+        const owner = session.players.find(x => x.id === event.meldAdd.targetPlayerId);
+        const meld = owner?.melds[event.meldAdd.meldIndex];
+        if (!meld)
+            return sendError(ws, 'Meld was not found');
+
+        const newMeld = { ...meld };
+        switch (event.meldAdd.position) {
+            case 'start':
+                newMeld.cards = [card, ...meld.cards];
+                break;
+            case 'end':
+                newMeld.cards = [...meld.cards, card];
+                break;
+            case 'joker': {
+                if (isJoker(card))
+                    return sendError(ws, 'Jokers cannot replace other jokers');
+                const i = findJokerSpot(card, meld);
+                if (i === -1)
+                    return sendError(ws, 'No jokers can be replaced by this card');
+                newMeld.cards[i] = card;
+                break;
+            }
+            default:
+                return sendError(ws, 'Invalid meld position');
+        }
+
+        if (!validateMeld(newMeld.cards, meld.config))
+            return sendError(ws, 'Card does not fit into the meld there');
+
+        owner.melds[event.meldAdd.meldIndex] = newMeld;
+        player.cards = player.cards.filter(x => x.id === card.id);
+        sendMessage(`Player ${player.name} added card ${ctool.name(card)} to a meld`, event);
+        
+        if (player.cards.length === 0)
+            endRound();
     }
 
     function handleDiscard() {
@@ -297,6 +348,12 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             tempCards: []
         };
     }
+    
+    function reshuffleDeck() {
+        session.deck = shuffle(session.discard);
+        session.discard = [];
+        sendMessage('Deck was re-shuffled', event, true);
+    }
 
     function startGame() {
         startNextRound();
@@ -327,6 +384,11 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         const config = session.config.rounds[session.round - 1];
         const deckCards = session.deck.splice(0, config.shanghaiPenaltyCount);
+        if (deckCards.length < config.shanghaiPenaltyCount) {
+            reshuffleDeck();
+            deckCards.push(...session.deck.splice(0, config.shanghaiPenaltyCount - deckCards.length));
+        }
+        
         player.cards.push(...deckCards);
         player.newCards.push(...deckCards);
 
@@ -334,6 +396,13 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         if (message === 'message')
             sendMessage(`Player ${session.players.find(x => x.id === event.playerId)?.name} allowed shanghai`, event);
+    }
+    
+    function rejectShanghai() {
+        if (!session.pendingShanghai)
+            return sendError(ws, 'No shanghais pending');
+        session.pendingShanghai = undefined;
+        sendMessage('Shanghai was rejected', event, true);
     }
 
     function endRound() {

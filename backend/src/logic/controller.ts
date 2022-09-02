@@ -1,4 +1,4 @@
-import { convertSessionToPublic, defaultConfig, GameEvent, GameJoinParams, GAME_EVENT, Session, SessionPublic, SYNC_EVENT, userError, uuid } from 'shared';
+import { convertSessionToPublic, defaultConfig, GameEvent, GameJoinParams, GAME_EVENT, Session, SessionPublic, SYNC_EVENT, userError, uuid, validateConfig } from 'shared';
 import { sendAll, subscribeEvent } from '../networking/socket';
 import { eventHandler } from './eventHandler';
 
@@ -29,7 +29,8 @@ export function getSessions(): SessionPublic[] {
 export function addSession(params: GameJoinParams) {
     if (Object.values(sessions).some(x => x.name === params.lobbyName))
         throw userError('Session already exists');
-
+    validateConfig(params.config);
+    
     const newSession: Session = {
         id: uuid(),
         name: params.lobbyName,
@@ -46,8 +47,6 @@ export function addSession(params: GameJoinParams) {
     };
 
     sessions[newSession.id] = newSession;
-
-    return convertSessionToPublic(newSession);
 }
 
 export function removeSession(id: string) {

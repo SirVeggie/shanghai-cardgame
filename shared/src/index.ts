@@ -2,11 +2,12 @@ import { Card, CardRank, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, MeldCo
 import { v4 } from 'uuid';
 import { isJoker } from './validation';
 import arrayShuffle from 'shuffle-array';
-import cardTool from './cardTool';
+import { ctool } from './cardTool';
 import { floor } from 'lodash';
 
 export * from './types';
 export * from './validation';
+export * from './cardTool';
 
 export function uuid(): string {
     return v4();
@@ -21,6 +22,17 @@ export class UserError extends Error {
 
 export function userError(message: string): UserError {
     return new UserError(message);
+}
+
+export class FatalError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = this.constructor.name;
+    }
+}
+
+export function fatalError(message: string): FatalError {
+    return new FatalError(message);
 }
 
 export function wsError(message: string): ErrorEvent {
@@ -172,13 +184,13 @@ export function generateDeck(decks: number, jokers: number) {
     for (let suit = 0; suit < 4; suit++) {
         for (let rank = 2; rank <= 14; rank++) {
             for (let deck = 0; deck < decks; deck++) {
-                cards.push(cardTool.fromValues(rank as CardRank, suit, deck));
+                cards.push(ctool.fromValues(rank as CardRank, suit, deck));
             }
         }
     }
     
     for (let i = 0; i < jokers; i++) {
-        cards.push(cardTool.fromValues(JOKER_RANK, i % 4, floor(i / 4)));
+        cards.push(ctool.fromValues(JOKER_RANK, i % 4, floor(i / 4)));
     }
     
     return cards;

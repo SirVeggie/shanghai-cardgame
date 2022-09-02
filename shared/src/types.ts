@@ -11,6 +11,7 @@ export type GameJoinParams = {
     lobbyName: string;
     playerName: string;
     password: string;
+    config?: GameConfig;
 };
 
 export type GameState = 'waiting-players' | 'turn-start' | 'shanghai-called' | 'card-drawn' | 'round-end' | 'game-end';
@@ -49,11 +50,6 @@ export type RoundConfig = {
     shanghaiCount: number;
     shanghaiPenaltyCount: number;
     melds: MeldConfig[];
-};
-
-export type MeldConfig = {
-    type: MeldType;
-    length: number;
 };
 
 export type SessionPublic = Omit<Session, 'players' | 'deck' | 'discard' | 'password'> & {
@@ -105,14 +101,22 @@ export enum CSuitIcon {
     '♦'
 }
 
-export type MeldType = 'set' | 'straight' | 'any-straight' | 'house';
-export type Meld = {
+export const MELD_TYPES = ['set', 'straight', 'any-straight', 'skip-straight', 'house'] as const;
+export type MeldType = typeof MELD_TYPES[number];
+export type MeldConfig = {
     type: MeldType;
+    length: number;
+};
+
+export type Meld = {
+    config: MeldConfig;
     cards: Card[];
 };
 
 export type MeldAdd = {
     card: Card;
+    targetPlayerId: string;
+    meldIndex: number;
     position: 'start' | 'end' | 'joker'
 };
 
@@ -129,7 +133,7 @@ export type GameEvent = {
     action: 'discard';
     cards: Card[];
 } | {
-    action: 'join';
+    action: 'join' | 'create' | 'connect';
     join: GameJoinParams;
 } | {
     action: 'meld';
@@ -159,10 +163,10 @@ export type MessageEvent = {
 
 export type SessionAction = typeof SESSION_ACTIONS[number];
 export const SESSION_ACTIONS = [
-    'create',
+    // 'create',
     'delete',
     // 'join',
-    'connect',
+    // 'connect',
     'disconnect'
 ] as const;
 
@@ -180,7 +184,9 @@ export const GAME_ACTIONS = [
 
 export type DataAction = typeof DATA_ACTIONS[number];
 export const DATA_ACTIONS = [
+    'create',
     'join',
+    'connect',
     'discard',
     'meld',
     'add-to-meld'
