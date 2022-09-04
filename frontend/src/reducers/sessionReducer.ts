@@ -1,25 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { SessionPublic } from 'shared';
 
-type InitialSession = typeof initialState;
-const initialState = {
-    game: undefined as SessionPublic | undefined,
-    socket: undefined as WebSocket | undefined
-};
-
 export const sesssionSlice = createSlice({
     name: 'session',
-    initialState,
+    initialState: null as SessionPublic | null,
     reducers: {
-        setSession: (state, action: PayloadAction<InitialSession>) => {
+        setSession: (state, action: PayloadAction<SessionPublic | null>) => {
             return action.payload;
         },
 
         clearSession: () => {
-            return {
-                game: undefined,
-                socket: undefined
-            };
+            return null;
         },
     }
 });

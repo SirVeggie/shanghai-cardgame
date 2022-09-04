@@ -8,7 +8,7 @@ export function errorHandler(error: any, req: any, res: any, next: any) {
     console.error('Error: ' + error);
     
     if (error instanceof UserError) {
-        return res.status(400).send({ error: error.message });
+        return res.status(400).send({ type: 'error', message: error.message });
     }
     
     next(error);

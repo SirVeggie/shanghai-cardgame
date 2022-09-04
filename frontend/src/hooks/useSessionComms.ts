@@ -4,7 +4,7 @@ import { useLocalSocket } from './useWebSocket';
 export function useSessionComms(session: string, player: string, password: string, callback: (data: WebEvent) => void) {
     const initial: GameEvent = {
         type: GAME_EVENT,
-        action: 'join',
+        action: 'connect',
         join: {
             lobbyName: session,
             password,

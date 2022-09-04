@@ -3,6 +3,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { errorHandler, unknownEndpoint } from './middleware';
 import { getBuildDir } from '../tools/path';
+import { sessionRouter } from './routers/sessionRouter';
 
 export function createServer(port: number) {
     const app = express();
@@ -25,7 +26,7 @@ export function createServer(port: number) {
 
     //====| routers |====//
 
-    
+    app.use('/api', sessionRouter);
 
     //====| static files |====//
 

@@ -1,4 +1,9 @@
 
+export type Coord = {
+    x: number;
+    y: number;
+}
+
 export type NotificationClass = 'info' | 'success' | 'error';
 export type NotificationType = {
     id: string;
@@ -120,7 +125,7 @@ export type MeldAdd = {
     position: 'start' | 'end' | 'joker'
 };
 
-export type WebEvent = GameEvent | SyncEvent | ErrorEvent | MessageEvent;
+export type WebEvent = GameEvent | SyncEvent | ErrorEvent | MessageEvent | SessionListEvent;
 
 export const GAME_EVENT = 'game';
 export type GameEvent = {
@@ -133,7 +138,7 @@ export type GameEvent = {
     action: 'discard';
     cards: Card[];
 } | {
-    action: 'join' | 'create' | 'connect';
+    action: 'connect';
     join: GameJoinParams;
 } | {
     action: 'meld';
@@ -141,6 +146,16 @@ export type GameEvent = {
 } | {
     action: 'add-to-meld';
     meldAdd: MeldAdd;
+});
+
+export const SESSION_LIST_EVENT = 'session-list';
+export type SessionListEvent = {
+    type: typeof SESSION_LIST_EVENT;
+} & ({
+    action: 'subscribe' | 'unsubscribe';
+} | {
+    action: 'update';
+    sessions: SessionPublic[];
 });
 
 export const SYNC_EVENT = 'sync';
@@ -163,29 +178,20 @@ export type MessageEvent = {
 
 export type SessionAction = typeof SESSION_ACTIONS[number];
 export const SESSION_ACTIONS = [
-    // 'create',
-    'delete',
-    // 'join',
-    // 'connect',
-    'disconnect'
+    'disconnect',
 ] as const;
 
 export type GameAction = typeof GAME_ACTIONS[number];
 export const GAME_ACTIONS = [
     'draw-deck',
     'draw-discard',
-    // 'discard',
     'call-shanghai',
     'set-ready',
     'reveal',
-    // 'meld',
-    // 'add-to-meld'
 ] as const;
 
 export type DataAction = typeof DATA_ACTIONS[number];
 export const DATA_ACTIONS = [
-    'create',
-    'join',
     'connect',
     'discard',
     'meld',

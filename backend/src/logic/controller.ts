@@ -1,5 +1,5 @@
-import { convertSessionToPublic, defaultConfig, GameEvent, GameJoinParams, GAME_EVENT, Session, SessionPublic, SYNC_EVENT, userError, uuid, validateConfig } from 'shared';
-import { sendAll, subscribeEvent } from '../networking/socket';
+import { convertSessionToPublic, defaultConfig, GameEvent, GameJoinParams, GAME_EVENT, Session, SessionPublic, SYNC_EVENT, userError, uuid, validateJoinParams } from 'shared';
+import { sendAll, subscribeEvent, syncList } from '../networking/socket';
 import { eventHandler } from './eventHandler';
 
 export const sessions: Record<string, Session> = {};
@@ -13,7 +13,7 @@ export function updateClients(sessions: Record<string, Session>, source: GameEve
     if (!session)
         return;
     sendAll(source.sessionId, x => {
-        if (!session.players.some(y => y.name === x.playerId))
+        if (!session.players.some(y => y.id === x.playerId))
             throw Error('Could not find player in session');
         return ({
             type: SYNC_EVENT,
@@ -29,8 +29,8 @@ export function getSessions(): SessionPublic[] {
 export function addSession(params: GameJoinParams) {
     if (Object.values(sessions).some(x => x.name === params.lobbyName))
         throw userError('Session already exists');
-    validateConfig(params.config);
-    
+    validateJoinParams(params);
+
     const newSession: Session = {
         id: uuid(),
         name: params.lobbyName,
@@ -53,4 +53,5 @@ export function removeSession(id: string) {
     if (!sessions[id])
         throw userError('Session not found');
     delete sessions[id];
+    syncList();
 }

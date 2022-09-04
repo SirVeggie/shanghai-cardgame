@@ -5,6 +5,7 @@ import { sendError, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
 
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
+    console.log('event handler');
     if (!sessions[event.sessionId])
         return sendError(ws, 'Invalid session');
     const session = sessions[event.sessionId];
@@ -14,11 +15,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
     function handle() {
         switch (event.action) {
-            case 'join': return handleJoin();
             case 'connect': return handleConnect();
             case 'disconnect': return handleDisconnect();
-            case 'create': return handleCreate();
-            case 'delete': return handleDelete();
 
             case 'set-ready': return handleSetReady();
             case 'reveal': return handleReveal();
@@ -34,34 +32,6 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     }
 
     //#region handlers
-    function handleCreate() {
-        handleJoin();
-    }
-
-    function handleDelete() {
-        return;
-    }
-    
-    function handleJoin() {
-        if (event.action !== 'join' && event.action !== 'create')
-            return sendError(ws, 'Invalid action');
-        const player: Player = {
-            id: event.playerId,
-            name: event.join.playerName,
-            cards: [],
-            isReady: false,
-            melds: [],
-            newCards: [],
-            points: 0,
-            remainingShouts: 0,
-            tempCards: []
-        };
-
-        session.players.push(player);
-
-        sendMessage(`Player ${player.name} joined`, event);
-    }
-
     function handleConnect() {
         const player = session.players.find(x => x.id === event.playerId);
         if (!player)
@@ -100,7 +70,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Cannot reveal a card right now');
         if (session.currentPlayerId !== event.playerId)
             return sendError(ws, 'Cannot reveal on someone else\'s turn');
-        
+
         // Reset shanghai when new card revealed
         session.state = 'turn-start';
         const card = session.deck.splice(0, 1)[0];
@@ -141,15 +111,15 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return sendError(ws, 'Cannot draw on opponent\'s turn');
         if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
             return sendError(ws, 'Cannot draw a card right now');
-        
+
         if (session.pendingShanghai)
             allowShanghai('message');
-        
+
         if (session.deck.length === 0 && session.discard.length === 0) {
             sendError(ws, 'Deck and discard pile are empty, card drawing skipped');
             return session.state = 'card-drawn';
         }
-        
+
         if (session.deck.length === 0)
             reshuffleDeck();
 
@@ -170,10 +140,10 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             sendError(ws, 'Deck and discard pile are empty, card drawing skipped');
             return session.state = 'card-drawn';
         }
-        
+
         if (session.discard.length === 0)
             return sendError(ws, 'Discard pile is empty');
-        
+
         if (session.pendingShanghai)
             rejectShanghai();
 
@@ -265,7 +235,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         owner.melds[event.meldAdd.meldIndex] = newMeld;
         player.cards = player.cards.filter(x => x.id === card.id);
         sendMessage(`Player ${player.name} added card ${ctool.name(card)} to a meld`, event);
-        
+
         if (player.cards.length === 0)
             endRound();
     }
@@ -348,7 +318,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             tempCards: []
         };
     }
-    
+
     function reshuffleDeck() {
         session.deck = shuffle(session.discard);
         session.discard = [];
@@ -388,7 +358,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             reshuffleDeck();
             deckCards.push(...session.deck.splice(0, config.shanghaiPenaltyCount - deckCards.length));
         }
-        
+
         player.cards.push(...deckCards);
         player.newCards.push(...deckCards);
 
@@ -397,7 +367,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (message === 'message')
             sendMessage(`Player ${session.players.find(x => x.id === event.playerId)?.name} allowed shanghai`, event);
     }
-    
+
     function rejectShanghai() {
         if (!session.pendingShanghai)
             return sendError(ws, 'No shanghais pending');

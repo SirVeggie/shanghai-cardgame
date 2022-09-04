@@ -1,4 +1,4 @@
-import { Card, CardRank, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
+import { Card, CardRank, Coord, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
 import { v4 } from 'uuid';
 import { isJoker } from './validation';
 import arrayShuffle from 'shuffle-array';
@@ -208,4 +208,15 @@ export function getPlayerRoundPoints (config: GameConfig, player: Player) {
     }));
 
     return points;
+}
+
+export function lerp(a: number, b: number, t: number): number {
+  return a * (1 - t) + b * t;
+}
+
+export function lerpCoord(a: Coord, b: Coord, t: number): Coord {
+  return {
+    x: lerp(a.x, b.x, t),
+    y: lerp(a.y, b.y, t)
+  };
 }

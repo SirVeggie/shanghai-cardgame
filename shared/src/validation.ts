@@ -1,4 +1,4 @@
-import { Card, GameConfig, JOKER_RANK, Meld, MeldConfig, MELD_TYPES } from './types';
+import { Card, GameConfig, GameJoinParams, JOKER_RANK, Meld, MeldConfig, MELD_TYPES } from './types';
 import { countBy, minBy } from 'lodash';
 import { assertNever, userError } from '.';
 
@@ -15,9 +15,18 @@ export function val(validator: (a: unknown) => boolean, a: unknown, error: strin
         throw userError(error);
 }
 
+export function validateJoinParams(params: GameJoinParams) {
+    if (!params)
+        throw userError('Missing join params');
+    val(isString, params.playerName, 'Missing player name');
+    val(isString, params.lobbyName, 'Missing game name');
+    val(isString, params.password, 'Missing password');
+    validateConfig(params.config);
+}
+
 export function validateConfig(config: GameConfig | undefined): void {
     if (!config)
-        throw userError('Missing game config');
+        return console.log('No config, using default');
     val(isNumber, config.minimumCardPoints, 'Invalid minimum card points');
     val(isNumber, config.firstMeldBonusPoints, 'Invalid first meld bonus points');
     val(isNumber, config.meldBonusStartPoints, 'Invalid meld bonus start points');
@@ -70,7 +79,7 @@ export function validateMeld(meld: Card[], config: MeldConfig): boolean {
         case 'any-straight': return validateAnyStraight(meld, config.length);
         case 'skip-straight': return validateSkipStraight(meld, config.length);
         case 'house': return validateHouse(meld, config.length);
-        
+
         default: return assertNever(config.type);
     }
 }

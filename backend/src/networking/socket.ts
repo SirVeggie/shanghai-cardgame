@@ -1,12 +1,13 @@
 import { Server } from 'http';
-import { FatalError, fatalError, GameEvent, GAME_EVENT, UserError, uuid, WebEvent, wsError, wsMessage } from 'shared';
+import { convertSessionToPublic, FatalError, fatalError, GameEvent, GAME_EVENT, SessionListEvent, SESSION_LIST_EVENT, UserError, WebEvent, wsError, wsMessage } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
-import { addSession, sessions } from '../logic/controller';
+import { sessions } from '../logic/controller';
 
 type Actor = { playerId: string, ws: WebSocket; };
 let wss: WebSocketServer = null as any;
 const actions: Record<WebEvent['type'], ((data: WebEvent, ws: WebSocket) => void)[]> = {} as any;
 const clients: Record<string, Actor[]> = {};
+const listListeners: WebSocket[] = [];
 
 export function createSocket(port: number): void;
 export function createSocket(server: Server): void;
@@ -24,12 +25,17 @@ function createSocketBase() {
             try {
                 handleMessage(event.data as string, ws);
             } catch (e) {
-                if (e instanceof UserError)
+                if (e instanceof UserError) {
+                    console.error(e.message);
                     return sendError(ws, e.message);
+                }
+
                 if (e instanceof FatalError) {
+                    console.error(e.message);
                     sendError(ws, e.message);
                     return ws.close();
                 }
+
                 throw e;
             }
         };
@@ -39,6 +45,9 @@ function createSocketBase() {
 }
 
 export function removeWsConnection(ws: WebSocket) {
+    const index = listListeners.indexOf(ws);
+    if (index !== -1)
+        listListeners.splice(index, 1);
     Object.keys(clients).forEach(x => {
         const index = clients[x].findIndex(y => y.ws === ws);
         if (index !== -1)
@@ -52,43 +61,37 @@ export function removeWsConnection(ws: WebSocket) {
 
 function handleMessage(message: string, ws: WebSocket) {
     const event = JSON.parse(message) as WebEvent;
-    console.log(`Incoming event: ${event.type} ${(event as any).action ? `action: ${(event as any).action}` : ''}`);
+    console.log(`Incoming event: ${event.type}${(event as any).action ? `, action: ${(event as any).action}` : ''}`);
 
-    handleCreate(event, ws);
-    handleJoin(event, ws);
+    if (event.type === SESSION_LIST_EVENT)
+        return handleList(event, ws);
     handleReConnect(event, ws);
     actions[event.type]?.forEach(x => x(event, ws));
 }
 
-function handleCreate(event: WebEvent, _ws: WebSocket): void {
-    if (event.type !== GAME_EVENT || event.action !== 'create')
-        return;
-    if (!event.join)
-        throw fatalError('Missing join params');
-    addSession(event.join);
+function handleList(event: SessionListEvent, ws: WebSocket) {
+    const index = listListeners.indexOf(ws);
+    if (event.action === 'subscribe') {
+        if (index === -1)
+            listListeners.push(ws);
+        syncList();
+    } else if (event.action === 'unsubscribe') {
+        if (index !== -1)
+            listListeners.splice(index, 1);
+    }
 }
 
-function handleJoin(event: WebEvent, ws: WebSocket): void {
-    if (event.type !== GAME_EVENT || (event.action !== 'join' && event.action !== 'create'))
-        return;
-    if (!event.join)
-        throw fatalError('Missing join params');
+export function syncList() {
+    const list = Object.values(sessions).map(x => convertSessionToPublic(x));
+    const event: SessionListEvent = {
+        type: SESSION_LIST_EVENT,
+        action: 'update',
+        sessions: list
+    };
 
-    const session = Object.values(sessions).find(x => x.name === event.join.lobbyName);
-    if (!session)
-        throw fatalError('Did not find lobby by that name');
-    if (session.password !== event.join.password)
-        throw fatalError('Wrong password');
-    if (session.state !== 'waiting-players')
-        throw fatalError('Cannot join an ongoing game');
-    if (session.players.some(x => x.name === event.join!.playerName))
-        throw fatalError('A player by that name is already in the lobby');
-
-    event.playerId = uuid();
-
-    if (!clients[session.id])
-        clients[session.id] = [];
-    clients[session.id].push({ playerId: event.playerId, ws });
+    for (const listener of listListeners) {
+        listener.send(JSON.stringify(event));
+    }
 }
 
 function handleReConnect(event: WebEvent, ws: WebSocket): void {
@@ -107,10 +110,10 @@ function handleReConnect(event: WebEvent, ws: WebSocket): void {
         throw fatalError('A player by that name does not exist in the lobby');
     if (clients[session.id]?.some(x => x.playerId === existing.id))
         throw fatalError('That player is already connected');
-    
+
     event.playerId = existing.id;
     event.sessionId = session.id;
-    
+
     if (!clients[session.id])
         clients[session.id] = [];
     clients[session.id].push({ playerId: existing.id, ws });
