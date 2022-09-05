@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { WebEvent } from 'shared';
 import ReconnectingWebSocket from 'reconnecting-websocket';
 
+// this is a bit dumb
+
 let ws: ReconnectingWebSocket | null = null;
 
 function isConnected() {

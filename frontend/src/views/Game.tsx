@@ -118,6 +118,15 @@ export function Game() {
       </div>
 
       {/*-----------------------------------------------------------------------*/}
+      
+      <div className={s.meldInfo}>
+        <span>Melds</span>
+        {session.config.rounds[session.round].melds.map((config, i) => (
+          <div key={i}>{config.type} of {config.length}</div>
+        ))}
+      </div>
+      
+      {/*-----------------------------------------------------------------------*/}
 
       <div className={cx(s.decks, mobile && 'mobile')}>
         <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscard} />
@@ -161,6 +170,38 @@ const useStyles = createUseStyles({
     textAlign: 'center',
   },
 
+  meldInfo: {
+    position: 'absolute',
+    top: '40vh',
+    right: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    textAlign: 'right',
+    fontSize: 'min(1.5em, 4vh)',
+    backgroundColor: '#0005',
+    color: '#ccc',
+    border: '2px solid #000a',
+    borderRight: 'none',
+    transform: 'translateY(-50%)',
+    padding: '1em',
+    borderRadius: '0.5em 0 0 0.5em',
+    backdropFilter: 'blur(3px)',
+    
+    '& > span': {
+      borderBottom: '1px solid #000a',
+      paddingBottom: '0.2em',
+      marginBottom: '0.5em',
+    },
+  },
+  
+  privateMelds: {
+    
+  },
+  
+  publicMelds: {
+    
+  },
+  
   player: {
     color: '#ccca',
     
@@ -182,6 +223,7 @@ const useStyles = createUseStyles({
     borderRight: 'none',
     padding: '0.5em 1em 1em 1em',
     borderBottomLeftRadius: '0.5em',
+    backdropFilter: 'blur(3px)',
 
     '& > div': {
       display: 'flex',
