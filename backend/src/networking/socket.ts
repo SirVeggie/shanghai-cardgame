@@ -19,9 +19,9 @@ export function createSocket(a: number | Server) {
 }
 
 function createSocketBase() {
-    wss.on('connection', ws => {
-        console.log('client connected');
-
+    wss.on('connection', (ws, req) => {
+        console.log(`client connected from ${req.socket.remoteAddress}`);
+        
         ws.onmessage = event => {
             try {
                 handleMessage(event.data as string, ws);

@@ -38,7 +38,6 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
     //#region handlers
     function handleConnect() {
-        console.log('connect');
         const player = session.players.find(x => x.id === event.playerId);
         if (!player)
         throw userError('Invalid player id');
@@ -46,7 +45,6 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     }
     
     function handleDisconnect() {
-        console.log('disconnect');
         const player = session.players.find(x => x.id === event.playerId);
         if (!player)
             throw userError('Invalid player id');

@@ -113,7 +113,7 @@ export function Game() {
 
         <div>
           <i><FontAwesomeIcon icon={solid('hourglass-half')} /></i>
-          {session.players.map(p => <div key={p.id}>{p.points}m</div>)}
+          {session.players.map(p => <div key={p.id}>{(p.playtime / 1000 / 60).toFixed(0)}m</div>)}
         </div>
       </div>
 
