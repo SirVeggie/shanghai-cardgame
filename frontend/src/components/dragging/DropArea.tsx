@@ -3,6 +3,7 @@ import { createUseStyles } from 'react-jss';
 import { Coord, uuid } from 'shared';
 import { useDropArea } from '../../hooks/useDropArea';
 import { DropInfo } from '../../reducers/dropReducer';
+import cx from 'classnames';
 
 type Props = {
   size?: Coord;
@@ -11,6 +12,7 @@ type Props = {
   style?: CSSProperties;
   visible?: boolean;
   children?: React.ReactNode;
+  className?: string;
 }
 
 export function DropArea(p: Props) {
@@ -33,7 +35,7 @@ export function DropArea(p: Props) {
   }, []);
   
   return (
-    <div className={s.holder} ref={(ref as any)} style={p.style}>
+    <div className={cx(s.holder, p.className)} ref={(ref as any)} style={p.style}>
       {p.children}
     </div>
   );

@@ -29,9 +29,7 @@ export function useSessionComms(params: GameJoinParams | null, callback: (data: 
         ws.send(connectEvent);
     }, [params?.lobbyName, ws.connected]);
     
-    const send = (data: GameEvent) => {
-        ws.send(data);
-    };
+    const send = (data: GameEvent) => ws.send(data);
     
     return { ...ws, send };
 }

@@ -33,6 +33,7 @@ export type Session = {
     turn: number;
     deck: Card[];
     discard: Card[];
+    turnStartTime: number;
     pendingShanghai?: string;
     winnerId?: string;
 };
@@ -67,7 +68,10 @@ export type SessionPublic = Omit<Session, 'players' | 'deck' | 'discard' | 'pass
     };
 };
 
-export type PlayerPublic = Omit<Player, 'cards' | 'newCards'>;
+export type PlayerPublic = Omit<Player, 'cards' | 'newCards'> & {
+    cardAmount: number;
+};
+
 export type Player = {
     id: string;
     name: string;
@@ -78,6 +82,7 @@ export type Player = {
     remainingShouts: number;
     newCards: Card[];
     tempCards: Card[];
+    playtime: number;
 };
 
 export type Card = {

@@ -16,7 +16,9 @@ type Props = {
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
-}
+};
+
+const useLerp = false;
 
 export function Draggable(p: Props) {
   const s = useStyles();
@@ -26,53 +28,62 @@ export function Draggable(p: Props) {
   const [drag, setDrag] = useState(false);
   const dropper = useDropArea();
 
-  useEffect(() => {
-    if (!drag)
-      return;
-    const interval = setInterval(() => {
-      if (!refPos.current || !refPosTarget.current)
+  if (useLerp) {
+    useEffect(() => {
+      if (!drag)
         return;
-      const newPos = lerpCoord(refPos.current, refPosTarget.current, 0.1);
-      ref.current!.style.transform = `translate(${newPos.x}px, ${newPos.y}px)`;
-      refPos.current = newPos;
-    }, 5);
+      const interval = setInterval(() => {
+        if (!refPos.current || !refPosTarget.current)
+          return;
+        const newPos = lerpCoord(refPos.current, refPosTarget.current, 0.1);
+        ref.current!.style.transform = `translate(${newPos.x}px, ${newPos.y}px)`;
+        refPos.current = newPos;
+      }, 5);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [drag]);
+      return () => {
+        clearInterval(interval);
+      };
+    }, [drag]);
+  }
 
   const onStart: DraggableEventHandler = (e, data) => {
     setDrag(true);
     p.onState?.(true);
-    
+
     if (refPos.current === undefined)
-    refPos.current = { x: 0, y: 0 };
+      refPos.current = { x: 0, y: 0 };
     refPosTarget.current = refPos.current;
     p.onStart?.(e, data);
   };
-  
+
   const onDrag: DraggableEventHandler = (e, data) => {
     refPosTarget.current!.x += data.deltaX;
     refPosTarget.current!.y += data.deltaY;
+    if (!useLerp) {
+      refPos.current = refPosTarget.current;
+      ref.current!.style.transform = `translate(${refPos.current!.x}px, ${refPos.current!.y}px)`;
+    }
     p.onDrag?.(e, data);
   };
-  
+
   const onStop: DraggableEventHandler = (e, data) => {
     setDrag(false);
     p.onState?.(false);
-    
+
     refPosTarget.current = undefined;
     refPos.current = undefined;
     (ref.current as any).style.transform = 'none';
-    p.onStop?.(e, data);
     
+    setTimeout(() => {
+      p.onStop?.(e, data);
+    }, 10);
+
     const rect = (p.positionRef?.current ? p.positionRef.current : data.node).getBoundingClientRect();
     const drop: Coord = {
       x: rect.x + (rect.width / 2),
       y: rect.y + (rect.height / 2)
     };
-    
+
     dropper.activate(drop, p.info);
   };
 
@@ -98,6 +109,7 @@ const useStyles = createUseStyles({
     cursor: 'grab',
 
     '&:active, &.dragging': {
+      position: 'relative',
       cursor: 'grabbing',
       transition: 'none',
       zIndex: 10

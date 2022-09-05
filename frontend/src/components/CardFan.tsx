@@ -1,4 +1,4 @@
-import { CSSProperties, useRef, useState } from 'react';
+import { CSSProperties, useRef } from 'react';
 import { createUseStyles } from 'react-jss';
 import { Card, Coord } from 'shared';
 import { Draggable } from './dragging/Draggable';
@@ -62,7 +62,7 @@ function DragCard(p: DragCardProps) {
   if (!p.drag)
     return <PlayingCard card={p.card} className={s.card} style={style} size={p.size} />;
   return (
-    <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }}>
+    <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }} className={s.drag}>
       <PlayingCard innerRef={(ref as any)} pointer card={p.card} size={p.size} className={cx(s.card)} style={style} />
     </Draggable>
   );
@@ -74,6 +74,12 @@ const useStyles = createUseStyles({
   fan: {
     display: 'flex',
     position: 'relative',
+  },
+  
+  drag: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   card: {

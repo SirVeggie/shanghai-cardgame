@@ -4,15 +4,23 @@ import { useJoinParams } from '../hooks/useJoinParams';
 import { sessionActions } from '../reducers/sessionReducer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
+import { useLocalSocket } from '../hooks/useWebSocket';
+import { GameEvent, GAME_EVENT } from 'shared';
 
 export function BackButton() {
   const s = useStyles();
   const dispatch = useDispatch();
   const [_, setParams] = useJoinParams();
   
+  const ws = useLocalSocket();
+  
   const click = () => {
     setParams(null);
     dispatch(sessionActions.clearSession());
+    ws.send({
+      type: GAME_EVENT,
+      action: 'disconnect',
+    } as GameEvent);
   };
   
   return (

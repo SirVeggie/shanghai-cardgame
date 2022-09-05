@@ -44,7 +44,8 @@ function joinGame(params: GameJoinParams) {
         newCards: [],
         points: 0,
         remainingShouts: 0,
-        tempCards: []
+        tempCards: [],
+        playtime: 0,
     };
 
     session.players.push(player);

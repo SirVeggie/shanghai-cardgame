@@ -33,7 +33,7 @@ export function SessionCard(p: Props) {
 const useStyles = createUseStyles({
   back: {
     flex: '1 1 200px',
-    minWidth: 200,
+    minWidth: 250,
     maxWidth: 300,
     borderRadius: '10px',
     overflow: 'hidden',
@@ -73,8 +73,8 @@ const useStyles = createUseStyles({
     color: '#000',
     fontSize: '1.2em',
     backgroundColor: '#fff',
-    minHeight: '100px',
-    padding: '20px',
+    minHeight: 80,
+    padding: 20,
     flexGrow: 1,
 
     '&:nth-child(1)': {

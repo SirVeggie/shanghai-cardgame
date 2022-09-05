@@ -10,6 +10,7 @@ type Props = {
   amount: number;
   onClick?: MouseEventHandler<HTMLDivElement>;
   onDrop?: (event: GameEvent) => void;
+  size?: string | number;
 };
 
 export function DrawPile(p: Props) {
@@ -19,13 +20,13 @@ export function DrawPile(p: Props) {
   };
 
   return (
-    <div className={s.base}>
+    <div>
       <div className={s.bottom}>
-        <PlayingCard back={p.amount > 1} />
+        <PlayingCard size={p.size} back={p.amount > 1} />
       </div>
       <Toggle on={p.amount > 0}>
         <Draggable info={info}>
-          <PlayingCard pointer hover back onClick={p.onClick} />
+          <PlayingCard pointer hover size={p.size} back onClick={p.onClick} />
         </Draggable>
       </Toggle>
     </div>
@@ -33,12 +34,6 @@ export function DrawPile(p: Props) {
 }
 
 const useStyles = createUseStyles({
-  base: {
-    '&:active, &:hover, &.dragging': {
-      zIndex: 1,
-    },
-  },
-
   bottom: {
     position: 'absolute',
   }

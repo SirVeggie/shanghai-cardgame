@@ -11,6 +11,7 @@ type Props = {
   discard: SessionPublic['discard'];
   onClick?: MouseEventHandler<HTMLDivElement>;
   onDrop?: (info: DropInfo) => void;
+  size?: string | number;
 };
 
 export function DiscardPile(p: Props) {
@@ -21,22 +22,24 @@ export function DiscardPile(p: Props) {
   };
 
   const onDrop = (info: DropInfo) => {
-    console.log(`info: ${info.type}`);
     if (info.type !== 'hand-card')
       return;
     p.onDrop?.(info);
   };
 
   return (
-    <div className={s.base}>
+    <div>
       <div className={s.bottom}>
         <DropArea onDrop={onDrop}>
-          <PlayingCard card={p.discard.bottom} onClick={p.onClick} />
+          <PlayingCard size={p.size} card={p.discard.bottom} onClick={p.onClick} />
         </DropArea>
       </div>
+      <Toggle on={!p.discard.top}>
+        <PlayingCard size={p.size} dummy />
+      </Toggle>
       <Toggle on={!!p.discard.top}>
         <Draggable info={info}>
-          <PlayingCard pointer hover card={p.discard.top} onClick={p.onClick} />
+          <PlayingCard pointer hover size={p.size} card={p.discard.top} onClick={p.onClick} />
         </Draggable>
       </Toggle>
     </div>
@@ -44,12 +47,6 @@ export function DiscardPile(p: Props) {
 }
 
 const useStyles = createUseStyles({
-  base: {
-    '&:active, &:hover': {
-      zIndex: 1,
-    },
-  },
-
   bottom: {
     position: 'absolute',
   }

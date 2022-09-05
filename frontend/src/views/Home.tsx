@@ -80,16 +80,18 @@ export function Home() {
   };
 
   return (
-    <Container>
+    <Container noPadding>
       <div className={s.base}>
         {createForm.component}
         {joinForm.component}
         <div className={s.center}>
           <Button text='New Game' onClick={clickCreate} />
         </div>
-        {sessions.map(session => (
-          <SessionCard key={session.id} session={session} onClick={clickJoin(session)} />
-        ))}
+        <div className={s.sessions}>
+          {sessions.map(session => (
+            <SessionCard key={session.id} session={session} onClick={clickJoin(session)} />
+          ))}
+        </div>
       </div>
     </Container>
   );
@@ -97,13 +99,26 @@ export function Home() {
 
 const useStyles = createUseStyles({
   base: {
-    marginTop: '10vh',
+    paddingTop: '10vh',
+    height: '100vh',
+    boxSizing: 'border-box',
   },
 
   center: {
     display: 'flex',
     justifyContent: 'center',
     flexWrap: 'wrap',
-    marginBottom: 50,
+    height: 30,
+  },
+  
+  sessions: {
+    display: 'flex',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 20,
+    marginTop: 20,
+    padding: '0 20px 20px 20px',
+    maxHeight: 'calc(90vh - 70px)',
+    overflow: 'auto',
   }
 });

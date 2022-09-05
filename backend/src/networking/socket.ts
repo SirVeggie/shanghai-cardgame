@@ -9,6 +9,7 @@ const actions: Record<WebEvent['type'], ((data: WebEvent, ws: WebSocket) => void
 export const clients: Record<string, Actor[]> = {};
 const listListeners: WebSocket[] = [];
 
+
 export function createSocket(port: number): void;
 export function createSocket(server: Server): void;
 export function createSocket(a: number | Server) {
@@ -34,7 +35,9 @@ function createSocketBase() {
             }
         };
 
-        ws.onclose = () => handleDisconnect(ws);
+        ws.onclose = () => {
+            handleDisconnect(ws);
+        };
     });
 }
 
@@ -45,6 +48,8 @@ function handleMessage(message: string, ws: WebSocket) {
     if (event.type === SESSION_LIST_EVENT)
         return handleList(event, ws);
     handleConnect(event, ws);
+    if (event.type === GAME_EVENT && event.action === 'disconnect')
+        return handleDisconnect(ws);
     actions[event.type]?.forEach(x => x(event, ws));
 }
 
@@ -59,8 +64,6 @@ export function removeWsConnection(ws: WebSocket) {
         if (clients[x].length === 0)
             delete clients[x];
     });
-
-    ws.close();
 }
 
 function handleList(event: SessionListEvent, ws: WebSocket) {
@@ -103,7 +106,7 @@ function handleConnect(event: WebEvent, ws: WebSocket): void {
         throw userError('A player by that name does not exist in the lobby');
     if (clients[session.id]?.some(x => x.playerId === existing.id))
         throw userError('A player by that name is already connected');
-    
+
     event.playerId = existing.id;
     event.sessionId = session.id;
 

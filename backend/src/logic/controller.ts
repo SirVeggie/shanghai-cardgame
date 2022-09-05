@@ -36,6 +36,7 @@ export function addSession(params: GameJoinParams) {
         name: params.lobbyName,
         config: defaultConfig,
         password: params.password,
+        turnStartTime: Date.now(),
 
         currentPlayerId: '',
         state: 'waiting-players',

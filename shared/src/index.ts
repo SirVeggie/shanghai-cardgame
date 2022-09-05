@@ -54,6 +54,7 @@ export function convertSessionToPublic(session: Session, playerId?: string): Ses
         winnerId: session.winnerId,
         currentPlayerId: session.currentPlayerId,
         deckCardAmount: session.deck.length,
+        turnStartTime: session.turnStartTime,
 
         players: session.players.map(x => convertPlayerToPublic(x)),
         me: session.players.find(x => x.id === playerId),
@@ -69,10 +70,12 @@ export function convertPlayerToPublic(player: Player): PlayerPublic {
         id: player.id,
         name: player.name,
         isReady: player.isReady,
+        cardAmount: player.cards.length,
         points: player.points,
         melds: player.melds,
         remainingShouts: player.remainingShouts,
-        tempCards: player.tempCards
+        tempCards: player.tempCards,
+        playtime: player.playtime,
     };
 }
 
@@ -97,10 +100,12 @@ export function createPlayer(id: string, name: string): PlayerPublic {
         id,
         name,
         isReady: false,
+        cardAmount: 0,
         melds: [],
         points: 0,
         remainingShouts: 0,
-        tempCards: []
+        tempCards: [],
+        playtime: 0,
     };
 }
 
@@ -200,6 +205,11 @@ export function getPlayerRoundPoints (config: GameConfig, player: Player) {
     return points;
 }
 
+export const sortCards = (cards: Card[]) => cards.sort((a, b) => cardOrderIndex(a) - cardOrderIndex(b));
+export function cardOrderIndex(card: Card): number {
+    return card.suit * 1000 + card.rank * 10 + card.deck;
+}
+    
 export function lerp(a: number, b: number, t: number): number {
   return a * (1 - t) + b * t;
 }

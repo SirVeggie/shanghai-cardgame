@@ -5,6 +5,7 @@ import { contMinWidth } from '../tools/cssConst';
 type Props = {
   children: React.ReactNode;
   className?: string;
+  noPadding?: boolean;
 };
 
 export function Container(p: Props) {
@@ -12,7 +13,7 @@ export function Container(p: Props) {
 
   return (
     <div className={cx(s.container, p.className)}>
-      <div className='inner'>
+      <div className={cx('inner', p.noPadding && 'noPadding')}>
         {p.children}
       </div>
     </div>
@@ -32,6 +33,10 @@ const useStyles = createUseStyles({
       maxWidth: 1000,
       boxSizing: 'border-box',
       '--media-width': '700px',
+      
+      '&.noPadding': {
+        padding: 0,
+      },
 
       [`@media (max-width: ${contMinWidth})`]: {
         minWidth: 'calc(100%)',

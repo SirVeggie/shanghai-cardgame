@@ -4,10 +4,13 @@ import { Card, ctool } from 'shared';
 import cx from 'classnames';
 import { EmptyCard } from './EmptyCard';
 import { BackCard } from './BackCard';
+import { ppid } from 'process';
+import { DummyCard } from './DummyCard';
 
 type Props = {
   card?: Card;
   back?: boolean;
+  dummy?: boolean;
   onClick?: MouseEventHandler<HTMLDivElement>;
   className?: string;
   size?: string | number;
@@ -26,6 +29,8 @@ export function PlayingCard(p: Props) {
     cursor: p.onClick || p.pointer ? 'pointer' : 'default',
   };
   
+  if (p.dummy)
+    return <DummyCard size={p.size} />;
   if (p.back)
     return <BackCard {...p} />;
   if (!p.card)
