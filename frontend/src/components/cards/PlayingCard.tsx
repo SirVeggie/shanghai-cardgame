@@ -1,14 +1,20 @@
-import { CSSProperties, MouseEventHandler } from 'react';
+import { CSSProperties, MouseEventHandler, RefObject } from 'react';
 import { createUseStyles } from 'react-jss';
 import { Card, ctool } from 'shared';
 import cx from 'classnames';
+import { EmptyCard } from './EmptyCard';
+import { BackCard } from './BackCard';
 
 type Props = {
-  card: Card;
+  card?: Card;
+  back?: boolean;
   onClick?: MouseEventHandler<HTMLDivElement>;
   className?: string;
   size?: string | number;
   style?: CSSProperties;
+  pointer?: boolean;
+  hover?: boolean;
+  innerRef?: RefObject<HTMLElement>;
 }
 
 export function PlayingCard(p: Props) {
@@ -17,10 +23,15 @@ export function PlayingCard(p: Props) {
   const style = {
     ...p.style,
     fontSize: p.size ?? 30,
+    cursor: p.onClick || p.pointer ? 'pointer' : 'default',
   };
   
+  if (p.back)
+    return <BackCard {...p} />;
+  if (!p.card)
+    return <EmptyCard {...p} />;
   return (
-    <div className={cx(s.card, p.className, ctool.color(p.card))} onClick={p.onClick} style={style}>
+    <div ref={(p.innerRef as any)} className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover')} onClick={p.onClick} style={style}>
       <i>{ctool.suitIcon(p.card)}</i>
       <i>{ctool.suitIcon(p.card)}</i>
       <i>{ctool.suitIcon(p.card)}</i>
@@ -41,9 +52,17 @@ const useStyles = createUseStyles({
     overflow: 'hidden',
     backgroundClip: 'content-box',
     color: 'var(--card-black)',
-    cursor: 'pointer',
     userSelect: 'none',
     filter: 'drop-shadow(4px 4px 5px #0009)',
+    boxSizing: 'border-box',
+    
+    '&.hover': {
+      transition: 'transform 200ms ease',
+      
+      '&:hover': {
+        transform: 'translateY(-0.5em) scale(1.05)',
+      },
+    },
     
     '&.red': {
       color: 'var(--card-red)',
@@ -53,7 +72,7 @@ const useStyles = createUseStyles({
       pointerEvents: 'none',
     },
     
-    '&:not(.back)::after': {
+    '&::after': {
       content: '""',
       position: 'absolute',
       border: '1px dashed #0003',

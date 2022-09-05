@@ -24,17 +24,6 @@ export function userError(message: string): UserError {
     return new UserError(message);
 }
 
-export class FatalError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = this.constructor.name;
-    }
-}
-
-export function fatalError(message: string): FatalError {
-    return new FatalError(message);
-}
-
 export function wsError(message: string): ErrorEvent {
     return {
         type: ERROR_EVENT,
@@ -64,6 +53,7 @@ export function convertSessionToPublic(session: Session, playerId?: string): Ses
         turn: session.turn,
         winnerId: session.winnerId,
         currentPlayerId: session.currentPlayerId,
+        deckCardAmount: session.deck.length,
 
         players: session.players.map(x => convertPlayerToPublic(x)),
         me: session.players.find(x => x.id === playerId),

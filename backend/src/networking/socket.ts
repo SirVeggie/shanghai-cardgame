@@ -1,12 +1,12 @@
 import { Server } from 'http';
-import { convertSessionToPublic, FatalError, fatalError, GameEvent, GAME_EVENT, SessionListEvent, SESSION_LIST_EVENT, UserError, WebEvent, wsError, wsMessage } from 'shared';
+import { convertSessionToPublic, GameEvent, GAME_EVENT, SessionListEvent, SESSION_LIST_EVENT, userError, UserError, validateJoinParams, WebEvent, wsError, wsMessage } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
 import { sessions } from '../logic/controller';
 
 type Actor = { playerId: string, ws: WebSocket; };
 let wss: WebSocketServer = null as any;
 const actions: Record<WebEvent['type'], ((data: WebEvent, ws: WebSocket) => void)[]> = {} as any;
-const clients: Record<string, Actor[]> = {};
+export const clients: Record<string, Actor[]> = {};
 const listListeners: WebSocket[] = [];
 
 export function createSocket(port: number): void;
@@ -30,18 +30,22 @@ function createSocketBase() {
                     return sendError(ws, e.message);
                 }
 
-                if (e instanceof FatalError) {
-                    console.error(e.message);
-                    sendError(ws, e.message);
-                    return ws.close();
-                }
-
                 throw e;
             }
         };
 
         ws.onclose = () => handleDisconnect(ws);
     });
+}
+
+function handleMessage(message: string, ws: WebSocket) {
+    const event = JSON.parse(message) as WebEvent;
+    console.log(`Incoming event: ${event.type}${(event as any).action ? `, action: ${(event as any).action}` : ''}`);
+
+    if (event.type === SESSION_LIST_EVENT)
+        return handleList(event, ws);
+    handleConnect(event, ws);
+    actions[event.type]?.forEach(x => x(event, ws));
 }
 
 export function removeWsConnection(ws: WebSocket) {
@@ -57,16 +61,6 @@ export function removeWsConnection(ws: WebSocket) {
     });
 
     ws.close();
-}
-
-function handleMessage(message: string, ws: WebSocket) {
-    const event = JSON.parse(message) as WebEvent;
-    console.log(`Incoming event: ${event.type}${(event as any).action ? `, action: ${(event as any).action}` : ''}`);
-
-    if (event.type === SESSION_LIST_EVENT)
-        return handleList(event, ws);
-    handleReConnect(event, ws);
-    actions[event.type]?.forEach(x => x(event, ws));
 }
 
 function handleList(event: SessionListEvent, ws: WebSocket) {
@@ -94,23 +88,22 @@ export function syncList() {
     }
 }
 
-function handleReConnect(event: WebEvent, ws: WebSocket): void {
+function handleConnect(event: WebEvent, ws: WebSocket): void {
     if (event.type !== GAME_EVENT || event.action !== 'connect')
         return;
-    if (!event.join)
-        throw fatalError('Missing join params');
+    validateJoinParams(event.join);
 
     const session = Object.values(sessions).find(x => x.name === event.join.lobbyName);
     if (!session)
-        throw fatalError('Did not find lobby by that name');
+        throw userError('Did not find lobby by that name');
     if (session.password !== event.join.password)
-        throw fatalError('Wrong password');
+        throw userError('Wrong password');
     const existing = session.players.find(x => x.name === event.join.playerName);
     if (!existing)
-        throw fatalError('A player by that name does not exist in the lobby');
+        throw userError('A player by that name does not exist in the lobby');
     if (clients[session.id]?.some(x => x.playerId === existing.id))
-        throw fatalError('That player is already connected');
-
+        throw userError('A player by that name is already connected');
+    
     event.playerId = existing.id;
     event.sessionId = session.id;
 

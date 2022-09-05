@@ -26,7 +26,7 @@ export function validateJoinParams(params: GameJoinParams) {
 
 export function validateConfig(config: GameConfig | undefined): void {
     if (!config)
-        return console.log('No config, using default');
+        return;
     val(isNumber, config.minimumCardPoints, 'Invalid minimum card points');
     val(isNumber, config.firstMeldBonusPoints, 'Invalid first meld bonus points');
     val(isNumber, config.meldBonusStartPoints, 'Invalid meld bonus start points');
@@ -48,7 +48,7 @@ export function validateConfig(config: GameConfig | undefined): void {
             throw userError('missing round meld config');
         round.melds.forEach(meld => {
             val(isNumber, meld.length, 'Invalid meld length');
-            if (MELD_TYPES.some(x => x === meld.type))
+            if (!MELD_TYPES.some(x => x === meld.type))
                 throw userError('Invalid meld type');
         });
     });

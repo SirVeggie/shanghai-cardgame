@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch } from 'react-redux';
-import { GameJoinParams, SessionListEvent, SessionPublic, SESSION_LIST_EVENT } from 'shared';
+import { defaultConfig, ERROR_EVENT, GameJoinParams, SessionPublic, SESSION_LIST_EVENT, WebEvent } from 'shared';
 import { createSession, joinSession } from '../backend';
 import { Button } from '../components/Button';
 import { Container } from '../components/Container';
@@ -20,26 +20,29 @@ export function Home() {
   const [_, setParams] = useJoinParams();
   const notify = useNotification();
 
-  useLocalSocket({ type: SESSION_LIST_EVENT, action: 'subscribe' }, (event: SessionListEvent) => {
-    if (!event || event.type !== SESSION_LIST_EVENT || event.action !== 'update')
-      return;
-    setSessions(event.sessions);
+  useLocalSocket({ type: SESSION_LIST_EVENT, action: 'subscribe' }, (event: WebEvent) => {
+    if (event && event.type === SESSION_LIST_EVENT && event.action === 'update')
+      setSessions(event.sessions);
+    if (event && event.type === ERROR_EVENT)
+      notify.create('error', event.message);
   });
 
   const createForm = useForm('Create game', {
     game: { label: 'Game', type: 'text' },
     player: { label: 'Your name', type: 'text' },
     password: { label: 'Password', type: 'password' },
+    config: { label: 'Config', type: 'textarea' },
   }, data => {
     const params: GameJoinParams = {
       lobbyName: data.game,
       playerName: data.player,
       password: data.password,
+      config: data.config ? JSON.parse(data.config) : undefined,
     };
 
     createSession(params).then(session => {
-      dispatch(sessionActions.setSession(session));
       setParams(params);
+      dispatch(sessionActions.setSession(session));
     }).catch(err => {
       notify.create('error', err.message ?? err);
     });
@@ -63,6 +66,12 @@ export function Home() {
     });
   });
 
+  const clickCreate = () => {
+    createForm.setOpen(true, {
+      config: JSON.stringify(defaultConfig, null, 2),
+    });
+  };
+
   const clickJoin = (session: SessionPublic) => {
     return () => {
       setSessionName(session.name);
@@ -71,27 +80,30 @@ export function Home() {
   };
 
   return (
-    <Container className={s.container}>
-      {createForm.component}
-      {joinForm.component}
-      <div className={s.center}>
-        <Button text='New Game' onClick={() => createForm.setOpen(true)} />
+    <Container>
+      <div className={s.base}>
+        {createForm.component}
+        {joinForm.component}
+        <div className={s.center}>
+          <Button text='New Game' onClick={clickCreate} />
+        </div>
+        {sessions.map(session => (
+          <SessionCard key={session.id} session={session} onClick={clickJoin(session)} />
+        ))}
       </div>
-      {sessions.map(session => (
-        <SessionCard key={session.id} session={session} onClick={clickJoin(session)} />
-      ))}
     </Container>
   );
 }
 
 const useStyles = createUseStyles({
-  container: {
+  base: {
     marginTop: '10vh',
   },
 
   center: {
     display: 'flex',
     justifyContent: 'center',
-    marginBottom: 20,
+    flexWrap: 'wrap',
+    marginBottom: 50,
   }
 });

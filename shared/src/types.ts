@@ -60,9 +60,10 @@ export type RoundConfig = {
 export type SessionPublic = Omit<Session, 'players' | 'deck' | 'discard' | 'password'> & {
     me?: Player;
     players: PlayerPublic[];
+    deckCardAmount: number;
     discard: {
-        top: Card,
-        bottom: Card;
+        top: Card | undefined,
+        bottom: Card | undefined;
     };
 };
 

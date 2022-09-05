@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useEffect, useRef, useState } from 'react';
+import { CSSProperties, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { createUseStyles } from 'react-jss';
 import { Coord, lerpCoord } from 'shared';
@@ -7,13 +7,15 @@ import cx from 'classnames';
 import { DropInfo } from '../../reducers/dropReducer';
 
 type Props = {
+  info: DropInfo;
+  positionRef?: RefObject<HTMLElement>;
   onStart?: DraggableEventHandler;
   onDrag?: DraggableEventHandler;
   onStop?: DraggableEventHandler;
+  onState?: (drag: boolean) => void;
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
-  info: DropInfo;
 }
 
 export function Draggable(p: Props) {
@@ -42,28 +44,30 @@ export function Draggable(p: Props) {
 
   const onStart: DraggableEventHandler = (e, data) => {
     setDrag(true);
-
+    p.onState?.(true);
+    
     if (refPos.current === undefined)
-      refPos.current = { x: 0, y: 0 };
+    refPos.current = { x: 0, y: 0 };
     refPosTarget.current = refPos.current;
     p.onStart?.(e, data);
   };
-
+  
   const onDrag: DraggableEventHandler = (e, data) => {
     refPosTarget.current!.x += data.deltaX;
     refPosTarget.current!.y += data.deltaY;
     p.onDrag?.(e, data);
   };
-
+  
   const onStop: DraggableEventHandler = (e, data) => {
     setDrag(false);
+    p.onState?.(false);
     
     refPosTarget.current = undefined;
     refPos.current = undefined;
     (ref.current as any).style.transform = 'none';
     p.onStop?.(e, data);
     
-    const rect = data.node.getBoundingClientRect();
+    const rect = (p.positionRef?.current ? p.positionRef.current : data.node).getBoundingClientRect();
     const drop: Coord = {
       x: rect.x + (rect.width / 2),
       y: rect.y + (rect.height / 2)
@@ -78,7 +82,7 @@ export function Draggable(p: Props) {
       onDrag={onDrag}
       onStop={onStop}
     >
-      <div ref={(ref as any)} className={cx(s.draggable, p.className)} style={p.style}>
+      <div ref={(ref as any)} className={cx(s.draggable, p.className, drag && 'dragging')} style={p.style}>
         {p.children}
       </div>
     </DraggableCore>
@@ -93,10 +97,10 @@ const useStyles = createUseStyles({
     transform: 'translate(var(--pos-x), var(--pos-y))',
     cursor: 'grab',
 
-    '&:active': {
+    '&:active, &.dragging': {
       cursor: 'grabbing',
       transition: 'none',
       zIndex: 10
-    }
+    },
   }
 });

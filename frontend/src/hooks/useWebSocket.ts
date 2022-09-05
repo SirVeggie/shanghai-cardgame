@@ -1,32 +1,30 @@
 import { useEffect, useState } from 'react';
 import { WebEvent } from 'shared';
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
-export function useLocalSocket(data: WebEvent, onmessage?: (data: any, ws: WebSocket) => void) {
+export function useLocalSocket(data?: WebEvent, onMessage?: (data: any, ws: ReconnectingWebSocket) => void) {
     const host = window.location.host;
     const secure = window.location.protocol === 'https:' ? 's' : '';
-    const url = host.includes('localhost') ? 'ws://localhost:3001' : `ws${secure}://${host}`;
-    return useWebSocket(url, ws => ws.send(JSON.stringify(data)), onmessage);
+    // const url = host.includes('localhost') ? 'ws://localhost:3001' : `ws${secure}://${host}`;
+    const url = 'ws://89.27.98.123:30001';
+    const onOpen = data ? (ws: ReconnectingWebSocket) => ws.send(JSON.stringify(data)) : undefined;
+    return useWebSocket(url, onOpen, onMessage);
 }
 
-export function useWebSocket(url: string, onOpen?: (ws: WebSocket) => void, onmessage?: (data: any, ws: WebSocket) => void) {
-    const [count, setCount] = useState(0);
-    const [connected, setConnected] = useState(false);
-    const [ws, setWS] = useState(null as unknown as WebSocket);
+export function useWebSocket(url: string, onOpen?: (ws: ReconnectingWebSocket) => void, onMessage?: (data: any, ws: ReconnectingWebSocket) => void) {
+    const [ws, setWS] = useState(null as unknown as ReconnectingWebSocket);
+    const [connectedOnce, setConnected] = useState(false);
 
     useEffect(() => {
-        const ws = new WebSocket(url);
-
+        const ws = new ReconnectingWebSocket(url);
+        
         ws.onopen = () => {
-            setConnected(true);
             onOpen?.call(null, ws);
-        };
-
-        ws.onclose = () => {
-            setConnected(false);
+            setConnected(true);
         };
 
         ws.onmessage = event => {
-            onmessage?.call(null, JSON.parse(event.data), ws);
+            onMessage?.call(null, JSON.parse(event.data), ws);
         };
 
         setWS(ws);
@@ -36,18 +34,7 @@ export function useWebSocket(url: string, onOpen?: (ws: WebSocket) => void, onme
             ws.onclose = null;
             ws.close();
         };
-    }, [count]);
-
-    useEffect(() => {
-        window.addEventListener('focus', fixConnection);
-        return () => window.removeEventListener('focus', fixConnection);
     }, []);
-
-    const fixConnection = () => {
-        if (ws.readyState !== WebSocket.OPEN) {
-            setCount(count + 1);
-        }
-    };
 
     const send = (data: any) => {
         if (ws) {
@@ -55,5 +42,8 @@ export function useWebSocket(url: string, onOpen?: (ws: WebSocket) => void, onme
         }
     };
 
-    return [send, connected] as [(data: any) => void, boolean];
+    return {
+        send,
+        connected: connectedOnce && ws?.readyState === ws?.OPEN,
+    };
 }

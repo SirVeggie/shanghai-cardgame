@@ -1,8 +1,9 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useRef, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { Card, Coord } from 'shared';
 import { Draggable } from './dragging/Draggable';
-import { PlayingCard } from './PlayingCard';
+import { PlayingCard } from './cards/PlayingCard';
+import cx from 'classnames';
 
 type Props = {
   cards: Card[];
@@ -10,32 +11,19 @@ type Props = {
   angle?: number;
   spacing?: number;
   size?: string | number;
+  cardType?: 'hand-card' | 'meld-card';
 };
 
 export function CardFan(p: Props) {
   const s = useStyles();
 
-  const cards = p.cards.map((card, i) => {
-    const delta = i - (p.cards.length - 1) / 2;
-    const angle = p.angle ?? 0;
-    const offsets = calcOffsets(angle, p.spacing ?? 3, delta);
-    const style = {
-      fontSize: p.size ?? 30,
-      '--pos-x': `${offsets.x}em`,
-      '--pos-y': `${offsets.y}em`,
-      '--rot': `${delta * angle}deg`,
-    } as CSSProperties;
-
-    if (!p.drag)
-      return <PlayingCard card={card} className={s.card} style={style} size={p.size} />;
-    return (
-      <div key={card.id} className={s.card} style={style}>
-        <Draggable info={{ type: 'card', data: card }}>
-          <PlayingCard card={card} size={p.size} />
-        </Draggable>
-      </div>
-    );
-  });
+  const cards = p.cards.map((card, i) => (
+    <DragCard key={card.id} {...p}
+      cardAmount={p.cards.length}
+      index={i}
+      card={card}
+    />
+  ));
 
   return (
     <div className={s.fan}>
@@ -43,6 +31,44 @@ export function CardFan(p: Props) {
     </div>
   );
 }
+
+
+
+type DragCardProps = {
+  index: number;
+  card: Card;
+  cardAmount: number;
+  size?: string | number;
+  angle?: number;
+  spacing?: number;
+  drag?: boolean;
+  cardType?: 'hand-card' | 'meld-card';
+};
+
+function DragCard(p: DragCardProps) {
+  const s = useStyles();
+  const ref = useRef<HTMLElement>();
+
+  const delta = p.index - (p.cardAmount - 1) / 2;
+  const angle = p.angle ?? 0;
+  const offsets = calcOffsets(angle, p.spacing ?? 3, delta);
+  const style = {
+    fontSize: p.size ?? 30,
+    '--pos-x': `${offsets.x}em`,
+    '--pos-y': `${offsets.y}em`,
+    '--rot': `${delta * angle}deg`,
+  } as CSSProperties;
+
+  if (!p.drag)
+    return <PlayingCard card={p.card} className={s.card} style={style} size={p.size} />;
+  return (
+    <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }}>
+      <PlayingCard innerRef={(ref as any)} pointer card={p.card} size={p.size} className={cx(s.card)} style={style} />
+    </Draggable>
+  );
+}
+
+
 
 const useStyles = createUseStyles({
   fan: {
@@ -64,8 +90,8 @@ const useStyles = createUseStyles({
       transform: 'translate(var(--pos-x), calc(var(--pos-y))) scale(calc(var(--scale) * 1.1)) rotate(var(--rot)) translateY(-1em)',
     },
 
-    '&:active': {
-      transform: 'translate(var(--pos-x), calc(var(--pos-y))) scale(calc(var(--scale) * 1.1)) rotate(0deg) translateY(-1em)',
+    '.dragging &': {
+      transform: 'translate(var(--pos-x), calc(var(--pos-y))) scale(calc(var(--scale) * 1.1)) translateY(-1em) rotate(0deg)',
     },
   }
 });

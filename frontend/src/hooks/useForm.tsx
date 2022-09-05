@@ -70,9 +70,9 @@ export function useForm<T extends string>(title: string, fields: Record<T, Field
     return data;
   };
 
-  const setOpenCustom = (state: boolean, initialValues?: FormValues<T>) => {
+  const setOpenCustom = (state: boolean, initialValues?: Partial<FormValues<T>>) => {
     if (initialValues)
-      keys.forEach(key => states[key].set(initialValues[key]));
+      keys.forEach(key => states[key].set(initialValues[key] ?? ''));
     setOpen(state);
 
     setTimeout(() => {

@@ -5,7 +5,6 @@ import { sendError, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
 
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
-    console.log('event handler');
     if (!sessions[event.sessionId])
         return sendError(ws, 'Invalid session');
     const session = sessions[event.sessionId];

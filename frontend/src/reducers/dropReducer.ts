@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export type DropType = 'hand-card' | 'meld-card' | 'discard-card' | 'deck-card';
 export type DropInfo = {
-    type: string;
+    type: DropType;
     data?: any;
 }
 

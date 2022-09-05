@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { convertSessionToPublic, GameJoinParams, Player, userError, uuid, validateJoinParams } from 'shared';
 import { addSession, sessions } from '../../logic/controller';
-import { syncList } from '../socket';
+import { clients, syncList } from '../socket';
 
 export const sessionRouter = Router();
 
@@ -10,6 +10,7 @@ sessionRouter.post('/create', (req, res) => {
     if (!data)
         throw userError('Missing join params');
     addSession(data);
+    console.log(`Session created: ${data.lobbyName}`);
     const session = joinGame(data);
     res.send(session);
 });
@@ -27,10 +28,10 @@ function joinGame(params: GameJoinParams) {
         throw userError('Did not find lobby by that name');
     if (session.password !== params.password)
         throw userError('Wrong password');
+    if (session.players.some(x => x.name === params.playerName))
+        return reconnect(params);
     if (session.state !== 'waiting-players')
         throw userError('Cannot join an ongoing game');
-    if (session.players.some(x => x.name === params.playerName))
-        throw userError('A player by that name is already in the lobby');
 
     console.log(`Player joining: ${params.playerName}`);
 
@@ -48,6 +49,22 @@ function joinGame(params: GameJoinParams) {
 
     session.players.push(player);
     syncList();
-    
-    return convertSessionToPublic(session);
+
+    return convertSessionToPublic(session, player.id);
+}
+
+function reconnect(params: GameJoinParams) {
+    const session = Object.values(sessions).find(x => x.name === params.lobbyName);
+    if (!session)
+        throw userError('Did not find lobby by that name');
+    if (session.password !== params.password)
+        throw userError('Wrong password');
+    const player = session.players.find(x => x.name === params.playerName);
+    if (!player)
+        throw userError('Did not find player by that name');
+    if (clients[session.id]?.some(x => x.playerId === player.id))
+        throw userError('A player by that name is already connected');
+
+    console.log(`Player reconnecting: ${params.playerName}`);
+    return convertSessionToPublic(session, player.id);
 }

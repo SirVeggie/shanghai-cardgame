@@ -21,7 +21,8 @@ export function SessionCard(p: Props) {
             {p.session.players.map(player => <div key={player.id}>{player.name}</div>)}
           </div>
           <div>
-            Round: {p.session.round}
+            Round: {p.session.round}<br />
+            Turn: {p.session.turn}
           </div>
         </div>
       </div>
@@ -66,9 +67,10 @@ const useStyles = createUseStyles({
   },
 
   inner: {
-    color: '#000',
-    position: 'relative',
     display: 'flex',
+    justifyContent: 'space-between',
+    position: 'relative',
+    color: '#000',
     fontSize: '1.2em',
     backgroundColor: '#fff',
     minHeight: '100px',

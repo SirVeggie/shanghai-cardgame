@@ -2,13 +2,50 @@ body {
   margin: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239C92AC' fill-opacity='0.25' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"), linear-gradient(to right top, #343a40, #2b2c31, #211f22, #151314, #000000);
+  /* background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239C92AC' fill-opacity='0.25' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"), linear-gradient(to right top, #343a40, #2b2c31, #211f22, #151314, #000000); */
+  background: url("https://img.freepik.com/premium-vector/poker-table-background-green-color_47243-1571.jpg?w=2000");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 
   --card-black: #161616;
   --card-red: #bd2727;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #000a #0005;
+}
+
+/* Works on Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #0000;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #0001;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #000a;
+  border-radius: 3px;
+  border: 1px solid #0005;
+}
+
+::-webkit-resizer {
+  appearance: none;
+  background: linear-gradient(to right bottom, #0000 0%, #0000 68%, #0003 68%, #0003 76%, #0000 77%, #0000 84%, #0003 84%, #0003 90%, #0000 93%, #0000 100%);
+}
+
+::-webkit-scrollbar-corner {
+  background: #0000;
+  border-top: 16px solid #0001;
+  border-left: 16px solid #0001;
+  border-right: 16px solid transparent;
+  border-bottom: 16px solid transparent;
 }
