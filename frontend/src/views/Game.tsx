@@ -21,6 +21,7 @@ import { MeldCards } from '../components/MeldCards';
 import { EventMessage, MessageLog } from '../components/MessageLog';
 import { SlideButton } from '../components/SlideButton';
 import { themeActions } from '../reducers/themeReducer';
+import { PlayingCard } from '../components/cards/PlayingCard';
 
 export function Game() {
   const s = useStyles();
@@ -72,7 +73,7 @@ export function Game() {
     if (info.type === 'deck-card')
       ws.send(revealCard(session.id, session.me.id));
   };
-  
+
   const playerReady = () => {
     ws.send(setReady(session.id, session.me!.id));
   };
@@ -98,6 +99,12 @@ export function Game() {
         xOffset='2.3em' yOffset='11em'
         onClick={() => dispatch(themeActions.setTheme('chess'))}
       />
+
+      {/*-----------------------------------------------------------------------*/}
+
+      <div style={{ position: 'absolute', left: '10vw', top: '10vh' }}>
+        <PlayingCard card={deck[0]} isNew />
+      </div>
 
       {/*-----------------------------------------------------------------------*/}
 

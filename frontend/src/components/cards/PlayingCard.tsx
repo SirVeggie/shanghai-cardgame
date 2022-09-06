@@ -21,6 +21,7 @@ type Props = {
   pointer?: boolean;
   hover?: boolean;
   innerRef?: RefObject<HTMLElement>;
+  isNew?: boolean;
 };
 
 export function PlayingCard(p: Props) {
@@ -40,12 +41,18 @@ export function PlayingCard(p: Props) {
   if (!p.card)
     return <EmptyCard {...p} />;
   return (
-    <div ref={(p.innerRef as any)} className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme)} onClick={p.onClick} style={style}>
+    <div
+      ref={(p.innerRef as any)}
+      className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme)}
+      onClick={p.onClick} style={style}
+    >
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <span>{ctool.rankPrefix(p.card)}</span>
       <span>{ctool.rankPrefix(p.card)}</span>
+      {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
+      {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
     </div>
   );
 
@@ -77,6 +84,20 @@ export function PlayingCard(p: Props) {
 }
 
 const useStyles = createUseStyles({
+  new: {
+    // color: '#ff0',
+    color: 'darkgrey',
+    fontSize: '1.7em',
+    position: 'absolute',
+    zIndex: -1,
+    top: '0em',
+    left: '0.1em',
+    
+    '&:nth-of-type(2)': {
+      top: '-0.25em',
+    },
+  },
+  
   card: {
     fontSize: '30px',
     width: '5em',

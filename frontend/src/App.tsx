@@ -22,7 +22,7 @@ export function App() {
   const gameState = useSelector((state: RootState) => state.session?.state);
   const [params, setParams] = useJoinParams();
   const ws = useLocalSocket();
-
+  
   useEffect(() => {
     if (hasInitialised)
       return;

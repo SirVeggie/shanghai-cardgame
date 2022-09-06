@@ -1,9 +1,10 @@
-import { Card, CardRank, Coord, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
+import { Card, CardRank, Coord, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, Meld, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
 import { v4 } from 'uuid';
 import { isJoker } from './validation';
 import arrayShuffle from 'shuffle-array';
 import { ctool } from './cardTool';
 import { floor } from 'lodash';
+import _ from 'lodash';
 
 export * from './types';
 export * from './validation';
@@ -168,6 +169,21 @@ export const defaultConfig: GameConfig = {
     minimumCardPoints: 5,
     rounds: defaultRounds
 };
+
+export function checkOverlaps(melds: Meld[], hand: Card[]): boolean {
+    const meldCards: Card[] = melds.reduce((acc, x) => acc.concat(x.cards), [] as Card[]);
+    const meldCounts = _.countBy(meldCards, x => `${x.rank}|${x.suit}`);
+    const handCounts = _.countBy(hand, x => `${x.rank}|${x.suit}`);
+    
+    for (const key in meldCounts) {
+        if (meldCounts[key] > (handCounts[key] ?? 0)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 
 export function shuffle(cards: Card[]) {
     return arrayShuffle(cards);
