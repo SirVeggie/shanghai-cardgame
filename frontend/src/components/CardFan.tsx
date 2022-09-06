@@ -12,16 +12,19 @@ type Props = {
   spacing?: number;
   size?: string | number;
   cardType?: 'hand-card' | 'meld-card';
+  newCards?: Card[];
 };
 
 export function CardFan(p: Props) {
   const s = useStyles();
 
   const cards = p.cards.map((card, i) => (
-    <DragCard key={card.id} {...p}
+    <DragCard
+      key={card.id} {...p}
       cardAmount={p.cards.length}
       index={i}
       card={card}
+      isNew={p.newCards?.some(x => x.id === card.id)}
     />
   ));
 
@@ -43,6 +46,7 @@ type DragCardProps = {
   spacing?: number;
   drag?: boolean;
   cardType?: 'hand-card' | 'meld-card';
+  isNew?: boolean;
 };
 
 function DragCard(p: DragCardProps) {
@@ -67,7 +71,15 @@ function DragCard(p: DragCardProps) {
     );
   return (
     <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }} className={s.center}>
-      <PlayingCard innerRef={(ref as any)} pointer card={p.card} size={p.size} className={cx(s.card)} style={style} />
+      <PlayingCard
+        innerRef={(ref as any)}
+        pointer
+        card={p.card}
+        size={p.size}
+        className={cx(s.card)}
+        style={style}
+        isNew={p.isNew}
+      />
     </Draggable>
   );
 }

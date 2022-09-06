@@ -2,7 +2,7 @@ import cx from 'classnames';
 import { CSSProperties, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { defaultConfig, ERROR_EVENT, generateDeck, getPlayerRoundPoints, MESSAGE_EVENT, SessionPublic, shuffle, SYNC_EVENT, uuid } from 'shared';
+import { defaultConfig, ERROR_EVENT, generateDeck, getPlayerRoundPoints, MESSAGE_EVENT, SessionPublic, shuffle, sortCards, SYNC_EVENT, uuid } from 'shared';
 import { CardFan } from '../components/CardFan';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
@@ -84,7 +84,7 @@ export function Game() {
     points: session.players[0].points,
     player: session.players[0],
   }).player;
-
+  
   return (
     <div className={s.game}>
       <SlideButton text='Set Ready' icon={solid('user-check')}
@@ -159,7 +159,7 @@ export function Game() {
 
       <div className={s.meldInfo}>
         <span>Melds</span>
-        {session.config.rounds[session.round].melds.map((config, i) => (
+        {session.config.rounds[session.round - 1].melds.map((config, i) => (
           <div key={i}>{config.type} of {config.length}</div>
         ))}
       </div>
@@ -194,7 +194,13 @@ export function Game() {
       <div className={s.hand} style={{ '--size': fan.size } as CSSProperties}>
         <DropArea className={s.handDrop} onDrop={onDraw}>
           <div className='inner'>
-            <CardFan drag cards={session.me!.cards} {...fan} cardType='hand-card' />
+            <CardFan
+              {...fan}
+              drag
+              cards={sortCards([...session.me!.cards])}
+              newCards={session.me!.newCards}
+              cardType='hand-card'
+            />
           </div>
         </DropArea>
       </div>

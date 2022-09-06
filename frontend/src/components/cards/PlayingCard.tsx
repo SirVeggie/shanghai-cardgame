@@ -43,7 +43,7 @@ export function PlayingCard(p: Props) {
   return (
     <div
       ref={(p.innerRef as any)}
-      className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme)}
+      className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme, p.isNew && 'new')}
       onClick={p.onClick} style={style}
     >
       <i>{convert(ctool.suitIcon(p.card))}</i>
@@ -51,6 +51,8 @@ export function PlayingCard(p: Props) {
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <span>{ctool.rankPrefix(p.card)}</span>
       <span>{ctool.rankPrefix(p.card)}</span>
+      {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
+      {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
       {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
       {p.isNew && <div className={s.new}><FontAwesomeIcon icon={solid('bookmark')} /></div>}
     </div>
@@ -85,19 +87,37 @@ export function PlayingCard(p: Props) {
 
 const useStyles = createUseStyles({
   new: {
-    // color: '#ff0',
-    color: 'darkgrey',
-    fontSize: '1.7em',
+    // color: '#775D59',
+    color: '#464646',
+    // color: 'darkgrey',
+    fontSize: '1.5em',
     position: 'absolute',
     zIndex: -1,
-    top: '0em',
-    left: '0.1em',
+    top: '-0.3em',
+    left: '0.17em',
     
+    '.red &': {
+      // color: 'var(--card-red)',
+      color: '#cd6767',
+    },
+
     '&:nth-of-type(2)': {
-      top: '-0.25em',
+      top: '0.1em',
+    },
+
+    '&:nth-of-type(3)': {
+      bottom: '-0.3em',
+      right: '0.18em',
+      transform: 'rotate(180deg)',
+    },
+
+    '&:nth-of-type(4)': {
+      bottom: '0.1em',
+      right: '0.18em',
+      transform: 'rotate(180deg)',
     },
   },
-  
+
   card: {
     fontSize: '30px',
     width: '5em',
@@ -147,16 +167,19 @@ const useStyles = createUseStyles({
       alignItems: 'center',
       height: 0,
       width: 0,
-      
     },
     
+    '&.new span': {
+      color: '#ccc',
+    },
+
     '&.classic i': {
       fontSize: '1.35em',
       '--offset-l': '0.5em',
       '--offset-r': '0.5em',
       '--offset-t': '0.6em',
       '--offset-b': '0.7em',
-      
+
       '&:nth-child(3)': {
         fontSize: '5em',
       },

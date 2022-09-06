@@ -133,6 +133,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         const player = session.players.find(x => x.id === event.playerId)!;
         const card = session.deck.splice(0, 1)[0];
         player.cards.push(card);
+        player.newCards = [card];
 
         session.state = 'card-drawn';
         sendMessage(`Player ${player.name} drew a card from the deck`, event);
@@ -157,6 +158,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         const player = session.players.find(x => x.id === event.playerId)!;
         const card = session.discard.pop()!;
         player.cards.push(card);
+        player.newCards = [card];
 
         session.state = 'card-drawn';
         sendMessage(`Player ${player.name} drew from the discard pile`, event);
@@ -229,6 +231,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
                 const i = findJokerSpot(card, meld);
                 if (i === -1)
                     throw userError('No jokers can be replaced by this card');
+                player.tempCards.push(meld.cards[i]);
+                player.cards.push(meld.cards[i]);
                 newMeld.cards[i] = card;
                 break;
             }
