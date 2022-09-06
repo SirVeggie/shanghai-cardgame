@@ -40,7 +40,7 @@ export function PlayingCard(p: Props) {
   if (!p.card)
     return <EmptyCard {...p} />;
   return (
-    <div ref={(p.innerRef as any)} className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover')} onClick={p.onClick} style={style}>
+    <div ref={(p.innerRef as any)} className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme)} onClick={p.onClick} style={style}>
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <i>{convert(ctool.suitIcon(p.card))}</i>
       <i>{convert(ctool.suitIcon(p.card))}</i>
@@ -116,12 +116,29 @@ const useStyles = createUseStyles({
     },
 
     '& i, & span': {
+      '--offset-l': '1em',
+      '--offset-r': '1em',
+      '--offset-t': '1em',
+      '--offset-b': '1em',
       position: 'absolute',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       height: 0,
       width: 0,
+      
+    },
+    
+    '&.classic i': {
+      fontSize: '1.35em',
+      '--offset-l': '0.5em',
+      '--offset-r': '0.5em',
+      '--offset-t': '0.6em',
+      '--offset-b': '0.7em',
+      
+      '&:nth-child(3)': {
+        fontSize: '5em',
+      },
     },
 
     '& i': {
@@ -130,13 +147,13 @@ const useStyles = createUseStyles({
 
     '& i:nth-child(1)': {
       justifyContent: 'right',
-      top: '1.1em',
-      right: '0.6em',
+      top: 'calc(1.1 * var(--offset-t))',
+      right: 'calc(0.6 * var(--offset-r))',
     },
     '& i:nth-child(2)': {
       justifyContent: 'left',
-      bottom: '1.1em',
-      left: '0.6em',
+      bottom: 'calc(1.1 * var(--offset-b))',
+      left: 'calc(0.6 * var(--offset-l))',
     },
     '& i:nth-child(3)': {
       fontSize: '3em',
@@ -149,13 +166,13 @@ const useStyles = createUseStyles({
     },
     '& span:nth-child(4)': {
       justifyContent: 'left',
-      top: '0.9em',
-      left: '0.5em',
+      top: 'calc(0.9 * var(--offset-t))',
+      left: 'calc(0.5 * var(--offset-l))',
     },
     '& span:nth-child(5)': {
       justifyContent: 'right',
-      bottom: '1em',
-      right: '0.5em',
+      bottom: 'calc(1 * var(--offset-b))',
+      right: 'calc(0.5 * var(--offset-r))',
     },
   }
 });
