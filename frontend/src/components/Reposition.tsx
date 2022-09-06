@@ -8,6 +8,8 @@ import cx from 'classnames';
 type Props = {
   children: React.ReactNode;
   hideHandle?: boolean;
+  className?: string;
+  innerClass?: string;
 };
 
 export function Reposition(p: Props) {
@@ -16,9 +18,9 @@ export function Reposition(p: Props) {
 
   return (
     <Draggable handle='.repositionHandle'>
-      <div className={cx(s.base, touch && 'touch', p.hideHandle && 'hide')}>
+      <div className={cx(s.base, p.className, touch && 'touch', p.hideHandle && 'hide')}>
         <div className='repositionHandle'><FontAwesomeIcon icon={solid('eject')} /></div>
-        <div>
+        <div className={p.innerClass}>
           {p.children}
         </div>
       </div>
@@ -28,7 +30,8 @@ export function Reposition(p: Props) {
 
 const useStyles = createUseStyles({
   base: {
-    padding: 50,
+    padding: '50px 0 0 50px',
+    margin: '0 50px 50px 0',
 
     '&:not(.hide):hover > :first-child, &.touch:not(.hide) div:first-child': {
       opacity: 1,

@@ -116,6 +116,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('Cannot draw on opponent\'s turn');
         if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
             throw userError('Cannot draw a card right now');
+        if (session.discard.length === 0 && session.deck.length !== 0)
+            throw userError('Discard pile empty, reveal a card first');
 
         if (session.pendingShanghai)
             allowShanghai('message');
@@ -337,8 +339,11 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function startNextRound() {
         session.round += 1;
         resetState();
+        console.log(session.players);
+        // const player = sessions[event.sessionId].players.find(x => x.id === session.currentPlayerId)!;
+        sendMessage(`Round ${session.round} started: ${'player.name'} to start`, event, true);
     }
-
+    
     function startNextTurn() {
         session.state = 'turn-start';
         
@@ -353,6 +358,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.turn += 1;
         session.turnStartTime = time;
         console.log(`Current player: ${nextPlayer.name} - ${nextPlayer.id}`);
+        sendMessage(`Turn ${session.turn} started: ${nextPlayer.name} to play`, event, true);
     }
 
     function allowShanghai(message: 'message' | 'no-message') {

@@ -2,25 +2,29 @@ import { CSSProperties } from 'react';
 import { createUseStyles } from 'react-jss';
 import { Meld, PlayerPublic } from 'shared';
 import { CardFan } from './CardFan';
+import cx from 'classnames';
 
 type Props = {
   meld: Meld;
   player: PlayerPublic;
   size?: string | number;
+  style?: CSSProperties;
+  className?: string;
 };
 
 export function MeldCards(p: Props) {
   const s = useStyles();
   
-  const size = p.size ?? '10px';
+  const size = p.size ?? '1vh';
   const width = (p.meld.cards.length - 1) * 3.2 + 5;
   const style = {
+    ...p.style,
     '--size': size,
     '--width': `${width}em`,
   } as CSSProperties;
   
   return (
-    <div className={s.base} style={style}>
+    <div className={cx(s.base, p.className)} style={style}>
       <span>{p.player.name}: {p.meld.config.type} of {p.meld.config.length}</span>
       <CardFan size={size} cards={p.meld.cards} />
     </div>

@@ -84,6 +84,7 @@ export function Home() {
       <div className={s.base}>
         {createForm.component}
         {joinForm.component}
+        
         <div className={s.center}>
           <Button text='New Game' onClick={clickCreate} />
         </div>

@@ -1,8 +1,8 @@
 import cx from 'classnames';
-import { CSSProperties } from 'react';
+import { CSSProperties, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { defaultConfig, ERROR_EVENT, generateDeck, getPlayerRoundPoints, MESSAGE_EVENT, SessionPublic, shuffle, SYNC_EVENT } from 'shared';
+import { defaultConfig, ERROR_EVENT, generateDeck, getPlayerRoundPoints, MESSAGE_EVENT, SessionPublic, shuffle, SYNC_EVENT, uuid } from 'shared';
 import { CardFan } from '../components/CardFan';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
@@ -12,28 +12,36 @@ import { useSessionComms } from '../hooks/useSessionComms';
 import { DropInfo } from '../reducers/dropReducer';
 import { sessionActions } from '../reducers/sessionReducer';
 import { RootState } from '../store';
-import { callShanghai, discardCard, drawDeck, drawDiscard } from '../tools/actions';
+import { callShanghai, discardCard, drawDeck, drawDiscard, revealCard, setReady } from '../tools/actions';
 import { DropArea } from '../components/dragging/DropArea';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
 import { Reposition } from '../components/Reposition';
 import { MeldCards } from '../components/MeldCards';
+import { EventMessage, MessageLog } from '../components/MessageLog';
+import { SlideButton } from '../components/SlideButton';
+import { themeActions } from '../reducers/themeReducer';
 
 export function Game() {
   const s = useStyles();
   const dispatch = useDispatch();
   const [params] = useJoinParams();
   const notify = useNotification();
-  // const session = useSelector((state: RootState) => state.session)!;
+  const [messages, setMessages] = useState<EventMessage[]>([]);
+  const session = useSelector((state: RootState) => state.session)!;
 
   const ws = useSessionComms(params, event => {
     if (event.type === SYNC_EVENT)
       dispatch(sessionActions.setSession(event.session));
-    // if (event.type === ERROR_EVENT)
-    // notify.create('error', event.message);
+    if (event.type === ERROR_EVENT)
+      log(event.message, 'error');
     if (event.type === MESSAGE_EVENT)
-      notify.create('info', event.message);
+      log(event.message, 'info');
   });
+
+  const log = (message: string, type: 'info' | 'error' = 'info') => {
+    setMessages(msgs => [{ id: uuid(), type, message }, ...(msgs.slice(0, 25))]);
+  };
 
   const fan = {
     angle: 5 / (session.me!.cards.length * 0.1),
@@ -59,7 +67,14 @@ export function Game() {
   const onDiscard = (info: DropInfo) => {
     if (!session.me)
       return notify.create('error', 'You are not in this game');
-    ws.send(discardCard(session.id, session.me.id, info.data));
+    if (info.type === 'hand-card')
+      ws.send(discardCard(session.id, session.me.id, info.data));
+    if (info.type === 'deck-card')
+      ws.send(revealCard(session.id, session.me.id));
+  };
+  
+  const playerReady = () => {
+    ws.send(setReady(session.id, session.me!.id));
   };
 
   const winningPlayer = session.players.reduce((min, p) => {
@@ -71,6 +86,21 @@ export function Game() {
 
   return (
     <div className={s.game}>
+      <SlideButton text='Set Ready' icon={solid('user-check')}
+        xOffset='2.9em' yOffset='3em' onClick={playerReady}
+        attention={session.state === 'round-end' && session.me?.isReady === false}
+      />
+      <SlideButton text='Classic Theme' icon={solid('heart')}
+        xOffset='2.5em' yOffset='8em'
+        onClick={() => dispatch(themeActions.setTheme('classic'))}
+      />
+      <SlideButton text='Chess Theme' icon={solid('chess-board')}
+        xOffset='2.3em' yOffset='11em'
+        onClick={() => dispatch(themeActions.setTheme('chess'))}
+      />
+
+      {/*-----------------------------------------------------------------------*/}
+
       <div className={s.roundInfo}>
         Round {session.round}/{session.config.rounds.length}{' - '}
         {session.config.rounds[session.round - 1].description}
@@ -129,6 +159,10 @@ export function Game() {
 
       {/*-----------------------------------------------------------------------*/}
 
+      <MessageLog messages={messages} className={s.log} />
+
+      {/*-----------------------------------------------------------------------*/}
+
       <div className={s.decks}>
         <Reposition>
           <div className='inner'>
@@ -141,18 +175,18 @@ export function Game() {
       {/*-----------------------------------------------------------------------*/}
 
       <div className={s.privateMelds}>
-        {session.me?.melds.map((meld, i) => (
-          <Reposition key={i}>
-            <MeldCards meld={meld} player={session.players.find(x => x.id === session.me?.id)!} />
-          </Reposition>
-        ))}
+        <Reposition innerClass='drag'>
+          {session.me?.melds.map((meld, i) => (
+            <MeldCards key={i} meld={meld} player={session.players.find(x => x.id === session.me?.id)!} />
+          ))}
+        </Reposition>
       </div>;
 
       {/*-----------------------------------------------------------------------*/}
 
       <div className={s.hand} style={{ '--size': fan.size } as CSSProperties}>
         <DropArea className={s.handDrop} onDrop={onDraw}>
-          <div>
+          <div className='inner'>
             <CardFan drag cards={session.me!.cards} {...fan} cardType='hand-card' />
           </div>
         </DropArea>
@@ -209,10 +243,38 @@ const useStyles = createUseStyles({
     },
   },
 
+  log: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 'min(20vw, 30vh)',
+    maxHeight: '20vh',
+    fontSize: 'min(1.5em, 1vw)',
+    borderBottom: 'none',
+    borderLeft: 'none',
+    borderRadius: '0 0.3em 0 0',
+  },
+
   privateMelds: {
     position: 'absolute',
     top: '25vh',
-    left: '25vw'
+    left: '25vw',
+    pointerEvents: 'none',
+
+    '& > div': {
+      pointerEvents: 'initial',
+    },
+
+    '& .drag': {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+
+      '& > div': {
+        marginBottom: '3em',
+      },
+    },
   },
 
   publicMelds: {
@@ -286,6 +348,7 @@ const useStyles = createUseStyles({
 
   hand: {
     position: 'absolute',
+    pointerEvents: 'none',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -294,6 +357,10 @@ const useStyles = createUseStyles({
     left: 0,
     right: 0,
     zIndex: 1,
+
+    '& .inner > div': {
+      pointerEvents: 'initial',
+    },
   },
 
   handDrop: {
@@ -302,7 +369,6 @@ const useStyles = createUseStyles({
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    // backgroundColor: 'red',
 
     '& > div': {
       position: 'absolute',
@@ -310,7 +376,6 @@ const useStyles = createUseStyles({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      // backgroundColor: 'blue',
       width: '100%',
       height: '50%',
     },
@@ -329,7 +394,7 @@ const session: SessionPublic = {
     isReady: false,
     cardAmount: 5,
     melds: [],
-    points: 0,
+    points: 129,
     remainingShouts: 3,
     tempCards: [],
     playtime: 420000,
@@ -339,7 +404,7 @@ const session: SessionPublic = {
     isReady: false,
     cardAmount: 11,
     melds: [],
-    points: 0,
+    points: 74,
     remainingShouts: 3,
     tempCards: [],
     playtime: 90000,
@@ -358,8 +423,11 @@ const session: SessionPublic = {
     id: 'asd',
     name: 'test',
     isReady: false,
-    melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } }],
-    points: 0,
+    melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } },
+    { cards: deck.slice(57, 60), config: { type: 'set', length: 3 } },
+    { cards: deck.slice(60, 64), config: { type: 'straight', length: 4 } },
+    ],
+    points: 129,
     remainingShouts: 3,
     tempCards: [],
     newCards: deck.slice(0, 2),

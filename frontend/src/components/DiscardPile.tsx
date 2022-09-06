@@ -21,16 +21,10 @@ export function DiscardPile(p: Props) {
     data: p.discard.top,
   };
 
-  const onDrop = (info: DropInfo) => {
-    if (info.type !== 'hand-card')
-      return;
-    p.onDrop?.(info);
-  };
-
   return (
     <div>
       <div className={s.bottom}>
-        <DropArea onDrop={onDrop}>
+        <DropArea onDrop={p.onDrop}>
           <PlayingCard size={p.size} card={p.discard.bottom} onClick={p.onClick} />
         </DropArea>
       </div>

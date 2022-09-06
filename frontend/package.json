@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://89.27.98.123:30001",
+  "proxy": "http://localhost:3001",
   "scripts": {
     "start": "react-scripts start",
     "create_build": "react-scripts build",

@@ -7,7 +7,7 @@ import cx from 'classnames';
 
 type Props = {
   size?: Coord;
-  onDrop: (info: DropInfo) => void;
+  onDrop?: (info: DropInfo) => void;
   name?: string;
   style?: CSSProperties;
   visible?: boolean;
@@ -20,12 +20,16 @@ export function DropArea(p: Props) {
   const drop = useDropArea();
   const ref = useRef<HTMLElement>();
   
+  const idle = () => {
+    console.log('drop was ignored');
+  };
+  
   useEffect(() => {
     const id = uuid();
     drop.addDrop({
       id: id,
       name: p.name ?? 'Drop Area',
-      func: p.onDrop,
+      func: p.onDrop ?? idle,
       getArea: () => ref.current!.getBoundingClientRect(),
     });
     

@@ -4,6 +4,7 @@ import { gameReducer } from './reducers/gameReducer';
 import { joinParamReducer } from './reducers/joinParamReducer';
 import { notificationReducer } from './reducers/notificationReducer';
 import { sessionReducer } from './reducers/sessionReducer';
+import { themeReducer } from './reducers/themeReducer';
 
 export const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
         session: sessionReducer,
         drops: dropReducer,
         joinParams: joinParamReducer,
+        theme: themeReducer,
     },
     
     middleware: getDefaultMiddleware => getDefaultMiddleware({

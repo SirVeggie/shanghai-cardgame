@@ -7,6 +7,8 @@ import { BackCard } from './BackCard';
 import { DummyCard } from './DummyCard';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 type Props = {
   card?: Card;
@@ -19,17 +21,18 @@ type Props = {
   pointer?: boolean;
   hover?: boolean;
   innerRef?: RefObject<HTMLElement>;
-}
+};
 
 export function PlayingCard(p: Props) {
   const s = useStyles();
-  
+  const theme = useSelector((state: RootState) => state.theme);
+
   const style = {
     ...p.style,
     fontSize: p.size ?? 30,
     cursor: p.onClick || p.pointer ? 'pointer' : 'default',
   };
-  
+
   if (p.dummy)
     return <DummyCard size={p.size} />;
   if (p.back)
@@ -45,30 +48,32 @@ export function PlayingCard(p: Props) {
       <span>{ctool.rankPrefix(p.card)}</span>
     </div>
   );
-}
 
-function convert(suit: string) {
-  let icon: any;
-  
-  switch (suit) {
-    case '♠':
-      icon = solid('chess-king');
-      break;
-    case '♣':
-      icon = solid('chess-rook');
-      break;
-    case '♥':
-      icon = solid('chess-queen');
-      break;
-    case '♦':
-      icon = solid('chess-bishop');
-      break;
-    default:
-      icon = solid('question');
-      break;
+  function convert(suit: string) {
+    if (theme === 'classic')
+      return suit;
+    let icon: any;
+
+    switch (suit) {
+      case '♠':
+        icon = solid('chess-king');
+        break;
+      case '♣':
+        icon = solid('chess-rook');
+        break;
+      case '♥':
+        icon = solid('chess-queen');
+        break;
+      case '♦':
+        icon = solid('chess-bishop');
+        break;
+      default:
+        icon = solid('question');
+        break;
+    }
+
+    return <FontAwesomeIcon icon={icon} />;
   }
-  
-  return <FontAwesomeIcon icon={icon} />;
 }
 
 const useStyles = createUseStyles({
@@ -85,23 +90,23 @@ const useStyles = createUseStyles({
     userSelect: 'none',
     filter: 'drop-shadow(4px 4px 5px #0009)',
     boxSizing: 'border-box',
-    
+
     '&.hover': {
       transition: 'transform 200ms ease',
-      
+
       '&:hover': {
         transform: 'translateY(-0.5em) scale(1.05)',
       },
     },
-    
+
     '&.red': {
       color: 'var(--card-red)',
     },
-    
+
     '&.noMouse': {
       pointerEvents: 'none',
     },
-    
+
     '&::after': {
       content: '""',
       position: 'absolute',
@@ -109,7 +114,7 @@ const useStyles = createUseStyles({
       inset: '0.25em',
       borderRadius: '0.15em',
     },
-    
+
     '& i, & span': {
       position: 'absolute',
       display: 'flex',
@@ -118,11 +123,11 @@ const useStyles = createUseStyles({
       height: 0,
       width: 0,
     },
-    
+
     '& i': {
       fontSize: '0.9em',
     },
-    
+
     '& i:nth-child(1)': {
       justifyContent: 'right',
       top: '1.1em',

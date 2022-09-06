@@ -13,8 +13,8 @@ function isConnected() {
 export function useLocalSocket(data?: WebEvent, onMessage?: (data: any, ws: ReconnectingWebSocket) => void) {
     const host = window.location.host;
     const secure = window.location.protocol === 'https:' ? 's' : '';
-    // const url = host.includes('localhost') ? 'ws://localhost:3001' : `ws${secure}://${host}`;
-    const url = 'ws://89.27.98.123:30001';
+    const url = host.includes('localhost') ? 'ws://localhost:3001' : `ws${secure}://${host}`;
+    // const url = 'ws://89.27.98.123:30001';
     const onOpen = data ? (ws: ReconnectingWebSocket) => ws.send(JSON.stringify(data)) : undefined;
     return useWebSocket(url, onOpen, onMessage);
 }
