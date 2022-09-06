@@ -60,9 +60,13 @@ function DragCard(p: DragCardProps) {
   } as CSSProperties;
 
   if (!p.drag)
-    return <PlayingCard card={p.card} className={s.card} style={style} size={p.size} />;
+    return (
+      <div className={s.center}>
+        <PlayingCard card={p.card} className={s.card} style={style} size={p.size} />;
+      </div>
+    );
   return (
-    <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }} className={s.drag}>
+    <Draggable positionRef={(ref as any)} info={{ type: p.cardType ?? 'hand-card', data: p.card }} className={s.center}>
       <PlayingCard innerRef={(ref as any)} pointer card={p.card} size={p.size} className={cx(s.card)} style={style} />
     </Draggable>
   );
@@ -75,8 +79,8 @@ const useStyles = createUseStyles({
     display: 'flex',
     position: 'relative',
   },
-  
-  drag: {
+
+  center: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',

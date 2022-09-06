@@ -4,8 +4,9 @@ import { Card, ctool } from 'shared';
 import cx from 'classnames';
 import { EmptyCard } from './EmptyCard';
 import { BackCard } from './BackCard';
-import { ppid } from 'process';
 import { DummyCard } from './DummyCard';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
 
 type Props = {
   card?: Card;
@@ -37,13 +38,37 @@ export function PlayingCard(p: Props) {
     return <EmptyCard {...p} />;
   return (
     <div ref={(p.innerRef as any)} className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover')} onClick={p.onClick} style={style}>
-      <i>{ctool.suitIcon(p.card)}</i>
-      <i>{ctool.suitIcon(p.card)}</i>
-      <i>{ctool.suitIcon(p.card)}</i>
+      <i>{convert(ctool.suitIcon(p.card))}</i>
+      <i>{convert(ctool.suitIcon(p.card))}</i>
+      <i>{convert(ctool.suitIcon(p.card))}</i>
       <span>{ctool.rankPrefix(p.card)}</span>
       <span>{ctool.rankPrefix(p.card)}</span>
     </div>
   );
+}
+
+function convert(suit: string) {
+  let icon: any;
+  
+  switch (suit) {
+    case '♠':
+      icon = solid('chess-king');
+      break;
+    case '♣':
+      icon = solid('chess-rook');
+      break;
+    case '♥':
+      icon = solid('chess-queen');
+      break;
+    case '♦':
+      icon = solid('chess-bishop');
+      break;
+    default:
+      icon = solid('question');
+      break;
+  }
+  
+  return <FontAwesomeIcon icon={icon} />;
 }
 
 const useStyles = createUseStyles({
@@ -95,21 +120,21 @@ const useStyles = createUseStyles({
     },
     
     '& i': {
-      fontSize: '1.25em',
+      fontSize: '0.9em',
     },
     
     '& i:nth-child(1)': {
       justifyContent: 'right',
-      top: '0.65em',
-      right: '0.35em',
+      top: '1.1em',
+      right: '0.6em',
     },
     '& i:nth-child(2)': {
       justifyContent: 'left',
-      bottom: '0.7em',
-      left: '0.35em',
+      bottom: '1.1em',
+      left: '0.6em',
     },
     '& i:nth-child(3)': {
-      fontSize: '5em',
+      fontSize: '3em',
       height: '95%',
       width: '100%',
       top: 0,
@@ -119,12 +144,12 @@ const useStyles = createUseStyles({
     },
     '& span:nth-child(4)': {
       justifyContent: 'left',
-      top: '0.85em',
+      top: '0.9em',
       left: '0.5em',
     },
     '& span:nth-child(5)': {
       justifyContent: 'right',
-      bottom: '0.85em',
+      bottom: '1em',
       right: '0.5em',
     },
   }

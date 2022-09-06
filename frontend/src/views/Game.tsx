@@ -1,3 +1,4 @@
+import cx from 'classnames';
 import { CSSProperties } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,23 +9,22 @@ import { DrawPile } from '../components/DrawPile';
 import { useJoinParams } from '../hooks/useJoinParams';
 import { useNotification } from '../hooks/useNotification';
 import { useSessionComms } from '../hooks/useSessionComms';
-import { useTouch } from '../hooks/useTouch';
 import { DropInfo } from '../reducers/dropReducer';
 import { sessionActions } from '../reducers/sessionReducer';
 import { RootState } from '../store';
-import cx from 'classnames';
 import { callShanghai, discardCard, drawDeck, drawDiscard } from '../tools/actions';
 import { DropArea } from '../components/dragging/DropArea';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { regular, solid } from '@fortawesome/fontawesome-svg-core/import.macro';
+import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
+import { Reposition } from '../components/Reposition';
+import { MeldCards } from '../components/MeldCards';
 
 export function Game() {
   const s = useStyles();
   const dispatch = useDispatch();
   const [params] = useJoinParams();
   const notify = useNotification();
-  const mobile = useTouch();
-  const session = useSelector((state: RootState) => state.session)!;
+  // const session = useSelector((state: RootState) => state.session)!;
 
   const ws = useSessionComms(params, event => {
     if (event.type === SYNC_EVENT)
@@ -88,13 +88,14 @@ export function Game() {
 
         <div>
           <i><FontAwesomeIcon icon={solid('user-secret')} /></i>
+          {/* <i><FontAwesomeIcon icon={solid('user-group')} /></i> */}
           {session.players.map(p => (
             <div key={p.id} className={cx(s.player, session.currentPlayerId === p.id && 'current')}>{p.name}</div>
           ))}
         </div>
 
         <div>
-          <i><FontAwesomeIcon icon={solid('wand-magic-sparkles')} /></i>
+          <i><FontAwesomeIcon icon={solid('head-side-cough')} /></i>
           {session.players.map(p => <div key={p.id}>{p.remainingShouts}</div>)}
         </div>
 
@@ -118,20 +119,34 @@ export function Game() {
       </div>
 
       {/*-----------------------------------------------------------------------*/}
-      
+
       <div className={s.meldInfo}>
         <span>Melds</span>
         {session.config.rounds[session.round].melds.map((config, i) => (
           <div key={i}>{config.type} of {config.length}</div>
         ))}
       </div>
-      
+
       {/*-----------------------------------------------------------------------*/}
 
-      <div className={cx(s.decks, mobile && 'mobile')}>
-        <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscard} />
-        <DrawPile size={deckSize} amount={session.deckCardAmount} />
+      <div className={s.decks}>
+        <Reposition>
+          <div className='inner'>
+            <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscard} />
+            <DrawPile size={deckSize} amount={session.deckCardAmount} />
+          </div>
+        </Reposition>
       </div>
+
+      {/*-----------------------------------------------------------------------*/}
+
+      <div className={s.privateMelds}>
+        {session.me?.melds.map((meld, i) => (
+          <Reposition key={i}>
+            <MeldCards meld={meld} player={session.players.find(x => x.id === session.me?.id)!} />
+          </Reposition>
+        ))}
+      </div>;
 
       {/*-----------------------------------------------------------------------*/}
 
@@ -142,7 +157,7 @@ export function Game() {
           </div>
         </DropArea>
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -186,25 +201,27 @@ const useStyles = createUseStyles({
     padding: '1em',
     borderRadius: '0.5em 0 0 0.5em',
     backdropFilter: 'blur(3px)',
-    
+
     '& > span': {
       borderBottom: '1px solid #000a',
       paddingBottom: '0.2em',
       marginBottom: '0.5em',
     },
   },
-  
+
   privateMelds: {
-    
+    position: 'absolute',
+    top: '25vh',
+    left: '25vw'
   },
-  
+
   publicMelds: {
-    
+
   },
-  
+
   player: {
     color: '#ccca',
-    
+
     '&.current': {
       color: '#ccc',
       textDecoration: 'underline',
@@ -247,8 +264,8 @@ const useStyles = createUseStyles({
   },
 
   decks: {
-    display: 'flex',
     position: 'absolute',
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     top: 0,
@@ -256,7 +273,13 @@ const useStyles = createUseStyles({
     left: 0,
     right: 0,
 
-    '& > :first-child': {
+    '& .inner': {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    '& .inner > :first-child': {
       marginRight: '1em',
     }
   },
@@ -335,7 +358,7 @@ const session: SessionPublic = {
     id: 'asd',
     name: 'test',
     isReady: false,
-    melds: [],
+    melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } }],
     points: 0,
     remainingShouts: 3,
     tempCards: [],
