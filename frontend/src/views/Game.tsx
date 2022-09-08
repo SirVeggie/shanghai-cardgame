@@ -62,7 +62,7 @@ export function Game() {
 
   const onDraw = (info: DropInfo) => {
     if (!session.me)
-      return notify.create('error', 'You are not in this game');
+      return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'deck-card') {
       if (canDrawDeck(session))
         resetDragAnimations();
@@ -88,7 +88,7 @@ export function Game() {
 
   const onDiscardDrop = (info: DropInfo) => {
     if (!session.me)
-      return notify.create('error', 'You are not in this game');
+      return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'hand-card') {
       if (canDiscard(session))
         resetDragAnimations();
@@ -114,7 +114,7 @@ export function Game() {
   const onPrivateMeldAdd = (id: string) => {
     return (info: DropInfo) => {
       if (!session.me)
-        return notify.create('error', 'You are not in this game');
+        return notify.create('error', 'Oh no! session.me not defined');
       if (info.type === 'hand-card') {
         if (!id)
           return notify.create('error', 'Could not find meld');
@@ -152,7 +152,7 @@ export function Game() {
 
   const submitMelds = () => {
     if (!session.me)
-      return notify.create('error', 'You are not in this game');
+      return notify.create('error', 'Oh no! session.me not defined');
     const config: MeldConfig = { type: 'set', length: 1 };
     ws.send(meldCards(session.id, session.me.id, melds.map(x => ({ cards: x.cards, config }))));
     setMelds([]);
