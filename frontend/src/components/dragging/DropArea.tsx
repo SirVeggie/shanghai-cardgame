@@ -36,7 +36,7 @@ export function DropArea(p: Props) {
     return () => {
       drop.removeDrop(id);
     };
-  }, []);
+  }, [p.onDrop]);
   
   return (
     <div className={cx(s.holder, p.className)} ref={(ref as any)} style={p.style}>
