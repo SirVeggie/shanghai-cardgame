@@ -47,6 +47,7 @@ const useStyles = createUseStyles({
       transform: 'translate(-30px, -30px)',
       cursor: 'all-scroll',
       transition: 'opacity 200ms ease-out',
+      pointerEvents: 'initial',
 
       '& > svg': {
         fontSize: 20,

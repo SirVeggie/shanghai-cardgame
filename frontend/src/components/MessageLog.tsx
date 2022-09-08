@@ -39,6 +39,10 @@ const useStyles = createUseStyles({
   message: {
     boxSizing: 'border-box',
     
+    '&::first-letter': {
+      textTransform: 'uppercase',
+    },
+    
     '&.error': {
       color: '#faa',
     },

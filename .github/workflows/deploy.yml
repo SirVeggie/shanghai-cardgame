@@ -1,0 +1,29 @@
+name: Deployment
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    if: ${{ contains(join(github.event.commits.*.message, ' '), '#deploy') }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy using ssh
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        password: ${{ secrets.SSH_PASS }}
+        port: 22
+        script: |
+          cd ~/projects/shanghai-new
+          npm run deploy
+    - name: Notification
+      uses: fjogeleit/http-request-action@v1
+      with:
+        url: ${{ secrets.NOTIFY }}
+        method: 'POST'
+        customHeaders: '{"Content-Type": "application/json"}'
+        data: '{"shanghai": ""}'
+        

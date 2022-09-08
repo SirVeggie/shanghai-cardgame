@@ -1,8 +1,8 @@
 import cx from 'classnames';
-import { CSSProperties, useState } from 'react';
+import { CSSProperties, useRef, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { defaultConfig, ERROR_EVENT, generateDeck, getPlayerRoundPoints, MESSAGE_EVENT, SessionPublic, shuffle, sortCards, SYNC_EVENT, uuid } from 'shared';
+import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldConfig, MESSAGE_EVENT, SessionPublic, sortCards, SYNC_EVENT, uuid } from 'shared';
 import { CardFan } from '../components/CardFan';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
@@ -12,16 +12,16 @@ import { useSessionComms } from '../hooks/useSessionComms';
 import { DropInfo } from '../reducers/dropReducer';
 import { sessionActions } from '../reducers/sessionReducer';
 import { RootState } from '../store';
-import { callShanghai, discardCard, drawDeck, drawDiscard, revealCard, setReady } from '../tools/actions';
+import { callShanghai, discardCard, drawDeck, drawDiscard, meldCards, revealCard, setReady } from '../tools/actions';
 import { DropArea } from '../components/dragging/DropArea';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
 import { Reposition } from '../components/Reposition';
-import { MeldCards } from '../components/MeldCards';
 import { EventMessage, MessageLog } from '../components/MessageLog';
 import { SlideButton } from '../components/SlideButton';
 import { themeActions } from '../reducers/themeReducer';
-import { PlayingCard } from '../components/cards/PlayingCard';
+import { MeldContainer, PrivateMeld } from '../components/MeldContainer';
+import { resetDragAnimations } from '../tools/DOM';
 
 export function Game() {
   const s = useStyles();
@@ -30,10 +30,14 @@ export function Game() {
   const notify = useNotification();
   const [messages, setMessages] = useState<EventMessage[]>([]);
   const session = useSelector((state: RootState) => state.session)!;
-
+  const sessionRef = useRef(undefined as unknown as SessionPublic);
+  const [melds, setMelds] = useState<PrivateMeld[]>([]);
+  
   const ws = useSessionComms(params, event => {
-    if (event.type === SYNC_EVENT)
+    if (event.type === SYNC_EVENT) {
       dispatch(sessionActions.setSession(event.session));
+      sessionRef.current = event.session;
+    }
     if (event.type === ERROR_EVENT)
       log(event.message, 'error');
     if (event.type === MESSAGE_EVENT)
@@ -52,59 +56,121 @@ export function Game() {
 
   const deckSize = 'min(5vh, 30px)';
 
-  const onDraw = (info: DropInfo) => {
-    if (!session.me)
-      return notify.create('error', 'You are not in this game');
-    if (info.type === 'deck-card') {
-      ws.send(drawDeck(session.id, session.me.id));
-    } else if (info.type === 'discard-card') {
-      if (session.currentPlayerId !== session.me.id)
-        ws.send(callShanghai(session.id, session.me.id));
-      else
-        ws.send(drawDiscard(session.id, session.me.id));
-    }
-  };
-
-  const onDiscard = (info: DropInfo) => {
-    if (!session.me)
-      return notify.create('error', 'You are not in this game');
-    if (info.type === 'hand-card')
-      ws.send(discardCard(session.id, session.me.id, info.data));
-    if (info.type === 'deck-card')
-      ws.send(revealCard(session.id, session.me.id));
-  };
-
-  const playerReady = () => {
-    ws.send(setReady(session.id, session.me!.id));
-  };
-
   const winningPlayer = session.players.reduce((min, p) => {
     return p.points < min.points ? { points: p.points, player: p } : min;
   }, {
     points: session.players[0].points,
     player: session.players[0],
   }).player;
+
+  const onDraw = (info: DropInfo) => {
+    if (!sessionRef.current.me)
+      return notify.create('error', 'You are not in this game');
+    if (info.type === 'deck-card') {
+      
+      if (canDrawDeck(sessionRef.current))
+        resetDragAnimations();
+      ws.send(drawDeck(sessionRef.current.id, sessionRef.current.me.id));
+    } else if (info.type === 'discard-card') {
+      if (sessionRef.current.currentPlayerId !== sessionRef.current.me.id) {
+        ws.send(callShanghai(sessionRef.current.id, sessionRef.current.me.id));
+      } else {
+        if (canDrawDiscard(sessionRef.current))
+          resetDragAnimations();
+        ws.send(drawDiscard(sessionRef.current.id, sessionRef.current.me.id));
+      }
+    } else if (info.type === 'meld-card') {
+      const id = findPrivateMeldId(info.data);
+      if (!id)
+        return notify.create('error', 'Could not find meld');
+      removeFromPrivateMeld(id, info.data);
+      resetDragAnimations();
+    }
+  };
+
+  const onDiscardDrop = (info: DropInfo) => {
+    if (!sessionRef.current.me)
+      return notify.create('error', 'You are not in this game');
+    if (info.type === 'hand-card') {
+      if (canDiscard(sessionRef.current))
+        resetDragAnimations();
+      ws.send(discardCard(sessionRef.current.id, sessionRef.current.me.id, info.data));
+    } else if (info.type === 'deck-card') {
+      if (canRevealCard(sessionRef.current))
+        resetDragAnimations();
+      ws.send(revealCard(sessionRef.current.id, sessionRef.current.me.id));
+    }
+  };
+
+  const onPrivateMeldAdd = (id: string) => {
+    return (info: DropInfo) => {
+      if (!sessionRef.current.me)
+        return notify.create('error', 'You are not in this game');
+      if (info.type === 'hand-card') {
+        if (!id)
+          return notify.create('error', 'Could not find meld');
+        addToPrivateMeld(id, info.data);
+      }
+    };
+  };
+
+  const playerReady = () => {
+    ws.send(setReady(session.id, session.me!.id));
+  };
+
+  const newPrivateMeld = () => {
+    setMelds(melds => [...melds, { id: uuid(), cards: [] }]);
+  };
+
+  const addToPrivateMeld = (id: string, card: Card) => {
+    setMelds(melds => melds.map(meld => meld.id === id ? { ...meld, cards: [...meld.cards, card] } : meld));
+  };
+
+  const removeFromPrivateMeld = (id: string, card: Card) => {
+    let res = melds.map(meld => meld.id === id ? { ...meld, cards: meld.cards.filter(c => c !== card) } : meld);
+    res = res.filter(meld => meld.cards.length > 0);
+    setMelds(res);
+  };
+
+  const findPrivateMeldId = (card: Card) => {
+    const meld = melds.find(meld => meld.cards.some(x => x.id === card.id));
+    return meld ? meld.id : undefined;
+  };
+
+  const privateMeldsContainCard = (card: Card) => {
+    return melds.some(meld => meld.cards.some(c => c === card));
+  };
   
+  const submitMelds = () => {
+    if (!session.me)
+      return notify.create('error', 'You are not in this game');
+    const config: MeldConfig = { type: 'set', length: 1 };
+    ws.send(meldCards(session.id, session.me.id, melds.map(x => ({ cards: x.cards, config }))));
+    setMelds([]);
+  };
+
   return (
     <div className={s.game}>
       <SlideButton text='Set Ready' icon={solid('user-check')}
         xOffset='2.9em' yOffset='3em' onClick={playerReady}
         attention={session.state === 'round-end' && session.me?.isReady === false}
       />
+      <SlideButton text='Add Meld' icon={solid('clone')}
+        xOffset='2.5em' yOffset='6em'
+        onClick={newPrivateMeld}
+      />
+      <SlideButton text='Confirm Melds' icon={solid('object-group')}
+        xOffset='2.5em' yOffset='9em'
+        onClick={submitMelds}
+      />
       <SlideButton text='Classic Theme' icon={solid('heart')}
-        xOffset='2.5em' yOffset='8em'
+        xOffset='2.5em' yOffset='12em'
         onClick={() => dispatch(themeActions.setTheme('classic'))}
       />
       <SlideButton text='Chess Theme' icon={solid('chess-board')}
-        xOffset='2.3em' yOffset='11em'
+        xOffset='2.3em' yOffset='15em'
         onClick={() => dispatch(themeActions.setTheme('chess'))}
       />
-
-      {/*-----------------------------------------------------------------------*/}
-
-      <div style={{ position: 'absolute', left: '10vw', top: '10vh' }}>
-        <PlayingCard card={deck[0]} isNew />
-      </div>
 
       {/*-----------------------------------------------------------------------*/}
 
@@ -173,7 +239,7 @@ export function Game() {
       <div className={s.decks}>
         <Reposition>
           <div className='inner'>
-            <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscard} />
+            <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscardDrop} />
             <DrawPile size={deckSize} amount={session.deckCardAmount} />
           </div>
         </Reposition>
@@ -181,13 +247,26 @@ export function Game() {
 
       {/*-----------------------------------------------------------------------*/}
 
-      <div className={s.privateMelds}>
+      {/* <div className={s.privateMelds}>
         <Reposition innerClass='drag'>
           {session.me?.melds.map((meld, i) => (
             <MeldCards key={i} meld={meld} player={session.players.find(x => x.id === session.me?.id)!} />
           ))}
         </Reposition>
-      </div>;
+      </div> */}
+
+      {/*-----------------------------------------------------------------------*/}
+
+      <div style={{ position: 'absolute', left: '20vw', top: '15vh' }}>
+        {melds.map((meld, i) => (
+          <MeldContainer
+            key={i}
+            meld={meld}
+            size='20px'
+            onDrop={onPrivateMeldAdd(meld.id)}
+          />
+        ))}
+      </div>
 
       {/*-----------------------------------------------------------------------*/}
 
@@ -197,7 +276,7 @@ export function Game() {
             <CardFan
               {...fan}
               drag
-              cards={sortCards([...session.me!.cards])}
+              cards={sortCards([...session.me!.cards]).filter(x => !privateMeldsContainCard(x))}
               newCards={session.me!.newCards}
               cardType='hand-card'
             />
@@ -254,6 +333,10 @@ const useStyles = createUseStyles({
       paddingBottom: '0.2em',
       marginBottom: '0.5em',
     },
+
+    '& > div::first-letter': {
+      textTransform: 'uppercase',
+    },
   },
 
   log: {
@@ -288,10 +371,6 @@ const useStyles = createUseStyles({
         marginBottom: '3em',
       },
     },
-  },
-
-  publicMelds: {
-
   },
 
   player: {
@@ -347,11 +426,13 @@ const useStyles = createUseStyles({
     bottom: '25vh',
     left: 0,
     right: 0,
+    pointerEvents: 'none',
 
     '& .inner': {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      pointerEvents: 'initial',
     },
 
     '& .inner > :first-child': {
@@ -395,56 +476,56 @@ const useStyles = createUseStyles({
   }
 });
 
-const deck = shuffle(generateDeck(2, 4));
-const session: SessionPublic = {
-  id: '123',
-  name: 'test',
-  config: defaultConfig,
-  currentPlayerId: 'asd',
-  players: [{
-    id: 'asd',
-    name: 'test',
-    isReady: false,
-    cardAmount: 5,
-    melds: [],
-    points: 129,
-    remainingShouts: 3,
-    tempCards: [],
-    playtime: 420000,
-  }, {
-    id: 'asd2',
-    name: 'test2',
-    isReady: false,
-    cardAmount: 11,
-    melds: [],
-    points: 74,
-    remainingShouts: 3,
-    tempCards: [],
-    playtime: 90000,
-  }],
-  round: 1,
-  state: 'turn-start',
-  turn: 1,
-  deckCardAmount: deck.length,
-  turnStartTime: Date.now(),
-  discard: {
-    top: deck.slice(20, 21)[0],
-    bottom: deck.slice(21, 22)[0],
-  },
+// const deck = shuffle(generateDeck(2, 4));
+// const session: SessionPublic = {
+//   id: '123',
+//   name: 'test',
+//   config: defaultConfig,
+//   currentPlayerId: 'asd',
+//   players: [{
+//     id: 'asd',
+//     name: 'test',
+//     isReady: false,
+//     cardAmount: 5,
+//     melds: [],
+//     points: 129,
+//     remainingShouts: 3,
+//     tempCards: [],
+//     playtime: 420000,
+//   }, {
+//     id: 'asd2',
+//     name: 'test2',
+//     isReady: false,
+//     cardAmount: 11,
+//     melds: [],
+//     points: 74,
+//     remainingShouts: 3,
+//     tempCards: [],
+//     playtime: 90000,
+//   }],
+//   round: 1,
+//   state: 'turn-start',
+//   turn: 1,
+//   deckCardAmount: deck.length,
+//   turnStartTime: Date.now(),
+//   discard: {
+//     top: deck.slice(20, 21)[0],
+//     bottom: deck.slice(21, 22)[0],
+//   },
 
-  me: {
-    id: 'asd',
-    name: 'test',
-    isReady: false,
-    melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } },
-    { cards: deck.slice(57, 60), config: { type: 'set', length: 3 } },
-    { cards: deck.slice(60, 64), config: { type: 'straight', length: 4 } },
-    ],
-    points: 129,
-    remainingShouts: 3,
-    tempCards: [],
-    newCards: deck.slice(0, 2),
-    cards: deck.slice(0, 5),
-    playtime: 420000,
-  }
-};
+//   me: {
+//     id: 'asd',
+//     name: 'test',
+//     isReady: false,
+//     melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } },
+//     { cards: deck.slice(57, 60), config: { type: 'set', length: 3 } },
+//     { cards: deck.slice(60, 64), config: { type: 'straight', length: 4 } },
+//     ],
+//     points: 129,
+//     remainingShouts: 3,
+//     tempCards: [],
+//     newCards: deck.slice(0, 2),
+//     cards: deck.slice(0, 5),
+//     playtime: 420000,
+//   }
+// };

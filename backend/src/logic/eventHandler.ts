@@ -1,13 +1,15 @@
 import { minBy } from 'lodash';
-import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPrevPlayer, isJoker, Player, Session, shuffle, userError, UserError, validateMeld, validateMelds } from 'shared';
+import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPrevPlayer, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
 import { sendError, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
 
+
+
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
     if (!sessions[event.sessionId])
         return sendError(ws, 'Invalid session');
-    const session = sessions[event.sessionId];
+    let session = sessions[event.sessionId];
 
     try {
         handle();
@@ -40,10 +42,10 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function handleConnect() {
         const player = session.players.find(x => x.id === event.playerId);
         if (!player)
-        throw userError('Invalid player id');
+            throw userError('Invalid player id');
         sendMessage(`Player ${player.name} rejoined`, event);
     }
-    
+
     function handleDisconnect() {
         const player = session.players.find(x => x.id === event.playerId);
         if (!player)
@@ -80,6 +82,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.state = 'turn-start';
         const card = session.deck.splice(0, 1)[0];
         session.discard.push(card);
+        sendMessage(`${currentPlayer().name} revealed ${ctool.longName(card)}`, event);
     }
 
     function handleCallShanghai() {
@@ -108,7 +111,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             allowShanghai('no-message');
         }
 
-        sendMessage(`Player ${p.name} called shanghai!`, event, true);
+        sendMessage(`${p.name} called shanghai!`, event);
     }
 
     function handleDrawDeck() {
@@ -136,7 +139,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.newCards = [card];
 
         session.state = 'card-drawn';
-        sendMessage(`Player ${player.name} drew a card from the deck`, event);
+        sendMessage(`${player.name} drew a card from the deck`, event);
     }
 
     function handleDrawDiscard() {
@@ -161,7 +164,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.newCards = [card];
 
         session.state = 'card-drawn';
-        sendMessage(`Player ${player.name} drew from the discard pile`, event);
+        sendMessage(`${player.name} drew from the discard pile`, event);
     }
 
     function handleMeld() {
@@ -189,7 +192,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.melds = event.melds;
         player.cards = player.cards.filter(x => !cards.some(xx => xx.id === x.id));
 
-        sendMessage(`Player ${player.name} melded their cards`, event);
+        sendMessage(`${player.name} melded their cards`, event);
     }
 
     function handleAddMeld() {
@@ -245,7 +248,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         owner.melds[event.meldAdd.meldIndex] = newMeld;
         player.cards = player.cards.filter(x => x.id === card.id);
-        sendMessage(`Player ${player.name} added card ${ctool.name(card)} to a meld`, event);
+        player.tempCards = player.tempCards.filter(x => x.id === card.id);
+        sendMessage(`${player.name} added card ${ctool.name(card)} to ${owner.name}'s a meld`, event);
 
         if (player.cards.length === 0)
             endRound();
@@ -266,10 +270,11 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         const index = player.cards.findIndex(x => x.id === card.id);
         if (index === -1)
             throw userError('Cannot discard a card that you do not have');
-        if (player.cards.some(x => player.tempCards.some(xx => xx.id === x.id)))
+        if (player.tempCards.length !== 0)
             throw userError('You still have temporary cards in your hand');
         player.cards.splice(index, 1);
         session.discard.push(card);
+        sendMessage(`${player.name} discarded ${ctool.name(card)}`, event);
 
         if (player.cards.length === 0) {
             endRound();
@@ -293,6 +298,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         };
 
         sessions[event.sessionId] = roundSetup(newSession);
+        session = sessions[event.sessionId];
     }
 
     function roundSetup(session: Session): Session {
@@ -333,7 +339,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function reshuffleDeck() {
         session.deck = shuffle(session.discard);
         session.discard = [];
-        sendMessage('Deck was re-shuffled', event, true);
+        sendMessage('Deck was re-shuffled', event);
     }
 
     function startGame() {
@@ -343,26 +349,33 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function startNextRound() {
         session.round += 1;
         resetState();
-        console.log(session.players);
-        // const player = sessions[event.sessionId].players.find(x => x.id === session.currentPlayerId)!;
-        sendMessage(`Round ${session.round} started: ${'player.name'} to start`, event, true);
+        const player = session.players.find(x => x.id === session.currentPlayerId)!;
+        if (session.round === 1) {
+            setTimeout(async () => {
+                sendMessage('Game started! Good luck and have fun', event);
+                await sleep(500);
+                sendMessage(`Round ${session.round}: ${player.name} to play`, event);
+            }, 1000);
+        } else {
+            sendMessage(`Round ${session.round} started: ${player.name} to play`, event);
+        }
     }
-    
+
     function startNextTurn() {
         session.state = 'turn-start';
-        
+
         const time = Date.now();
         const duration = time - session.turnStartTime;
         const currentPlayer = session.players.find(x => x.id === session.currentPlayerId)!;
         currentPlayer.playtime += duration;
-        
+
         const nextPlayer = getNextPlayer(session.currentPlayerId, session.players);
-        
+
         session.currentPlayerId = nextPlayer.id;
         session.turn += 1;
         session.turnStartTime = time;
         console.log(`Current player: ${nextPlayer.name} - ${nextPlayer.id}`);
-        sendMessage(`Turn ${session.turn} started: ${nextPlayer.name} to play`, event, true);
+        sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event);
     }
 
     function allowShanghai(message: 'message' | 'no-message') {
@@ -389,14 +402,14 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.pendingShanghai = undefined;
 
         if (message === 'message')
-            sendMessage(`Player ${session.players.find(x => x.id === event.playerId)?.name} allowed shanghai`, event);
+            sendMessage(`${session.players.find(x => x.id === event.playerId)?.name} allowed shanghai`, event);
     }
 
     function rejectShanghai() {
         if (!session.pendingShanghai)
             throw userError('No shanghais pending');
         session.pendingShanghai = undefined;
-        sendMessage('Shanghai was rejected', event, true);
+        sendMessage('Shanghai was rejected', event);
     }
 
     function endRound() {
@@ -404,7 +417,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             return endGame();
         session.state = 'round-end';
 
-        sendMessage('Round has ended, press ready to continue', event, true);
+        sendMessage('Round has ended, press ready to continue', event);
     }
 
     function endGame() {
@@ -412,6 +425,12 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.winnerId = winner.id;
         session.state = 'game-end';
 
-        sendMessage(`The winner is ${winner.name}!`, event, true);
+        sendMessage(`The winner is ${winner.name}!`, event);
+    }
+    
+    //====| Helper functions |====//
+    
+    function currentPlayer() {
+        return session.players.find(x => x.id === session.currentPlayerId)!;
     }
 }

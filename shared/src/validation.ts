@@ -1,6 +1,6 @@
-import { Card, GameConfig, GameJoinParams, JOKER_RANK, Meld, MeldConfig, MELD_TYPES } from './types';
+import { Card, GameConfig, GameJoinParams, JOKER_RANK, Meld, MeldConfig, MELD_TYPES, SessionPublic } from './types';
 import { countBy, minBy } from 'lodash';
-import { assertNever, userError } from '.';
+import { assertNever, userError, GameAction, DataAction, getPrevPlayer } from '.';
 
 export function isNumber(a: unknown): a is number {
     return typeof a === 'number';
@@ -196,6 +196,126 @@ function validateHouse(cards: Card[], length: number): boolean {
     if (filteredKeys.length > 2)
         return false;
     if (Math.abs(res[keys[0]] - res[keys[1]]) > 1)
+        return false;
+    return true;
+}
+
+export function possibleMoves(session: SessionPublic): string[] {
+    const moves: (GameAction | DataAction)[] = [];
+
+    if (canSetReady(session))
+        moves.push('set-ready');
+    if (canRevealCard(session))
+        moves.push('reveal');
+    if (canCallShanghai(session))
+        moves.push('call-shanghai');
+    if (canDrawDeck(session))
+        moves.push('draw-deck');
+    if (canDrawDiscard(session))
+        moves.push('draw-discard');
+    if (canMeld(session))
+        moves.push('meld');
+    if (canAddToMeld(session))
+        moves.push('add-to-meld');
+    if (canDiscard(session))
+        moves.push('discard');
+
+    return moves.map(x => x.toString());
+
+}
+
+export function canSetReady(session: SessionPublic): boolean {
+    return session.state === 'waiting-players' || session.state === 'round-end';
+}
+
+export function canRevealCard(session: SessionPublic): boolean {
+    if (session.discard.top)
+        return false;
+    if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
+        return false;
+    if (!session.me || session.currentPlayerId !== session.me.id)
+        return false;
+    return true;
+}
+
+export function canCallShanghai(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.pendingShanghai)
+        return false;
+    if (session.state !== 'turn-start')
+        return false;
+    if (session.me.id === session.currentPlayerId)
+        return false;
+    if (session.me.id === getPrevPlayer(session.currentPlayerId, session.players).id)
+        return false;
+    if (!session.discard.top)
+        return false;
+    if (session.me.melds.length)
+        return false;
+    if (session.me.remainingShouts <= 0)
+        return false;
+    return true;
+}
+
+export function canDrawDeck(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.currentPlayerId !== session.me.id)
+        return false;
+    if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
+        return false;
+    if (session.deckCardAmount === 0)
+        return false;
+    if (!session.discard.top)
+        return false;
+    return true;
+}
+
+export function canDrawDiscard(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.currentPlayerId !== session.me.id)
+        return false;
+    if (session.state !== 'turn-start' && session.state !== 'shanghai-called')
+        return false;
+    if (!session.discard.top)
+        return false;
+    return true;
+}
+
+export function canMeld(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.currentPlayerId !== session.me.id)
+        return false;
+    if (session.state !== 'card-drawn')
+        return false;
+    if (session.me.melds.length !== 0)
+        return false;
+    return true;
+}
+
+export function canAddToMeld(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.currentPlayerId !== session.me.id)
+        return false;
+    if (session.state !== 'card-drawn')
+        return false;
+    if (session.me.melds.length === 0)
+        return false;
+    return true;
+}
+
+export function canDiscard(session: SessionPublic): boolean {
+    if (!session.me)
+        return false;
+    if (session.currentPlayerId !== session.me.id)
+        return false;
+    if (session.state !== 'card-drawn')
+        return false;
+    if (session.me.tempCards.length !== 0)
         return false;
     return true;
 }

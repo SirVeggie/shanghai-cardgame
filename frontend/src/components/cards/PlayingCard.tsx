@@ -100,17 +100,22 @@ const useStyles = createUseStyles({
       // color: 'var(--card-red)',
       color: '#cd6767',
     },
-
+    
+    '&:nth-of-type(1)': {
+      filter: 'drop-shadow(0 0 0.3em #0008)',
+    },
+    
     '&:nth-of-type(2)': {
       top: '0.1em',
     },
-
+    
     '&:nth-of-type(3)': {
       bottom: '-0.3em',
       right: '0.18em',
       transform: 'rotate(180deg)',
+      filter: 'drop-shadow(0 0 0.3em #0008)',
     },
-
+    
     '&:nth-of-type(4)': {
       bottom: '0.1em',
       right: '0.18em',

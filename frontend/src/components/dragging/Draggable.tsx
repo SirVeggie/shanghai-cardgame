@@ -93,7 +93,7 @@ export function Draggable(p: Props) {
       onDrag={onDrag}
       onStop={onStop}
     >
-      <div ref={(ref as any)} className={cx(s.draggable, p.className, drag && 'dragging')} style={p.style}>
+      <div ref={(ref as any)} className={cx(s.draggable, 'draggable', p.className, drag && 'dragging')} style={p.style}>
         {p.children}
       </div>
     </DraggableCore>
@@ -107,6 +107,10 @@ const useStyles = createUseStyles({
     transition: 'transform 500ms ease',
     transform: 'translate(var(--pos-x), var(--pos-y))',
     cursor: 'grab',
+    
+    '&.no-transition': {
+      transition: 'none'
+    },
 
     '&:active, &.dragging': {
       position: 'relative',

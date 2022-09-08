@@ -14,6 +14,10 @@ export function uuid(): string {
     return v4();
 }
 
+export function sleep(ms: number): Promise<unknown> {
+    return new Promise(res => setTimeout(res, ms));
+}
+
 export class UserError extends Error {
     constructor(message: string) {
         super(message);

@@ -21,7 +21,7 @@ export function createSocket(a: number | Server) {
 function createSocketBase() {
     wss.on('connection', (ws, req) => {
         console.log(`client connected from ${req.socket.remoteAddress}`);
-        
+
         ws.onmessage = event => {
             try {
                 handleMessage(event.data as string, ws);
@@ -150,11 +150,9 @@ export function sendEvent(event: GameEvent, includeSelf?: boolean) {
     });
 }
 
-export function sendMessage(message: string, event: GameEvent, includeSelf?: boolean) {
+export function sendMessage(message: string, event: GameEvent) {
     clients[event.sessionId]?.forEach(x => {
-        if (x.playerId !== event.playerId || includeSelf) {
-            sendMessageWS(x.ws, message);
-        }
+        sendMessageWS(x.ws, message);
     });
 }
 
