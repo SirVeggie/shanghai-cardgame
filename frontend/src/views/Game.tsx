@@ -32,7 +32,7 @@ export function Game() {
   const session = useSelector((state: RootState) => state.session)!;
   const sessionRef = useRef(undefined as unknown as SessionPublic);
   const [melds, setMelds] = useState<PrivateMeld[]>([]);
-  
+
   const ws = useSessionComms(params, event => {
     if (event.type === SYNC_EVENT) {
       dispatch(sessionActions.setSession(event.session));
@@ -67,10 +67,10 @@ export function Game() {
     if (!sessionRef.current.me)
       return notify.create('error', 'You are not in this game');
     if (info.type === 'deck-card') {
-      
       if (canDrawDeck(sessionRef.current))
         resetDragAnimations();
       ws.send(drawDeck(sessionRef.current.id, sessionRef.current.me.id));
+
     } else if (info.type === 'discard-card') {
       if (sessionRef.current.currentPlayerId !== sessionRef.current.me.id) {
         ws.send(callShanghai(sessionRef.current.id, sessionRef.current.me.id));
@@ -79,6 +79,7 @@ export function Game() {
           resetDragAnimations();
         ws.send(drawDiscard(sessionRef.current.id, sessionRef.current.me.id));
       }
+
     } else if (info.type === 'meld-card') {
       const id = findPrivateMeldId(info.data);
       if (!id)
@@ -95,10 +96,21 @@ export function Game() {
       if (canDiscard(sessionRef.current))
         resetDragAnimations();
       ws.send(discardCard(sessionRef.current.id, sessionRef.current.me.id, info.data));
+
     } else if (info.type === 'deck-card') {
       if (canRevealCard(sessionRef.current))
         resetDragAnimations();
       ws.send(revealCard(sessionRef.current.id, sessionRef.current.me.id));
+
+    } else if (info.type === 'meld-card') {
+      const id = findPrivateMeldId(info.data);
+      if (!id)
+        return notify.create('error', 'Could not find meld');
+      if (canDiscard(sessionRef.current)) {
+        removeFromPrivateMeld(id, info.data);
+        resetDragAnimations();
+      }
+      ws.send(discardCard(sessionRef.current.id, sessionRef.current.me.id, info.data));
     }
   };
 
@@ -140,7 +152,7 @@ export function Game() {
   const privateMeldsContainCard = (card: Card) => {
     return melds.some(meld => meld.cards.some(c => c === card));
   };
-  
+
   const submitMelds = () => {
     if (!session.me)
       return notify.create('error', 'You are not in this game');
