@@ -40,6 +40,11 @@ export function Game() {
     if (event.type === MESSAGE_EVENT)
       log(event.message, 'info');
   });
+  
+  if (melds.length && session.me!.melds.length) {
+    // Remove private melds on meld success
+    setMelds([]);
+  }
 
   const log = (message: string, type: 'info' | 'error' = 'info') => {
     setMessages(msgs => [{ id: uuid(), type, message }, ...(msgs.slice(0, 25))]);
@@ -147,7 +152,7 @@ export function Game() {
   };
 
   const privateMeldsContainCard = (card: Card) => {
-    return melds.some(meld => meld.cards.some(c => c === card));
+    return melds.some(meld => meld.cards.some(c => c.id === card.id));
   };
 
   const submitMelds = () => {
@@ -155,7 +160,6 @@ export function Game() {
       return notify.create('error', 'Oh no! session.me not defined');
     const config: MeldConfig = { type: 'set', length: 1 };
     ws.send(meldCards(session.id, session.me.id, melds.map(x => ({ cards: x.cards, config }))));
-    setMelds([]);
   };
 
   return (
@@ -167,10 +171,12 @@ export function Game() {
       <SlideButton text='Add Meld' icon={solid('clone')}
         xOffset='2.5em' yOffset='6em'
         onClick={newPrivateMeld}
-      />
+        hide={session.me!.melds.length > 0}
+        />
       <SlideButton text='Confirm Melds' icon={solid('object-group')}
         xOffset='2.5em' yOffset='9em'
         onClick={submitMelds}
+        hide={session.me!.melds.length > 0}
       />
       <SlideButton text='Classic Theme' icon={solid('heart')}
         xOffset='2.5em' yOffset='12em'
