@@ -22,6 +22,7 @@ import { SlideButton } from '../components/SlideButton';
 import { themeActions } from '../reducers/themeReducer';
 import { MeldContainer, PrivateMeld } from '../components/MeldContainer';
 import { resetDragAnimations } from '../tools/DOM';
+import Draggable from 'react-draggable';
 
 export function Game() {
   const s = useStyles();
@@ -40,7 +41,7 @@ export function Game() {
     if (event.type === MESSAGE_EVENT)
       log(event.message, 'info');
   });
-  
+
   if (melds.length && session.me!.melds.length) {
     // Remove private melds on meld success
     setMelds([]);
@@ -164,28 +165,30 @@ export function Game() {
 
   return (
     <div className={s.game}>
-      <SlideButton text='Set Ready' icon={solid('user-check')}
-        xOffset='2.9em' yOffset='3em' onClick={playerReady}
-        attention={session.state === 'round-end' && session.me?.isReady === false}
-      />
-      <SlideButton text='Add Meld' icon={solid('clone')}
-        xOffset='2.5em' yOffset='6em'
-        onClick={newPrivateMeld}
-        hide={session.me!.melds.length > 0}
+      <div className='side-buttons'>
+        <SlideButton text='Set Ready' icon={solid('user-check')}
+          xOffset='2.9em' yOffset='3em' onClick={playerReady}
+          attention={session.state === 'round-end' && session.me?.isReady === false}
         />
-      <SlideButton text='Confirm Melds' icon={solid('object-group')}
-        xOffset='2.5em' yOffset='9em'
-        onClick={submitMelds}
-        hide={session.me!.melds.length > 0}
-      />
-      <SlideButton text='Classic Theme' icon={solid('heart')}
-        xOffset='2.5em' yOffset='12em'
-        onClick={() => dispatch(themeActions.setTheme('classic'))}
-      />
-      <SlideButton text='Chess Theme' icon={solid('chess-board')}
-        xOffset='2.3em' yOffset='15em'
-        onClick={() => dispatch(themeActions.setTheme('chess'))}
-      />
+        <SlideButton text='Add Meld' icon={solid('clone')}
+          xOffset='2.5em' yOffset='6em'
+          onClick={newPrivateMeld}
+          hide={session.me!.melds.length > 0}
+        />
+        <SlideButton text='Confirm Melds' icon={solid('object-group')}
+          xOffset='2.5em' yOffset='9em'
+          onClick={submitMelds}
+          hide={session.me!.melds.length > 0}
+        />
+        <SlideButton text='Classic Theme' icon={solid('heart')}
+          xOffset='2.5em' yOffset='12em'
+          onClick={() => dispatch(themeActions.setTheme('classic'))}
+        />
+        <SlideButton text='Chess Theme' icon={solid('chess-board')}
+          xOffset='2.3em' yOffset='15em'
+          onClick={() => dispatch(themeActions.setTheme('chess'))}
+        />
+      </div>
 
       {/*-----------------------------------------------------------------------*/}
 
@@ -208,7 +211,7 @@ export function Game() {
           <i><FontAwesomeIcon icon={solid('user-secret')} /></i>
           {/* <i><FontAwesomeIcon icon={solid('user-group')} /></i> */}
           {session.players.map(p => (
-            <div key={p.id} className={cx(s.player, session.currentPlayerId === p.id && 'current')}>{p.name}</div>
+            <div key={p.id} className={cx('player', session.currentPlayerId === p.id && 'current')}>{p.name}</div>
           ))}
         </div>
 
@@ -251,37 +254,35 @@ export function Game() {
 
       {/*-----------------------------------------------------------------------*/}
 
-      <div className={s.decks}>
-        <Reposition>
-          <div className='inner'>
-            <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscardDrop} />
-            <DrawPile size={deckSize} amount={session.deckCardAmount} />
+      <Draggable handle='.table-handle' positionOffset={{ x: '-25%', y: '-25%' }}>
+        <div className={s.table}>
+          <div className='table-handle' />
+          {/* <div className='table-size' /> */}
+
+          <div className={s.decks}>
+            <Reposition>
+              <div className='inner'>
+                <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscardDrop} />
+                <DrawPile size={deckSize} amount={session.deckCardAmount} />
+              </div>
+            </Reposition>
           </div>
-        </Reposition>
-      </div>
 
-      {/*-----------------------------------------------------------------------*/}
+          {/*-----------------------------------------------------------------------*/}
 
-      {/* <div className={s.privateMelds}>
-        <Reposition innerClass='drag'>
-          {session.me?.melds.map((meld, i) => (
-            <MeldCards key={i} meld={meld} player={session.players.find(x => x.id === session.me?.id)!} />
-          ))}
-        </Reposition>
-      </div> */}
+          <div style={{ position: 'absolute', left: '40%', top: '40%' }}>
+            {melds.map(meld => (
+              <MeldContainer
+                key={meld.id}
+                meld={meld}
+                size='min(4vh, 30px)'
+                onDrop={onPrivateMeldAdd(meld.id)}
+              />
+            ))}
+          </div>
 
-      {/*-----------------------------------------------------------------------*/}
-
-      <div style={{ position: 'absolute', left: '20vw', top: '15vh' }}>
-        {melds.map((meld, i) => (
-          <MeldContainer
-            key={i}
-            meld={meld}
-            size='20px'
-            onDrop={onPrivateMeldAdd(meld.id)}
-          />
-        ))}
-      </div>
+        </div >
+      </Draggable>
 
       {/*-----------------------------------------------------------------------*/}
 
@@ -308,11 +309,14 @@ const useStyles = createUseStyles({
     overflow: 'hidden',
     width: '100vw',
     height: '100vh',
+    userSelect: 'none',
+    backgroundColor: '#000',
   },
 
   roundInfo: {
     position: 'absolute',
     top: 0,
+    zIndex: 1,
     left: '50%',
     fontSize: 'min(1.5em, 4vh)',
     backgroundColor: '#0005',
@@ -330,6 +334,7 @@ const useStyles = createUseStyles({
     position: 'absolute',
     top: '40vh',
     right: 0,
+    zIndex: 1,
     display: 'flex',
     flexDirection: 'column',
     textAlign: 'right',
@@ -358,6 +363,7 @@ const useStyles = createUseStyles({
     position: 'absolute',
     bottom: 0,
     left: 0,
+    zIndex: 1,
     width: 'min(20vw, 30vh)',
     maxHeight: '20vh',
     fontSize: 'min(1.5em, 1vw)',
@@ -366,41 +372,12 @@ const useStyles = createUseStyles({
     borderRadius: '0 0.3em 0 0',
   },
 
-  privateMelds: {
-    position: 'absolute',
-    top: '25vh',
-    left: '25vw',
-    pointerEvents: 'none',
-
-    '& > div': {
-      pointerEvents: 'initial',
-    },
-
-    '& .drag': {
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-
-      '& > div': {
-        marginBottom: '3em',
-      },
-    },
-  },
-
-  player: {
-    color: '#ccca',
-
-    '&.current': {
-      color: '#ccc',
-      textDecoration: 'underline',
-    },
-  },
   players: {
     position: 'absolute',
     display: 'flex',
     top: 0,
     right: 0,
+    zIndex: 1,
     fontSize: 'min(1.5em, 4vh)',
     backgroundColor: '#0005',
     color: '#ccc',
@@ -410,6 +387,15 @@ const useStyles = createUseStyles({
     padding: '0.5em 1em 1em 1em',
     borderBottomLeftRadius: '0.5em',
     backdropFilter: 'blur(3px)',
+
+    '& .player': {
+      color: '#ccca',
+
+      '&.current': {
+        color: '#ccc',
+        textDecoration: 'underline',
+      },
+    },
 
     '& > div': {
       display: 'flex',
@@ -429,6 +415,27 @@ const useStyles = createUseStyles({
       '&:not(:first-child)': {
         textAlign: 'center',
       },
+    },
+  },
+
+  table: {
+    position: 'relative',
+    width: '200%',
+    height: '200%',
+    borderRadius: '5vw',
+    boxShadow: 'inset 0 0 25vw 15vw #000a',
+    background: 'url("/poker-table-background-tiled.jpg")',
+    boxSizing: 'border-box',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    
+    '& .table-handle': {
+      boxSizing: 'border-box',
+      width: '100%',
+      height: '100%',
+      borderRadius: '5vw',
+      border: '7px dashed #000a',
     },
   },
 

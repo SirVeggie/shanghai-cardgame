@@ -86,6 +86,11 @@ export function Draggable(p: Props) {
 
     dropper.activate(drop, p.info);
   };
+  
+  const style = {
+    zIndex: drag ? 10 : 0,
+    ...p.style,
+  } as CSSProperties;
 
   return (
     <DraggableCore nodeRef={ref}
@@ -93,7 +98,7 @@ export function Draggable(p: Props) {
       onDrag={onDrag}
       onStop={onStop}
     >
-      <div ref={(ref as any)} className={cx(s.draggable, 'draggable', p.className, drag && 'dragging')} style={p.style}>
+      <div ref={(ref as any)} className={cx(s.draggable, 'draggable', p.className, drag && 'dragging')} style={style}>
         {p.children}
       </div>
     </DraggableCore>

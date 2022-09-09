@@ -7,6 +7,7 @@ import { EmptyCard } from './cards/EmptyCard';
 import { DropArea } from './dragging/DropArea';
 import { Reposition } from './Reposition';
 import { Toggle } from './Toggle';
+import cx from 'classnames';
 
 export type PrivateMeld = {
   id: string;
@@ -17,6 +18,8 @@ type Props = {
   meld: PrivateMeld;
   size?: string;
   onDrop?: (info: DropInfo) => void;
+  style?: CSSProperties;
+  className?: string;
 };
 
 export function MeldContainer(p: Props) {
@@ -25,13 +28,13 @@ export function MeldContainer(p: Props) {
   const size = p.size ?? '30px';
   const width = (p.meld.cards.length - 1) * 3.2 + 5;
   const style = {
-    // ...p.style,
+    ...p.style,
     '--size': size,
     '--width': p.meld.cards.length ? `${width}em` : '5em',
   } as CSSProperties;
 
   return (
-    <div className={s.shrink} style={style}>
+    <div className={cx(s.shrink, p.className)} style={style}>
       <Reposition>
         <DropArea onDrop={p.onDrop}>
           <div className={s.base} style={style}>
@@ -63,5 +66,6 @@ const useStyles = createUseStyles({
     justifyContent: 'center',
     alignItems: 'center',
     pointerEvents: 'initial',
+    transition: 'width 500ms ease',
   }
 });
