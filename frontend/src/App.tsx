@@ -66,11 +66,16 @@ export function App() {
       </Toggle>
 
       <Toggle on={!!gameState && gameState !== 'waiting-players' && gameState !== 'game-end'}>
+        <div className='dark' />
         <Game />
       </Toggle>
 
       <Toggle on={gameState === 'game-end'}>
         <GameEnd />
+      </Toggle>
+      
+      <Toggle on={gameState === undefined && !!params}>
+        <div className='dark' />
       </Toggle>
     </div>
   );
@@ -86,5 +91,16 @@ const useStyles = createUseStyles({
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
+    
+    overflow: 'hidden',
+    
+    '& .dark': {
+      backgroundColor: 'black',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    },
   },
 });

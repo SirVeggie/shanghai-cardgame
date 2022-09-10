@@ -105,9 +105,11 @@ const useStyles = createUseStyles({
 
     color: '#ddd',
     padding: '0 1em',
+    background: 'linear-gradient(180deg, #0003, #0000)',
     backdropFilter: 'blur(3px)',
-    border: '1px solid #fff1',
+    border: '1px solid #fff5',
     borderRadius: '1em',
+    boxShadow: 'inset 0 0 0.3em #fff5, 0 0.3em 0.5em #0005',
 
     '& > span': {
       fontSize: 'var(--size)',

@@ -34,6 +34,9 @@ const useStyles = createUseStyles({
   },
   
   card: {
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'relative',
     boxSizing: 'border-box',
     boxShadow: '0px 3px 10px rgba(0, 0, 0, 0.5)',
     borderRadius: '10px',
@@ -42,6 +45,7 @@ const useStyles = createUseStyles({
     maxWidth: 300,
     userSelect: 'none',
     cursor: 'pointer',
+    backdropFilter: 'blur(2px)',
     transition: 'transform 250ms ease, box-shadow 250ms ease',
     
     '&:hover': {
@@ -66,7 +70,6 @@ const useStyles = createUseStyles({
   },
   
   inner: {
-    // backdropFilter: 'blur(3px)',
     display: 'flex',
     justifyContent: 'space-between',
     position: 'relative',
@@ -85,10 +88,6 @@ const useStyles = createUseStyles({
       whiteSpace: 'pre-line',
       gap: '10px',
       marginRight: '20px',
-    },
-
-    '&:nth-child(2)': {
-
     },
   },
 

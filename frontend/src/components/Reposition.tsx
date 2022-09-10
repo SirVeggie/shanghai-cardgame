@@ -48,9 +48,10 @@ const useStyles = createUseStyles({
       cursor: 'all-scroll',
       transition: 'opacity 200ms ease-out',
       pointerEvents: 'initial',
-
+      
       '& > svg': {
         fontSize: 20,
+        color: '#ccc',
         position: 'absolute',
         top: 5,
         left: 5,

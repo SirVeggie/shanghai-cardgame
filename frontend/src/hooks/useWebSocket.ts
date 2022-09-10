@@ -46,7 +46,7 @@ export function useWebSocket(url: string, onOpen?: (ws: ReconnectingWebSocket) =
             active = false;
             ws?.removeEventListener('message', func);
         };
-    }, [!ws]);
+    }, [!ws, onMessage]);
 
     useEffect(() => {
         if (isConnected()) {

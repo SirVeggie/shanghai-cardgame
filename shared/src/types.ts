@@ -35,6 +35,7 @@ export type Session = {
     discard: Card[];
     turnStartTime: number;
     pendingShanghai?: string;
+    discardOwner?: string;
     winnerId?: string;
 };
 
@@ -179,6 +180,7 @@ export type ErrorEvent = {
 export const MESSAGE_EVENT = 'message';
 export type MessageEvent = {
     type: typeof MESSAGE_EVENT;
+    method: 'log' | 'notification';
     message: string;
 };
 

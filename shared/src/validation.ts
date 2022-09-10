@@ -69,7 +69,7 @@ export function validateMelds(melds: Meld[], configs: MeldConfig[]): boolean {
         const index = configsCopy.findIndex(config => validateMeld(melds[i].cards, config));
         if (index === -1)
             return false;
-        configsCopy.splice(index, 1);
+        melds[i].config = configsCopy.splice(index, 1)[0];
     }
 
     return true;

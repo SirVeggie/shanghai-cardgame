@@ -27,13 +27,19 @@ export function MessageLog(p: Props) {
 
 const useStyles = createUseStyles({
   base: {
-    backgroundColor: '#0005',
+    background: 'linear-gradient(0deg, #0005, #0000)',
     backdropFilter: 'blur(3px)',
     padding: '0.2em 0.5em 0.5em 0.5em',
-    borderRadius: '0.2em',
-    border: '2px solid #0005',
+    borderRadius: '0.3em',
+    border: '1px solid #fff5',
+    boxShadow: 'inset 0 0 0.3em #fff3, 0 0 0.5em #0005',
     color: '#ccc',
     overflow: 'auto',
+    
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: '#0002',
+      border: 'none',
+    }
   },
   
   message: {
@@ -54,7 +60,7 @@ const useStyles = createUseStyles({
     '&:not(:last-child)': {
       marginBottom: '0.3em',
       paddingBottom: '0.3em',
-      borderBottom: '2px solid #0005',
+      borderBottom: '2px solid #0002',
       translate: 'all 500ms ease',
     },
   },

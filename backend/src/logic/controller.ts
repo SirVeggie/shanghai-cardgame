@@ -34,7 +34,7 @@ export function addSession(params: GameJoinParams) {
     const newSession: Session = {
         id: uuid(),
         name: params.lobbyName,
-        config: defaultConfig,
+        config: params.config ? params.config : defaultConfig,
         password: params.password,
         turnStartTime: Date.now(),
 

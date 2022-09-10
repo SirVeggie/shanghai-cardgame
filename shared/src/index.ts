@@ -36,10 +36,11 @@ export function wsError(message: string): ErrorEvent {
     };
 }
 
-export function wsMessage(message: string): MessageEvent {
+export function wsMessage(message: string, method: MessageEvent['method']): MessageEvent {
     return {
         type: MESSAGE_EVENT,
-        message
+        method,
+        message,
     };
 }
 
@@ -168,8 +169,8 @@ export const defaultConfig: GameConfig = {
     firstMeldBonusPoints: 15,
     jokerPenaltyAmountHand: 25,
     jokerPenaltyAmountMeld: 7,
-    meldBonusStartPoints: 0,
-    meldBonusIncrementPoints: 2,
+    meldBonusStartPoints: 2,
+    meldBonusIncrementPoints: 1,
     minimumCardPoints: 5,
     rounds: defaultRounds
 };

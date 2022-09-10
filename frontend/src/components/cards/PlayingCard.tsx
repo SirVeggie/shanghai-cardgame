@@ -137,6 +137,10 @@ const useStyles = createUseStyles({
     filter: 'drop-shadow(4px 4px 5px #0009)',
     boxSizing: 'border-box',
 
+    '&.hidden': {
+      opacity: 0,
+    },
+    
     '&.hover': {
       transition: 'transform 200ms ease',
 

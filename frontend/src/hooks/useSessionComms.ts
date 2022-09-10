@@ -19,9 +19,7 @@ export function useSessionComms(params: GameJoinParams | null, callback: (data: 
         playerId: ''
     };
     
-    const ws = useLocalSocket(connectEvent, data => {
-        callback(data);
-    });
+    const ws = useLocalSocket(connectEvent, callback);
     
     useEffect(() => {
         if (!params || !ws.connected || !retry)

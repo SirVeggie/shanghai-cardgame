@@ -1,5 +1,5 @@
 import cx from 'classnames';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
 import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCards, SYNC_EVENT, uuid } from 'shared';
@@ -33,21 +33,23 @@ export function Game() {
   const session = useSelector((state: RootState) => state.session)!;
   const [melds, setMelds] = useState<PrivateMeld[]>([]);
   const [hand, setHand] = useState<Card[]>([]);
-
-  const ws = useSessionComms(params, event => {
+  
+  const ws = useSessionComms(params, useCallback(event => {
     if (event.type === ERROR_EVENT)
-      log(event.message, 'error');
-    if (event.type === MESSAGE_EVENT)
-      log(event.message, 'info');
+    log(event.message, 'error');
+    if (event.type === MESSAGE_EVENT && event.method === 'log')
+    log(event.message, 'info');
+    if (event.type === MESSAGE_EVENT && event.method === 'notification')
+    notify.create('info', event.message);
     if (event.type === SYNC_EVENT) {
       dispatch(sessionActions.setSession(event.session));
       updateHand(event.session);
     }
-  });
+  }, [JSON.stringify(hand)]));
 
   // Initialize hand from session cards
-  if (!hand.length)
-    updateHand();
+  if (!hand.length && session.me!.cards.length)
+    updateHand(session);
 
   if (melds.length && session.me!.melds.length) {
     // Remove private melds on meld success
@@ -58,7 +60,7 @@ export function Game() {
     setMessages(msgs => [{ id: uuid(), type, message }, ...(msgs.slice(0, 25))]);
   };
 
-  const deckSize = 'min(5vh, 30px)';
+  const deckSize = 'min(3vh, 30px)';
 
   let winningPlayer: PlayerPublic | null = session.players.reduce((min, p) => {
     return p.points < min.points ? { points: p.points, player: p } : min;
@@ -66,10 +68,10 @@ export function Game() {
     points: session.players[0].points,
     player: session.players[0],
   }).player;
-  
+
   if (session.players.some(x => x.id !== winningPlayer!.id && x.points === winningPlayer!.points))
     winningPlayer = null;
-  
+
 
   const onHandDrop = (info: DropInfo) => {
     if (!session.me)
@@ -198,7 +200,12 @@ export function Game() {
 
   const reorderInPrivateMeld = (id: string, card: Card, pos: number) => {
     const meld = melds.find(meld => meld.id === id)!;
-    const index = Math.floor(pos * meld.cards.length);
+    const oldIndex = meld.cards.findIndex(c => c.id === card.id);
+    const gap = 1 / meld.cards.length;
+    const oldPos = oldIndex / meld.cards.length + gap / 2;
+    const index = Math.floor(pos < oldPos
+      ? (pos + gap / 2) * meld.cards.length
+      : (pos - gap / 2) * meld.cards.length);
     meld.cards = meld.cards.filter(c => c.id !== card.id);
     meld.cards.splice(index, 0, card);
     setMelds(melds => melds.map(m => m.id === id ? meld : m));
@@ -214,23 +221,29 @@ export function Game() {
   };
 
   function reorderHand(card: Card, pos: number) {
-    const index = Math.floor(pos * hand.length);
+    const oldIndex = hand.findIndex(c => c.id === card.id);
+    const gap = 1 / hand.length;
+    const oldPos = oldIndex / hand.length + gap / 2;
+    const index = Math.floor(pos < oldPos
+      ? (pos + gap / 2) * hand.length
+      : (pos - gap / 2) * hand.length);
     const newHand = hand.filter(c => c.id !== card.id);
     newHand.splice(index, 0, card);
     setHand(newHand);
   }
 
-  function updateHand(newSession?: SessionPublic) {
-    const workingSession = newSession ?? session;
+  function updateHand(workingSession: SessionPublic) {
     if (!workingSession.me)
       return notify.create('error', 'Oh no! session.me not defined');
-    if (workingSession.me!.cards.length === 0)
-      return;
     if (hand.length === 0)
       return setHand(sortCards([...workingSession.me.cards]));
     const newCards = workingSession.me.cards.filter(card => !hand.some(c => c.id === card.id));
     const cards = hand.filter(x => workingSession.me!.cards.some(xx => xx.id === x.id)).concat(newCards);
     setHand(cards);
+  }
+  
+  function openContext() {
+    
   }
 
   const submitMelds = () => {
@@ -280,14 +293,12 @@ export function Game() {
         <div>
           <i></i>
           {session.players.map(p => (<div key={p.id}>
-            {/* <span>s</span> */}
             {p.id === winningPlayer?.id && <i><FontAwesomeIcon icon={solid('crown')} size='sm' /></i>}
           </div>))}
         </div>
 
         <div>
           <i><FontAwesomeIcon icon={solid('user-secret')} /></i>
-          {/* <i><FontAwesomeIcon icon={solid('user-group')} /></i> */}
           {session.players.map(p => (
             <div key={p.id} className={cx('player', session.currentPlayerId === p.id && 'current')}>{p.name}</div>
           ))}
@@ -333,7 +344,7 @@ export function Game() {
       {/*-----------------------------------------------------------------------*/}
 
       <Draggable handle='.table-handle' positionOffset={{ x: '-25%', y: '-25%' }}>
-        <div className={s.table}>
+        <div className={s.table} onClick={openContext}>
           <div className='table-handle' />
 
           <div className={s.decks}>
@@ -353,7 +364,7 @@ export function Game() {
                 key={p.id}
                 player={p}
                 melds={p.melds}
-                size='min(4vh, 30px)'
+                size='min(3vh, 30px)'
                 onDrop={onPublicMeldDrop}
               />
             ))}
@@ -366,7 +377,7 @@ export function Game() {
               <PrivateMeld
                 key={meld.id}
                 meld={meld}
-                size='min(4vh, 30px)'
+                size='min(3vh, 30px)'
                 onDrop={onPrivateMeldDrop(meld.id)}
               />
             ))}
@@ -387,6 +398,18 @@ export function Game() {
 }
 
 const useStyles = createUseStyles({
+  '@keyframes appear': {
+    from: {
+      opacity: 0,
+      transform: 'scale(1.05)',
+    },
+    
+    to: {
+      opacity: 1,
+      transform: 'scale(1)',
+    },
+  },
+  
   game: {
     position: 'relative',
     overflow: 'hidden',
@@ -394,6 +417,8 @@ const useStyles = createUseStyles({
     height: '100vh',
     userSelect: 'none',
     backgroundColor: '#000c',
+    
+    animation: '$appear 5s ease',
   },
 
   sideButtons: {
@@ -407,9 +432,10 @@ const useStyles = createUseStyles({
     zIndex: 1,
     left: '50%',
     fontSize: 'min(1.5em, 4vh)',
-    backgroundColor: '#0005',
+    background: 'linear-gradient(180deg, #0005, #0000)',
     color: '#ccc',
-    border: '2px solid #000a',
+    border: '2px solid #fff5',
+    boxShadow: 'inset 0 0 0.3em #fff3, 0 0.3em 0.5em #0005',
     borderTop: 'none',
     transform: 'translateX(-50%)',
     padding: '0.2em 1em 0.5em 1em',
@@ -427,9 +453,10 @@ const useStyles = createUseStyles({
     flexDirection: 'column',
     textAlign: 'right',
     fontSize: 'min(1.5em, 4vh)',
-    backgroundColor: '#0005',
+    background: 'linear-gradient(-90deg, #0005, #0000)',
     color: '#ccc',
-    border: '2px solid #000a',
+    border: '2px solid #fff5',
+    boxShadow: 'inset 0 0 0.3em #fff3, 0 0.3em 0.5em #0005',
     borderRight: 'none',
     transform: 'translateY(-50%)',
     padding: '1em',
@@ -452,7 +479,7 @@ const useStyles = createUseStyles({
     bottom: 0,
     left: 0,
     zIndex: 1,
-    width: 'min(20vw, 30vh)',
+    width: '20vw',
     maxHeight: '20vh',
     fontSize: 'min(1.5em, 1vw)',
     borderBottom: 'none',
@@ -467,9 +494,10 @@ const useStyles = createUseStyles({
     right: 0,
     zIndex: 1,
     fontSize: 'min(1.5em, 4vh)',
-    backgroundColor: '#0005',
+    background: 'linear-gradient(-135deg, #000a, #0000)',
     color: '#ccc',
-    border: '2px solid #000a',
+    border: '2px solid #fff5',
+    boxShadow: 'inset 0 0 0.3em #fff3, 0 0.3em 0.5em #0005',
     borderTop: 'none',
     borderRight: 'none',
     padding: '0.5em 1em 1em 1em',
@@ -492,7 +520,7 @@ const useStyles = createUseStyles({
       '& > div': {
         flex: '1 0 0px',
       },
-      
+
       '&:not(:last-child)': {
         marginRight: '1em',
       },
@@ -570,57 +598,3 @@ const useStyles = createUseStyles({
     top: '88vh',
   },
 });
-
-// const deck = shuffle(generateDeck(2, 4));
-// const session: SessionPublic = {
-//   id: '123',
-//   name: 'test',
-//   config: defaultConfig,
-//   currentPlayerId: 'asd',
-//   players: [{
-//     id: 'asd',
-//     name: 'test',
-//     isReady: false,
-//     cardAmount: 5,
-//     melds: [],
-//     points: 129,
-//     remainingShouts: 3,
-//     tempCards: [],
-//     playtime: 420000,
-//   }, {
-//     id: 'asd2',
-//     name: 'test2',
-//     isReady: false,
-//     cardAmount: 11,
-//     melds: [],
-//     points: 74,
-//     remainingShouts: 3,
-//     tempCards: [],
-//     playtime: 90000,
-//   }],
-//   round: 1,
-//   state: 'round-end',
-//   turn: 1,
-//   deckCardAmount: deck.length,
-//   turnStartTime: Date.now(),
-//   discard: {
-//     top: deck.slice(20, 21)[0],
-//     bottom: deck.slice(21, 22)[0],
-//   },
-
-//   me: {
-//     id: 'asd',
-//     name: 'test',
-//     isReady: false,
-//     melds: [{ cards: deck.slice(50, 57), config: { type: 'straight', length: 5 } },
-//     { cards: deck.slice(57, 60), config: { type: 'set', length: 3 } },
-//     { cards: deck.slice(60, 64), config: { type: 'straight', length: 4 } },
-//     ],
-//     points: 129,
-//     remainingShouts: 3,
-//     tempCards: [],
-//     newCards: deck.slice(0, 2),
-//     cards: deck.slice(0, 0),
-//     playtime: 420000,
-//   }
-// };

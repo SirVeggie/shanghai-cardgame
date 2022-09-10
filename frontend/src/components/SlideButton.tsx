@@ -18,10 +18,12 @@ type Props = {
 export function SlideButton(p: Props) {
   const s = useStyles();
 
+  const number = p.yOffset?.match(/\d+/)?.[0];
   const style = {
     ...p.style,
     '--x-offset': p.xOffset ?? '0px',
     '--y-offset': p.yOffset ?? '0px',
+    '--delay': number ? `${number}0ms` : '0ms',
   } as CSSProperties;
 
   return (
@@ -37,21 +39,26 @@ const useStyles = createUseStyles({
     position: 'fixed',
     top: 'calc(10vh + var(--y-offset))',
     left: 0,
-    border: '1px solid #0003',
+    border: '1px solid #fff5',
+    borderLeft: 'none',
     padding: '0.5rem 0.6rem',
     borderRadius: '0 0.5rem 0.5rem 0',
-    background: '#ddd5',
+    backgroundColor: '#0003',
+    color: '#ddde',
     cursor: 'pointer',
     zIndex: 1,
-    transition: 'transform 350ms ease, background 350ms ease',
+    transition: 'transform 350ms ease, background 350ms ease, color 350ms ease',
     transform: 'translateX(calc(-100% + var(--x-offset)))',
     animation: '$slideIn 1000ms ease',
+    animationDelay: 'calc(4s + var(--delay) * 3)',
+    animationFillMode: 'backwards',
     fontWeight: 'bold',
     fontSize: '1.1rem',
     
     '&:hover': {
       animation: '$slideIn 0ms ease',
-      background: '#fffe',
+      backgroundColor: '#fffe',
+      color: '#000d',
       transform: 'translateX(0px)',
     },
     

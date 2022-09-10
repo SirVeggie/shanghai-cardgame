@@ -1,9 +1,9 @@
 import { minBy } from 'lodash';
-import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, getPrevPlayer, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
+import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, isJoker, Player, Session, shuffle, sleep, sortCards, userError, UserError, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
-import { sendError, sendMessage } from '../networking/socket';
+import { sendError, sendMessage, sendMessageSingle } from '../networking/socket';
 import { updateClients } from './controller';
-
+import _ from 'lodash';
 
 
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
@@ -82,6 +82,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.state = 'turn-start';
         const card = session.deck.splice(0, 1)[0];
         session.discard.push(card);
+        session.discardOwner = undefined;
         sendMessage(`${currentPlayer().name} revealed ${ctool.longName(card)}`, event);
     }
 
@@ -92,7 +93,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('Shanghai is not allowed right now');
         if (event.playerId === session.currentPlayerId)
             throw userError('Current player cannot call shanghai');
-        if (event.playerId === getPrevPlayer(session.currentPlayerId, session.players).id)
+        if (event.playerId === session.discardOwner)
             throw userError('Can\'t call shanghai on a card you discarded');
         if (session.discard.length === 0)
             throw userError('Discard pile empty, can\'t call shanghai');
@@ -105,13 +106,15 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         session.pendingShanghai = event.playerId;
         session.state = 'shanghai-called';
+        session.discardOwner = undefined;
 
         const current = session.players.find(x => x.id === session.currentPlayerId)!;
         if (current.melds.length !== 0) {
             allowShanghai('no-message');
         }
 
-        sendMessage(`${p.name} called shanghai!`, event);
+        sendMessage(`${p.name} called shanghai!`, event, 'log');
+        sendMessage(`${p.name} called shanghai!`, event, 'notification');
     }
 
     function handleDrawDeck() {
@@ -121,6 +124,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('Cannot draw a card right now');
         if (session.discard.length === 0 && session.deck.length !== 0)
             throw userError('Discard pile empty, reveal a card first');
+        if (Date.now() - session.turnStartTime < 2000)
+            throw userError('Wait at least 2 seconds before drawing');
 
         if (session.pendingShanghai)
             allowShanghai('message');
@@ -164,6 +169,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.newCards = [card];
 
         session.state = 'card-drawn';
+        session.discardOwner = undefined;
         sendMessage(`${player.name} drew from the discard pile`, event);
     }
 
@@ -192,7 +198,20 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.melds = event.melds;
         player.cards = player.cards.filter(x => !cards.some(xx => xx.id === x.id));
 
+        // first meld bonus points
+        if (session.players.filter(x => x.melds.length !== 0).length === 1)
+            player.points -= session.config.firstMeldBonusPoints;
+        // extra meld bonus points
+        for (const meld of event.melds) {
+            const extra = meld.cards.length - meld.config.length;
+            for (let i = 0; i < extra; i++) {
+                player.points -= session.config.meldBonusStartPoints + i * session.config.meldBonusIncrementPoints;
+            }
+        }
+
         sendMessage(`${player.name} melded their cards`, event);
+        if (player.cards.length === 0)
+            endRound();
     }
 
     function handleAddMeld() {
@@ -224,9 +243,11 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         switch (event.meldAdd.position) {
             case 'start':
                 newMeld.cards = [card, ...meld.cards];
+                console.log('add to start', newMeld);
                 break;
             case 'end':
                 newMeld.cards = [...meld.cards, card];
+                console.log('add to end', newMeld);
                 break;
             case 'joker': {
                 if (isJoker(card))
@@ -237,6 +258,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
                 player.tempCards.push(meld.cards[i]);
                 player.cards.push(meld.cards[i]);
                 newMeld.cards[i] = card;
+                console.log('add to joker', newMeld);
                 break;
             }
             default:
@@ -274,6 +296,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('You still have temporary cards in your hand');
         player.cards.splice(index, 1);
         session.discard.push(card);
+        session.discardOwner = player.id;
         sendMessage(`${player.name} discarded ${ctool.name(card)}`, event);
 
         if (player.cards.length === 0) {
@@ -294,7 +317,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             deck: [],
             discard: [],
             pendingShanghai: undefined,
-            winnerId: undefined
+            discardOwner: undefined,
+            winnerId: undefined,
         };
 
         sessions[event.sessionId] = roundSetup(newSession);
@@ -317,7 +341,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         // Set starting cards and shouts for players
         session.players.forEach(x => {
             const cards = session.deck.splice(0, config.cardCount);
-            x.cards.push(...cards);
+            x.cards.push(...sortCards(cards));
             x.remainingShouts = config.shanghaiCount;
         });
 
@@ -339,10 +363,12 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function reshuffleDeck() {
         session.deck = shuffle(session.discard);
         session.discard = [];
+        session.discardOwner = undefined;
         sendMessage('Deck was re-shuffled', event);
     }
 
     function startGame() {
+        session.players = _.shuffle(session.players);
         startNextRound();
     }
 
@@ -375,7 +401,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.turn += 1;
         session.turnStartTime = time;
         console.log(`Current player: ${nextPlayer.name} - ${nextPlayer.id}`);
-        sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event);
+        sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event, 'log');
+        sendMessageSingle('Your turn started', nextPlayer.id, 'notification');
     }
 
     function allowShanghai(message: 'message' | 'no-message') {
@@ -416,7 +443,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (session.round === session.config.rounds.length)
             return endGame();
         session.state = 'round-end';
-        
+
         for (const player of session.players) {
             player.points += getPlayerRoundPoints(session.config, player);
         }
@@ -431,9 +458,9 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         sendMessage(`The winner is ${winner.name}!`, event);
     }
-    
+
     //====| Helper functions |====//
-    
+
     function currentPlayer() {
         return session.players.find(x => x.id === session.currentPlayerId)!;
     }
