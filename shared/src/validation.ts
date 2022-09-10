@@ -131,13 +131,15 @@ function validateStraight(cards: Card[], length: number): boolean {
     if (cards.some(x => x.suit !== suit && !isJoker(x)))
         return false;
 
-    const min = minBy(cards.filter(x => !isJoker(x)), x => x.rank)!.rank;
+    let min = minBy(cards.filter(x => !isJoker(x)), x => x.rank)!.rank;
+    if (cards.some(x => x.rank === 14))
+        min = 1;
     let expected = min;
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
         if (expected === min && isJoker(card))
             continue;
-        if (card.rank !== expected && !isJoker(card))
+        if ((card.rank !== expected && (card.rank !== 14 || expected !== 1)) && !isJoker(card))
             return false;
         expected++;
     }
