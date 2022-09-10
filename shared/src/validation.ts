@@ -1,5 +1,5 @@
 import { Card, GameConfig, GameJoinParams, JOKER_RANK, Meld, MeldConfig, MELD_TYPES, SessionPublic } from './types';
-import { countBy, minBy } from 'lodash';
+import { countBy, flatMap, minBy, uniqBy } from 'lodash';
 import { assertNever, userError, GameAction, DataAction, getPrevPlayer } from '.';
 
 export function isNumber(a: unknown): a is number {
@@ -57,6 +57,9 @@ export function validateConfig(config: GameConfig | undefined): void {
 export function validateMelds(melds: Meld[], configs: MeldConfig[]): boolean {
     if (melds.length !== configs.length)
         return false;
+    const allCards = flatMap(melds, x => x.cards);
+    if (uniqBy(allCards, x => x.id).length !== allCards.length)
+        return false;
 
     // force smaller melds and configs to be checked first
     melds = [...melds].sort((a, b) => a.cards.length - b.cards.length);
@@ -89,6 +92,12 @@ export function isJoker(card: Card): boolean {
 }
 
 export function findJokerSpot(card: Card, meld: Meld): number {
+    // banned meld types
+    if (isJoker(card))
+        return -1;
+    if (['set'].some(x => x === meld.config.type))
+        return -1;
+    
     const jokerIndexes = meld.cards.reduce((list, x, i) => isJoker(x) ? [...list, i] : list, [] as number[]);
     for (const i of jokerIndexes) {
         const cards = [...meld.cards];
@@ -106,7 +115,7 @@ function validateSet(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const rank = cards[0].rank;
+    const rank = cards.find(x => !isJoker(x))?.rank ?? 0;
     if (cards.some(x => x.rank !== rank && !isJoker(x)))
         return false;
     return true;
@@ -118,7 +127,7 @@ function validateStraight(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const suit = cards[0].suit;
+    const suit = cards.find(x => !isJoker(x))?.suit ?? 0;
     if (cards.some(x => x.suit !== suit && !isJoker(x)))
         return false;
 
@@ -163,7 +172,7 @@ function validateSkipStraight(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const suit = cards[0].suit;
+    const suit = cards.find(x => !isJoker(x))?.suit ?? 0;
     if (cards.some(x => x.suit !== suit && !isJoker(x)))
         return false;
 

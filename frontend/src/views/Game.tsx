@@ -1,9 +1,8 @@
 import cx from 'classnames';
-import { CSSProperties, useState } from 'react';
+import { useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldConfig, MESSAGE_EVENT, sortCards, SYNC_EVENT, uuid } from 'shared';
-import { CardFan } from '../components/CardFan';
+import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCards, SYNC_EVENT, uuid } from 'shared';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
 import { useJoinParams } from '../hooks/useJoinParams';
@@ -12,17 +11,18 @@ import { useSessionComms } from '../hooks/useSessionComms';
 import { DropInfo } from '../reducers/dropReducer';
 import { sessionActions } from '../reducers/sessionReducer';
 import { RootState } from '../store';
-import { callShanghai, discardCard, drawDeck, drawDiscard, meldCards, revealCard, setReady } from '../tools/actions';
-import { DropArea } from '../components/dragging/DropArea';
+import { addToMeld, callShanghai, discardCard, drawDeck, drawDiscard, meldCards, revealCard, setReady } from '../tools/actions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
 import { Reposition } from '../components/Reposition';
 import { EventMessage, MessageLog } from '../components/MessageLog';
 import { SlideButton } from '../components/SlideButton';
 import { themeActions } from '../reducers/themeReducer';
-import { MeldContainer, PrivateMeld } from '../components/MeldContainer';
+import { PrivateMeld } from '../components/PrivateMeld';
 import { resetDragAnimations } from '../tools/DOM';
 import Draggable from 'react-draggable';
+import { PublicMeldSet } from '../components/PublicMeldSet';
+import { Hand } from '../components/Hand';
 
 export function Game() {
   const s = useStyles();
@@ -32,15 +32,22 @@ export function Game() {
   const [messages, setMessages] = useState<EventMessage[]>([]);
   const session = useSelector((state: RootState) => state.session)!;
   const [melds, setMelds] = useState<PrivateMeld[]>([]);
+  const [hand, setHand] = useState<Card[]>([]);
 
   const ws = useSessionComms(params, event => {
-    if (event.type === SYNC_EVENT)
-      dispatch(sessionActions.setSession(event.session));
     if (event.type === ERROR_EVENT)
       log(event.message, 'error');
     if (event.type === MESSAGE_EVENT)
       log(event.message, 'info');
+    if (event.type === SYNC_EVENT) {
+      dispatch(sessionActions.setSession(event.session));
+      updateHand(event.session);
+    }
   });
+
+  // Initialize hand from session cards
+  if (!hand.length)
+    updateHand();
 
   if (melds.length && session.me!.melds.length) {
     // Remove private melds on meld success
@@ -51,22 +58,20 @@ export function Game() {
     setMessages(msgs => [{ id: uuid(), type, message }, ...(msgs.slice(0, 25))]);
   };
 
-  const fan = {
-    angle: 5 / (session.me!.cards.length * 0.1),
-    size: 'min(2vw, 30px)',
-    spacing: Math.min(3, 3 / (session.me!.cards.length * 0.07)),
-  };
-
   const deckSize = 'min(5vh, 30px)';
 
-  const winningPlayer = session.players.reduce((min, p) => {
+  let winningPlayer: PlayerPublic | null = session.players.reduce((min, p) => {
     return p.points < min.points ? { points: p.points, player: p } : min;
   }, {
     points: session.players[0].points,
     player: session.players[0],
   }).player;
+  
+  if (session.players.some(x => x.id !== winningPlayer!.id && x.points === winningPlayer!.points))
+    winningPlayer = null;
+  
 
-  const onDraw = (info: DropInfo) => {
+  const onHandDrop = (info: DropInfo) => {
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'deck-card') {
@@ -89,6 +94,9 @@ export function Game() {
         return notify.create('error', 'Could not find meld');
       removeFromPrivateMeld(id, info.data);
       resetDragAnimations();
+
+    } else if (info.type === 'hand-card') {
+      reorderHand(info.data, info.pos?.x ?? 1);
     }
   };
 
@@ -117,16 +125,46 @@ export function Game() {
     }
   };
 
-  const onPrivateMeldAdd = (id: string) => {
+  const onPrivateMeldDrop = (id: string) => {
     return (info: DropInfo) => {
       if (!session.me)
         return notify.create('error', 'Oh no! session.me not defined');
+      const pos = info.pos?.x ?? 1;
+
       if (info.type === 'hand-card') {
         if (!id)
           return notify.create('error', 'Could not find meld');
-        addToPrivateMeld(id, info.data);
+        removeFromAllMelds(info.data);
+        addToPrivateMeld(id, info.data, pos);
+
+      } else if (info.type === 'meld-card') {
+        if (!id)
+          return notify.create('error', 'Could not find target meld');
+        const oldId = findPrivateMeldId(info.data);
+        if (!oldId)
+          return notify.create('error', 'Could not find source meld');
+        if (oldId === id)
+          return reorderInPrivateMeld(id, info.data, pos);
+        removeFromAllMelds(info.data);
+        addToPrivateMeld(id, info.data, pos);
       }
     };
+  };
+
+  const onPublicMeldDrop = (info: DropInfo, player: PlayerPublic, index: number, position: MeldAdd['position']) => {
+    const card = info.data as Card;
+    if (!card?.deck === undefined)
+      return notify.create('error', 'Invalid card');
+    if (!session.me)
+      return notify.create('error', 'Oh no! session.me not defined');
+    if (info.type === 'hand-card') {
+      ws.send(addToMeld(session.id, session.me.id, {
+        card,
+        meldIndex: index,
+        targetPlayerId: player.id,
+        position,
+      }));
+    }
   };
 
   const playerReady = () => {
@@ -137,14 +175,33 @@ export function Game() {
     setMelds(melds => [...melds, { id: uuid(), cards: [] }]);
   };
 
-  const addToPrivateMeld = (id: string, card: Card) => {
-    setMelds(melds => melds.map(meld => meld.id === id ? { ...meld, cards: [...meld.cards, card] } : meld));
+  const addToPrivateMeld = (id: string, card: Card, pos: number) => {
+    const meld = melds.find(meld => meld.id === id)!;
+    const index = Math.floor(pos * (meld.cards.length + 1));
+    meld.cards.splice(index, 0, card);
+    setMelds(melds => melds.map(m => m.id === id ? meld : m));
   };
 
   const removeFromPrivateMeld = (id: string, card: Card) => {
     let res = melds.map(meld => meld.id === id ? { ...meld, cards: meld.cards.filter(c => c !== card) } : meld);
     res = res.filter(meld => meld.cards.length > 0);
     setMelds(res);
+  };
+
+  const removeFromAllMelds = (card: Card) => {
+    const res = melds
+      .map(meld => ({ ...meld, cards: meld.cards.filter(c => c !== card) }))
+      .filter(meld => meld.cards.length > 0)
+      .concat(melds.filter(meld => meld.cards.length === 0));
+    setMelds(res);
+  };
+
+  const reorderInPrivateMeld = (id: string, card: Card, pos: number) => {
+    const meld = melds.find(meld => meld.id === id)!;
+    const index = Math.floor(pos * meld.cards.length);
+    meld.cards = meld.cards.filter(c => c.id !== card.id);
+    meld.cards.splice(index, 0, card);
+    setMelds(melds => melds.map(m => m.id === id ? meld : m));
   };
 
   const findPrivateMeldId = (card: Card) => {
@@ -156,6 +213,26 @@ export function Game() {
     return melds.some(meld => meld.cards.some(c => c.id === card.id));
   };
 
+  function reorderHand(card: Card, pos: number) {
+    const index = Math.floor(pos * hand.length);
+    const newHand = hand.filter(c => c.id !== card.id);
+    newHand.splice(index, 0, card);
+    setHand(newHand);
+  }
+
+  function updateHand(newSession?: SessionPublic) {
+    const workingSession = newSession ?? session;
+    if (!workingSession.me)
+      return notify.create('error', 'Oh no! session.me not defined');
+    if (workingSession.me!.cards.length === 0)
+      return;
+    if (hand.length === 0)
+      return setHand(sortCards([...workingSession.me.cards]));
+    const newCards = workingSession.me.cards.filter(card => !hand.some(c => c.id === card.id));
+    const cards = hand.filter(x => workingSession.me!.cards.some(xx => xx.id === x.id)).concat(newCards);
+    setHand(cards);
+  }
+
   const submitMelds = () => {
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
@@ -165,7 +242,7 @@ export function Game() {
 
   return (
     <div className={s.game}>
-      <div className='side-buttons'>
+      <div className={s.sideButtons}>
         <SlideButton text='Set Ready' icon={solid('user-check')}
           xOffset='2.9em' yOffset='3em' onClick={playerReady}
           attention={session.state === 'round-end' && session.me?.isReady === false}
@@ -203,7 +280,8 @@ export function Game() {
         <div>
           <i></i>
           {session.players.map(p => (<div key={p.id}>
-            {p.id === winningPlayer.id && <i><FontAwesomeIcon icon={solid('crown')} size='sm' /></i>}
+            {/* <span>s</span> */}
+            {p.id === winningPlayer?.id && <i><FontAwesomeIcon icon={solid('crown')} size='sm' /></i>}
           </div>))}
         </div>
 
@@ -229,7 +307,7 @@ export function Game() {
           <i><FontAwesomeIcon icon={solid('trophy')} /></i>
           {session.players.map(p => <div key={p.id}>
             {p.points}
-            {session.me?.id === p.id ? ` + ${getPlayerRoundPoints(session.config, session.me)}` : ''}
+            {session.me?.id === p.id && session.state !== 'round-end' ? ` + ${getPlayerRoundPoints(session.config, session.me)}` : ''}
           </div>)}
         </div>
 
@@ -257,7 +335,6 @@ export function Game() {
       <Draggable handle='.table-handle' positionOffset={{ x: '-25%', y: '-25%' }}>
         <div className={s.table}>
           <div className='table-handle' />
-          {/* <div className='table-size' /> */}
 
           <div className={s.decks}>
             <Reposition>
@@ -270,13 +347,27 @@ export function Game() {
 
           {/*-----------------------------------------------------------------------*/}
 
-          <div style={{ position: 'absolute', left: '40%', top: '40%' }}>
+          <div className={s.publicMelds}>
+            {session.players.filter(p => p.melds.length).map(p => (
+              <PublicMeldSet
+                key={p.id}
+                player={p}
+                melds={p.melds}
+                size='min(4vh, 30px)'
+                onDrop={onPublicMeldDrop}
+              />
+            ))}
+          </div>
+
+          {/*-----------------------------------------------------------------------*/}
+
+          <div className={s.privateMelds}>
             {melds.map(meld => (
-              <MeldContainer
+              <PrivateMeld
                 key={meld.id}
                 meld={meld}
                 size='min(4vh, 30px)'
-                onDrop={onPrivateMeldAdd(meld.id)}
+                onDrop={onPrivateMeldDrop(meld.id)}
               />
             ))}
           </div>
@@ -286,19 +377,11 @@ export function Game() {
 
       {/*-----------------------------------------------------------------------*/}
 
-      <div className={s.hand} style={{ '--size': fan.size } as CSSProperties}>
-        <DropArea className={s.handDrop} onDrop={onDraw}>
-          <div className='inner'>
-            <CardFan
-              {...fan}
-              drag
-              cards={sortCards([...session.me!.cards]).filter(x => !privateMeldsContainCard(x))}
-              newCards={session.me!.newCards}
-              cardType='hand-card'
-            />
-          </div>
-        </DropArea>
-      </div>
+      <Hand
+        cards={hand.filter(x => !privateMeldsContainCard(x))}
+        newCards={session.me!.newCards}
+        onDrop={onHandDrop}
+      />
     </div >
   );
 }
@@ -310,7 +393,12 @@ const useStyles = createUseStyles({
     width: '100vw',
     height: '100vh',
     userSelect: 'none',
-    backgroundColor: '#000',
+    backgroundColor: '#000c',
+  },
+
+  sideButtons: {
+    position: 'relative',
+    zIndex: 2,
   },
 
   roundInfo: {
@@ -401,6 +489,10 @@ const useStyles = createUseStyles({
       display: 'flex',
       flexDirection: 'column',
 
+      '& > div': {
+        flex: '1 0 0px',
+      },
+      
       '&:not(:last-child)': {
         marginRight: '1em',
       },
@@ -429,7 +521,7 @@ const useStyles = createUseStyles({
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    
+
     '& .table-handle': {
       boxSizing: 'border-box',
       width: '100%',
@@ -462,40 +554,21 @@ const useStyles = createUseStyles({
     }
   },
 
-  hand: {
+  publicMelds: {
     position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: 'calc(100vh - var(--size) * 10)',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1,
+    left: 'calc(100vw - min(4vh, 30px) * 10)',
+    top: '88vh',
 
-    '& .inner > div': {
-      pointerEvents: 'initial',
+    '& > *': {
+      position: 'absolute',
     },
   },
 
-  handDrop: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    height: '100%',
-
-    '& > div': {
-      position: 'absolute',
-      bottom: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      width: '100%',
-      height: '50%',
-    },
-  }
+  privateMelds: {
+    position: 'absolute',
+    left: 'calc(100vw - min(4vh, 30px) * 10)',
+    top: '88vh',
+  },
 });
 
 // const deck = shuffle(generateDeck(2, 4));
@@ -526,7 +599,7 @@ const useStyles = createUseStyles({
 //     playtime: 90000,
 //   }],
 //   round: 1,
-//   state: 'turn-start',
+//   state: 'round-end',
 //   turn: 1,
 //   deckCardAmount: deck.length,
 //   turnStartTime: Date.now(),
@@ -547,7 +620,7 @@ const useStyles = createUseStyles({
 //     remainingShouts: 3,
 //     tempCards: [],
 //     newCards: deck.slice(0, 2),
-//     cards: deck.slice(0, 5),
+//     cards: deck.slice(0, 0),
 //     playtime: 420000,
 //   }
 // };

@@ -68,15 +68,14 @@ const useStyles = createUseStyles({
   },
 
   lobby: {
-    // display: 'flex',
-    // justifyContent: 'center',
-    // flexDirection: 'column',
     textAlign: 'center',
     marginTop: '10vh',
-    // width: '50%',
     borderRadius: 5,
     padding: '20px 40px',
-    backgroundColor: 'white',
+    backgroundColor: '#0003',
+    border: '1px solid #fff5',
+    backdropFilter: 'blur(3px)',
+    color: '#ddd',
 
     '& h2': {
       margin: 0,

@@ -17,7 +17,17 @@ export function useDropArea() {
 
     const activate = (pos: Coord, info: DropInfo): string[] => {
         const found = find(pos);
-        found.forEach(x => x.func(info));
+        found.forEach((x, i) => {
+            const area = x.getArea();
+            x.func({
+                pos: {
+                    x: (pos.x - area.x) / area.width,
+                    y: (pos.y - area.y) / area.height,
+                },
+                layer: i,
+                ...info
+            });
+        });
         return found.map(x => x.id);
     };
 

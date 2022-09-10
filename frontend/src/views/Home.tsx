@@ -117,8 +117,7 @@ const useStyles = createUseStyles({
     justifyContent: 'center',
     flexWrap: 'wrap',
     gap: 20,
-    marginTop: 20,
-    padding: '0 20px 20px 20px',
+    padding: 20,
     maxHeight: 'calc(90vh - 70px)',
     overflow: 'auto',
   }

@@ -14,10 +14,12 @@ import { SlideButton } from './components/SlideButton';
 import { solid } from '@fortawesome/fontawesome-svg-core/import.macro';
 import { GameEvent, GAME_EVENT } from 'shared';
 import { useLocalSocket } from './hooks/useWebSocket';
+import { createUseStyles } from 'react-jss';
 
 let hasInitialised = false;
 
 export function App() {
+  const s = useStyles();
   const dispatch = useDispatch();
   const gameState = useSelector((state: RootState) => state.session?.state);
   const [params, setParams] = useJoinParams();
@@ -48,7 +50,7 @@ export function App() {
   };
 
   return (
-    <div className='app'>
+    <div className={s.app}>
       <NotificationEmitter />
 
       <SlideButton text='Leave' icon={solid('sign-out-alt')}
@@ -73,3 +75,16 @@ export function App() {
     </div>
   );
 }
+
+const useStyles = createUseStyles({
+  app: {
+    width: '100vw',
+    height: '100vh',
+    
+    background: 'url("/poker-table-background-no-watermark.jpg")',
+    boxSizing: 'border-box',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  },
+});

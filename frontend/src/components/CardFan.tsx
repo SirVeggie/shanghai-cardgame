@@ -13,6 +13,7 @@ type Props = {
   size?: string | number;
   cardType?: 'hand-card' | 'meld-card';
   newCards?: Card[];
+  noHover?: boolean;
 };
 
 export function CardFan(p: Props) {
@@ -25,6 +26,7 @@ export function CardFan(p: Props) {
       index={i}
       card={card}
       isNew={p.newCards?.some(x => x.id === card.id)}
+      noHover={p.noHover}
     />
   ));
 
@@ -47,6 +49,7 @@ type DragCardProps = {
   drag?: boolean;
   cardType?: 'hand-card' | 'meld-card';
   isNew?: boolean;
+  noHover?: boolean;
 };
 
 function DragCard(p: DragCardProps) {
@@ -66,7 +69,7 @@ function DragCard(p: DragCardProps) {
   if (!p.drag)
     return (
       <div className={s.center}>
-        <PlayingCard card={p.card} className={s.card} style={style} size={p.size} />;
+        <PlayingCard card={p.card} className={cx(s.card, p.noHover && 'noHover')} style={style} size={p.size} />;
       </div>
     );
   return (
@@ -107,12 +110,12 @@ const useStyles = createUseStyles({
     position: 'absolute',
     transform: 'translate(var(--pos-x), var(--pos-y)) scale(var(--scale)) rotate(var(--rot))',
     transition: 'transform 200ms ease',
-
-    '&:hover': {
+    
+    '&:not(.noHover):hover': {
       transform: 'translate(var(--pos-x), calc(var(--pos-y))) scale(calc(var(--scale) * 1.1)) rotate(var(--rot)) translateY(-1em)',
     },
 
-    '.dragging &': {
+    '.dragging &:not(.noHover)': {
       transform: 'translate(var(--pos-x), calc(var(--pos-y))) scale(calc(var(--scale) * 1.1)) translateY(-1em) rotate(0deg)',
     },
   }

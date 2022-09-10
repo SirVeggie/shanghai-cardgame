@@ -22,11 +22,12 @@ type Props = {
   className?: string;
 };
 
-export function MeldContainer(p: Props) {
+export function PrivateMeld(p: Props) {
   const s = useStyles();
 
   const size = p.size ?? '30px';
-  const width = (p.meld.cards.length - 1) * 3.2 + 5;
+  const spacing = 3;
+  const width = (p.meld.cards.length - 1) * (spacing + 0.2) + 5;
   const style = {
     ...p.style,
     '--size': size,
@@ -39,11 +40,16 @@ export function MeldContainer(p: Props) {
         <DropArea onDrop={p.onDrop}>
           <div className={s.base} style={style}>
             <Toggle on={!p.meld.cards.length}>
-              <EmptyCard size={size} />
+              <EmptyCard size={size} className='repositionHandle' />
             </Toggle>
 
             <Toggle on={!!p.meld.cards.length}>
-              <CardFan cards={p.meld.cards} size={size} drag cardType='meld-card' />
+              <CardFan drag
+                cards={p.meld.cards}
+                size={size}
+                spacing={spacing}
+                cardType='meld-card'
+              />
             </Toggle>
           </div>
         </DropArea>
@@ -56,6 +62,7 @@ const useStyles = createUseStyles({
   shrink: {
     position: 'absolute',
     pointerEvents: 'none',
+    transform: 'translate(-50%, -50%)',
   },
   
   base: {

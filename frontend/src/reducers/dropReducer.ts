@@ -4,7 +4,9 @@ export type DropType = 'hand-card' | 'meld-card' | 'discard-card' | 'deck-card';
 export type DropInfo = {
     type: DropType;
     data?: any;
-}
+    pos?: { x: number, y: number; };
+    layer?: number;
+};
 
 export type Drop = {
     id: string;

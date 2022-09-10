@@ -1,5 +1,5 @@
 import { minBy } from 'lodash';
-import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPrevPlayer, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
+import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, getPrevPlayer, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
 import { sendError, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
@@ -247,8 +247,8 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('Card does not fit into the meld there');
 
         owner.melds[event.meldAdd.meldIndex] = newMeld;
-        player.cards = player.cards.filter(x => x.id === card.id);
-        player.tempCards = player.tempCards.filter(x => x.id === card.id);
+        player.cards = player.cards.filter(x => x.id !== card.id);
+        player.tempCards = player.tempCards.filter(x => x.id !== card.id);
         sendMessage(`${player.name} added card ${ctool.name(card)} to ${owner.name}'s a meld`, event);
 
         if (player.cards.length === 0)
@@ -416,6 +416,10 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (session.round === session.config.rounds.length)
             return endGame();
         session.state = 'round-end';
+        
+        for (const player of session.players) {
+            player.points += getPlayerRoundPoints(session.config, player);
+        }
 
         sendMessage('Round has ended, press ready to continue', event);
     }
