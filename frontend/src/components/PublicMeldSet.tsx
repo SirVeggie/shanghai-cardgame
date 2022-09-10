@@ -101,7 +101,6 @@ const useStyles = createUseStyles({
   },
 
   melds: {
-    // pointerEvents: 'none',
     animation: '$create 1000ms ease',
 
     color: '#ddd',
@@ -116,7 +115,6 @@ const useStyles = createUseStyles({
   },
 
   meld: {
-    // pointerEvents: 'initial',
     fontSize: 'var(--size)',
     width: 'var(--width)',
     height: '8em',
