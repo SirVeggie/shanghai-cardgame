@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NotificationEmitter } from './components/NotificationEmitter';
 import { Toggle } from './components/Toggle';
 import { Game } from './views/Game';
-import { Home } from './views/Home';
+import { Sessions } from './views/Sessions';
 import { Lobby } from './views/Lobby';
 import { RootState } from './store';
 import { GameEnd } from './views/GameEnd';
@@ -58,7 +58,7 @@ export function App() {
       />
 
       <Toggle on={gameState === undefined}>
-        <Home />
+        <Sessions />
       </Toggle>
 
       <Toggle on={gameState === 'waiting-players'}>

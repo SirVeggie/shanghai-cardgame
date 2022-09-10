@@ -12,7 +12,7 @@ import { useNotification } from '../hooks/useNotification';
 import { useLocalSocket } from '../hooks/useWebSocket';
 import { sessionActions } from '../reducers/sessionReducer';
 
-export function Home() {
+export function Sessions() {
   const s = useStyles();
   const dispatch = useDispatch();
   const [sessions, setSessions] = useState([] as SessionPublic[]);
@@ -117,7 +117,8 @@ const useStyles = createUseStyles({
     justifyContent: 'center',
     flexWrap: 'wrap',
     gap: 20,
-    padding: 20,
+    marginTop: 10,
+    padding: '10px 20px 20px 20px',
     maxHeight: 'calc(90vh - 70px)',
     overflow: 'auto',
   }
