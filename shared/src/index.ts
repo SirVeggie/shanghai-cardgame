@@ -3,7 +3,7 @@ import { v4 } from 'uuid';
 import { isJoker } from './validation';
 import arrayShuffle from 'shuffle-array';
 import { ctool } from './cardTool';
-import { floor } from 'lodash';
+import { countBy, floor } from 'lodash';
 import _ from 'lodash';
 
 export * from './types';
@@ -61,6 +61,7 @@ export function convertSessionToPublic(session: Session, playerId?: string): Ses
         currentPlayerId: session.currentPlayerId,
         deckCardAmount: session.deck.length,
         turnStartTime: session.turnStartTime,
+        gameStartTime: session.gameStartTime,
 
         players: session.players.map(x => convertPlayerToPublic(x)),
         me: session.players.find(x => x.id === playerId),
@@ -191,7 +192,8 @@ export function checkOverlaps(melds: Meld[], hand: Card[]): boolean {
 
 
 export function shuffle(cards: Card[]) {
-    return arrayShuffle(cards);
+    // I don't trust it
+    return arrayShuffle(arrayShuffle(arrayShuffle(cards)));
 }
 
 export function generateDeck(decks: number, jokers: number) {
@@ -226,9 +228,27 @@ export function getPlayerRoundPoints (config: GameConfig, player: Player) {
     return points;
 }
 
-export const sortCards = (cards: Card[]) => cards.sort((a, b) => cardOrderIndex(a) - cardOrderIndex(b));
 export function cardOrderIndex(card: Card): number {
-    return card.suit * 1000 + card.rank * 10 + card.deck;
+    return Number(isJoker(card)) * 10000 + card.suit * 1000 + card.rank * 10 + card.deck;
+}
+
+export function cardOrderIndexSet(card: Card): number {
+    return Number(isJoker(card)) * 10000 + card.rank * 1000 + card.suit * 10 + card.deck;
+}
+
+export function sortCardsStraights(cards: Card[]) {
+    return [...cards].sort((a, b) => cardOrderIndex(a) - cardOrderIndex(b));
+}
+
+export function sortCardsSets(cards: Card[]) {
+    return [...cards].sort((a, b) => cardOrderIndexSet(a) - cardOrderIndexSet(b));
+}
+
+export function sortCardsHybrid(cards: Card[]) {
+    const amounts = countBy(cards, x => x.rank);
+    const sets = sortCardsSets(cards.filter(x => amounts[x.rank] > 1));
+    const straights = sortCardsStraights(cards.filter(x => amounts[x.rank] === 1));
+    return sets.concat(straights);
 }
     
 export function lerp(a: number, b: number, t: number): number {

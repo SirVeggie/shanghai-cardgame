@@ -1,5 +1,5 @@
 import { convertSessionToPublic, defaultConfig, GameEvent, GameJoinParams, GAME_EVENT, Session, SessionPublic, SYNC_EVENT, userError, uuid, validateJoinParams } from 'shared';
-import { sendAll, subscribeEvent, syncList } from '../networking/socket';
+import { clients, sendAll, subscribeEvent, syncList } from '../networking/socket';
 import { eventHandler } from './eventHandler';
 
 export const sessions: Record<string, Session> = {};
@@ -37,6 +37,7 @@ export function addSession(params: GameJoinParams) {
         config: params.config ? params.config : defaultConfig,
         password: params.password,
         turnStartTime: Date.now(),
+        gameStartTime: Date.now(),
 
         currentPlayerId: '',
         state: 'waiting-players',
@@ -55,4 +56,23 @@ export function removeSession(id: string) {
         throw userError('Session not found');
     delete sessions[id];
     syncList();
+}
+
+export function cleanupSessions() {
+    const now = Date.now();
+    for (const session of Object.values(sessions)) {
+        if (session.state === 'waiting-players' && !clients[session.id]?.length) {
+            // Remove session that has no players and haven't been started
+            removeSession(session.id);
+        } else if (session.state === 'waiting-players' && now - session.gameStartTime > 1000 * 60 * 60) {
+            // remove session after 1 hour if it hasn't started
+            removeSession(session.id);
+        } else if (session.state === 'game-end' && now - session.turnStartTime > 1000 * 60 * 60) {
+            // remove session after 1 hour if it has ended
+            removeSession(session.id);
+        } else if (now - session.turnStartTime > 1000 * 60 * 60 * 24 * 7) {
+            // remove session after one week of inactivity
+            removeSession(session.id);
+        }
+    }
 }

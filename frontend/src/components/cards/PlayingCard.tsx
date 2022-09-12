@@ -42,6 +42,7 @@ export function PlayingCard(p: Props) {
     return <EmptyCard {...p} />;
   return (
     <div
+      id={String(p.card.id)}
       ref={(p.innerRef as any)}
       className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme, p.isNew && 'new')}
       onClick={p.onClick} style={style}
@@ -136,10 +137,6 @@ const useStyles = createUseStyles({
     userSelect: 'none',
     filter: 'drop-shadow(4px 4px 5px #0009)',
     boxSizing: 'border-box',
-
-    '&.hidden': {
-      opacity: 0,
-    },
     
     '&.hover': {
       transition: 'transform 200ms ease',

@@ -1,5 +1,5 @@
 import { Card, GameConfig, GameJoinParams, JOKER_RANK, Meld, MeldConfig, MELD_TYPES, SessionPublic } from './types';
-import { countBy, flatMap, minBy, uniqBy } from 'lodash';
+import { countBy, flatMap, takeRightWhile, takeWhile, uniqBy } from 'lodash';
 import { assertNever, userError, GameAction, DataAction, getPrevPlayer } from '.';
 
 export function isNumber(a: unknown): a is number {
@@ -97,7 +97,7 @@ export function findJokerSpot(card: Card, meld: Meld): number {
         return -1;
     if (['set'].some(x => x === meld.config.type))
         return -1;
-    
+
     const jokerIndexes = meld.cards.reduce((list, x, i) => isJoker(x) ? [...list, i] : list, [] as number[]);
     for (const i of jokerIndexes) {
         const cards = [...meld.cards];
@@ -127,25 +127,38 @@ function validateStraight(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const suit = cards.find(x => !isJoker(x))?.suit ?? 0;
-    if (cards.some(x => x.suit !== suit && !isJoker(x)))
+
+    const normals = cards.filter(x => !isJoker(x));
+    const suit = normals[0]?.suit ?? 0;
+    const first = cards[0]?.rank === 14 ? 1 : normals[0]?.rank ?? 1;
+    const last = normals[normals.length - 1]?.rank ?? 1;
+    
+    if (normals.some(x => x.suit !== suit))
+        return false;
+    if (takeWhile(cards, x => isJoker(x)).length >= first)
+        return false;
+    if (takeRightWhile(cards, x => isJoker(x)).length + last > 14)
         return false;
 
-    let min = minBy(cards.filter(x => !isJoker(x)), x => x.rank)!.rank;
-    if (cards.some(x => x.rank === 14))
-        min = 1;
-    let expected = min;
+    let expected = first;
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        if (expected === min && isJoker(card))
+
+        if (expected === first && isJoker(card)) {
             continue;
-        if ((card.rank !== expected && (card.rank !== 14 || expected !== 1)) && !isJoker(card))
+
+        } else if (expected === 1 && card.rank === 14) {
+            expected++;
+
+        } else if (card.rank !== expected && !isJoker(card)) {
             return false;
-        expected++;
+
+        } else {
+            expected++;
+        }
     }
 
     return true;
-
 }
 
 function validateAnyStraight(cards: Card[], length: number): boolean {
@@ -154,15 +167,32 @@ function validateAnyStraight(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const min = minBy(cards.filter(x => !isJoker(x)), x => x.rank)!.rank;
-    let expected = min;
+
+    const normals = cards.filter(x => !isJoker(x));
+    const first = cards[0]?.rank === 14 ? 1 : normals[0]?.rank ?? 1;
+    const last = normals[normals.length - 1]?.rank ?? 1;
+    
+    if (takeWhile(cards, x => isJoker(x)).length >= first)
+        return false;
+    if (takeRightWhile(cards, x => isJoker(x)).length + last > 14)
+        return false;
+
+    let expected = first;
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        if (expected === min && isJoker(card))
+
+        if (expected === first && isJoker(card)) {
             continue;
-        if (card.rank !== expected && !isJoker(card))
+
+        } else if (expected === 1 && card.rank === 14) {
+            expected++;
+
+        } else if (card.rank !== expected && !isJoker(card)) {
             return false;
-        expected++;
+
+        } else {
+            expected++;
+        }
     }
 
     return true;
@@ -174,19 +204,35 @@ function validateSkipStraight(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const suit = cards.find(x => !isJoker(x))?.suit ?? 0;
-    if (cards.some(x => x.suit !== suit && !isJoker(x)))
+
+    const normals = cards.filter(x => !isJoker(x));
+    const suit = normals[0]?.suit ?? 0;
+    const first = cards[0]?.rank === 14 ? 1 : normals[0]?.rank ?? 1;
+    const last = normals[normals.length - 1]?.rank ?? 1;
+    
+    if (normals.some(x => x.suit !== suit))
+        return false;
+    if (takeWhile(cards, x => isJoker(x)).length * 2 >= first)
+        return false;
+    if (takeRightWhile(cards, x => isJoker(x)).length * 2 + last > 14)
         return false;
 
-    const min = minBy(cards.filter(x => !isJoker(x)), x => x.rank)!.rank;
-    let expected = min;
+    let expected = first;
     for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        if (expected === min && isJoker(card))
+
+        if (expected === first && isJoker(card)) {
             continue;
-        if (card.rank !== expected && !isJoker(card))
+
+        } else if (expected === 1 && card.rank === 14) {
+            expected += 2;
+
+        } else if (card.rank !== expected && !isJoker(card)) {
             return false;
-        expected += 2;
+
+        } else {
+            expected += 2;
+        }
     }
 
     return true;

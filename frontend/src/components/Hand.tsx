@@ -15,8 +15,7 @@ export function Hand(p: Props) {
   const s = useStyles();
 
   const fan = {
-    angle: 4 / (p.cards.length * 0.1),
-    // angle: 0,
+    angle: 3 / (p.cards.length * 0.1),
     size: 'min(min(2vw, 5vh), 30px)',
     spacing: Math.min(3, 3 / (p.cards.length * 0.07)),
   };

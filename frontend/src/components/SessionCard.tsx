@@ -1,5 +1,6 @@
 import { createUseStyles } from 'react-jss';
 import { SessionPublic } from 'shared';
+import { Toggle } from './Toggle';
 
 type Props = {
   session: SessionPublic;
@@ -20,8 +21,15 @@ export function SessionCard(p: Props) {
           {p.session.players.map(player => <div key={player.id}>{player.name}</div>)}
         </div>
         <div>
-          Round: {p.session.round}<br />
-          Turn: {p.session.turn}
+          <Toggle on={p.session.state !== 'game-end'}>
+            Round: {p.session.round}/{p.session.config.rounds.length}<br />
+            Turn: {p.session.turn}
+          </Toggle>
+          <Toggle on={p.session.state === 'game-end'}>
+            Game Over<br />
+            Winner:<br />
+            {p.session.players.find(x => x.id === p.session.winnerId)?.name}
+          </Toggle>
         </div>
       </div>
     </div>
@@ -32,7 +40,7 @@ const useStyles = createUseStyles({
   back: {
     backdropFilter: 'blur(7.5px) contrast(50%)',
   },
-  
+
   card: {
     display: 'flex',
     flexDirection: 'column',
@@ -47,28 +55,28 @@ const useStyles = createUseStyles({
     cursor: 'pointer',
     backdropFilter: 'blur(2px)',
     transition: 'transform 250ms ease, box-shadow 250ms ease',
-    
+
     '&:hover': {
       // transform: 'scale(1.05)',
       transform: 'translateY(-5px)',
       boxShadow: '0px 8px 15px rgba(0, 0, 0, 0.5)',
     },
   },
-  
+
   titleBox: {
     display: 'flex',
     paddingTop: 10,
     color: '#ddd',
     backgroundColor: '#222',
     borderRadius: '10px 10px 0 0',
-    
+
     '& > h1': {
       fontSize: '1.5em',
       margin: '0 10px 10px 20px',
       flexGrow: 1,
     },
   },
-  
+
   inner: {
     display: 'flex',
     justifyContent: 'space-between',

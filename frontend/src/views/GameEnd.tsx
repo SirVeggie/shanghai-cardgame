@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -17,11 +18,11 @@ export function GameEnd() {
           <div>Score</div>
           <div>Playtime</div>
           {[...session!.players].sort((a, b) => a.points - b.points).map(p => (
-            <>
+            <Fragment key={p.id}>
               <div>{p.name}</div>
               <div>{p.points}</div>
               <div>{(p.playtime / 1000 / 60).toFixed()} min</div>
-            </>
+            </Fragment>
           ))}
         </div>
       </div>

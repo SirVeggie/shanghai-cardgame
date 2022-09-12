@@ -19,7 +19,7 @@ export type GameJoinParams = {
     config?: GameConfig;
 };
 
-export type GameState = 'waiting-players' | 'turn-start' | 'shanghai-called' | 'card-drawn' | 'round-end' | 'game-end';
+export type GameState = 'waiting-players' | 'turn-start' | 'shanghai-called' | 'card-drawn' | 'turn-end' | 'round-end' | 'game-end';
 export type Session = {
     id: string;
     name: string;
@@ -33,6 +33,7 @@ export type Session = {
     turn: number;
     deck: Card[];
     discard: Card[];
+    gameStartTime: number;
     turnStartTime: number;
     pendingShanghai?: string;
     discardOwner?: string;

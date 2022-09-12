@@ -1,7 +1,7 @@
 import { Server } from 'http';
 import { convertSessionToPublic, GameEvent, GAME_EVENT, MessageEvent, SessionListEvent, SESSION_LIST_EVENT, userError, UserError, validateJoinParams, WebEvent, wsError, wsMessage } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
-import { sessions } from '../logic/controller';
+import { cleanupSessions, sessions } from '../logic/controller';
 
 type Actor = { playerId: string, ws: WebSocket; };
 let wss: WebSocketServer = null as any;
@@ -21,7 +21,8 @@ export function createSocket(a: number | Server) {
 function createSocketBase() {
     wss.on('connection', (ws, req) => {
         console.log(`client connected from ${req.socket.remoteAddress}`);
-
+        cleanupSessions();
+        
         ws.onmessage = event => {
             try {
                 handleMessage(event.data as string, ws);
@@ -131,9 +132,9 @@ function handleDisconnect(ws: WebSocket) {
         }
     }
 
+    removeWsConnection(ws);
     if (event)
         actions[event.type]?.forEach(x => x(event!, ws));
-    removeWsConnection(ws);
 }
 
 export function subscribeEvent<T extends WebEvent>(event: T['type'], func: (event: T, ws: WebSocket) => void): void {

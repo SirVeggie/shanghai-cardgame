@@ -1,5 +1,5 @@
 import { minBy } from 'lodash';
-import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, isJoker, Player, Session, shuffle, sleep, sortCards, userError, UserError, validateMeld, validateMelds } from 'shared';
+import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
 import { sendError, sendMessage, sendMessageSingle } from '../networking/socket';
 import { updateClients } from './controller';
@@ -127,8 +127,13 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (Date.now() - session.turnStartTime < 2000)
             throw userError('Wait at least 2 seconds before drawing');
 
-        if (session.pendingShanghai)
+        if (session.pendingShanghai) {
             allowShanghai('message');
+            if (session.discard.length === 0) {
+                updateClients(sessions, event);
+                throw userError('Discard pile empty, canceling card draw');
+            }
+        }
 
         if (session.deck.length === 0 && session.discard.length === 0) {
             sendError(ws, 'Deck and discard pile are empty, card drawing skipped');
@@ -243,11 +248,9 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         switch (event.meldAdd.position) {
             case 'start':
                 newMeld.cards = [card, ...meld.cards];
-                console.log('add to start', newMeld);
                 break;
             case 'end':
                 newMeld.cards = [...meld.cards, card];
-                console.log('add to end', newMeld);
                 break;
             case 'joker': {
                 if (isJoker(card))
@@ -258,7 +261,6 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
                 player.tempCards.push(meld.cards[i]);
                 player.cards.push(meld.cards[i]);
                 newMeld.cards[i] = card;
-                console.log('add to joker', newMeld);
                 break;
             }
             default:
@@ -299,11 +301,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         session.discardOwner = player.id;
         sendMessage(`${player.name} discarded ${ctool.name(card)}`, event);
 
-        if (player.cards.length === 0) {
-            endRound();
-        } else {
-            startNextTurn();
-        }
+        endTurn();
     }
     //#endregion
 
@@ -341,7 +339,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         // Set starting cards and shouts for players
         session.players.forEach(x => {
             const cards = session.deck.splice(0, config.cardCount);
-            x.cards.push(...sortCards(cards));
+            x.cards.push(...cards);
             x.remainingShouts = config.shanghaiCount;
         });
 
@@ -375,6 +373,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
     function startNextRound() {
         session.round += 1;
         resetState();
+
         const player = session.players.find(x => x.id === session.currentPlayerId)!;
         if (session.round === 1) {
             setTimeout(async () => {
@@ -385,24 +384,31 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         } else {
             sendMessage(`Round ${session.round} started: ${player.name} to play`, event);
         }
+
+        startNextTurn('no-message');
     }
 
-    function startNextTurn() {
-        session.state = 'turn-start';
-
-        const time = Date.now();
-        const duration = time - session.turnStartTime;
-        const currentPlayer = session.players.find(x => x.id === session.currentPlayerId)!;
-        currentPlayer.playtime += duration;
-
+    function startNextTurn(msg: 'message' | 'no-message' = 'message') {
         const nextPlayer = getNextPlayer(session.currentPlayerId, session.players);
 
+        session.state = 'turn-start';
         session.currentPlayerId = nextPlayer.id;
         session.turn += 1;
-        session.turnStartTime = time;
-        console.log(`Current player: ${nextPlayer.name} - ${nextPlayer.id}`);
-        sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event, 'log');
-        sendMessageSingle('Your turn started', nextPlayer.id, 'notification');
+        session.turnStartTime = Date.now();
+
+        const oldTurn = session.turn;
+        if (session.turn !== 1) {
+            setTimeout(() => {
+                if (session.turn === oldTurn) {
+                    sendMessage(`${nextPlayer.name} spent more than 1 minute on a turn, they suck :)`, event);
+                }
+            }, 60000);
+        }
+
+        if (msg === 'message') {
+            sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event, 'log');
+            sendMessageSingle('Your turn started', nextPlayer.id, 'notification');
+        }
     }
 
     function allowShanghai(message: 'message' | 'no-message') {
@@ -439,15 +445,33 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         sendMessage('Shanghai was rejected', event);
     }
 
+    function endTurn(mode: 'continue' | 'no-continue' = 'continue') {
+        session.state = 'turn-end';
+        const time = Date.now();
+        const duration = time - session.turnStartTime;
+        const currentPlayer = session.players.find(x => x.id === session.currentPlayerId)!;
+        currentPlayer.playtime += duration;
+
+        if (mode === 'no-continue')
+            return;
+        if (currentPlayer.cards.length === 0) {
+            endRound();
+        } else {
+            startNextTurn();
+        }
+    }
+
     function endRound() {
-        if (session.round === session.config.rounds.length)
-            return endGame();
+        if (session.state !== 'turn-end')
+            endTurn('no-continue');
         session.state = 'round-end';
 
         for (const player of session.players) {
             player.points += getPlayerRoundPoints(session.config, player);
         }
 
+        if (session.round === session.config.rounds.length)
+            return endGame();
         sendMessage('Round has ended, press ready to continue', event);
     }
 

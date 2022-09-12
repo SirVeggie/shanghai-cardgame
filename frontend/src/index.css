@@ -23,6 +23,10 @@ body {
   scrollbar-color: #000a #0005;
 }
 
+/* .hidden { */
+  /* opacity: 0; */
+/* } */
+
 /* Works on Chrome, Edge, and Safari */
 ::-webkit-scrollbar {
   width: 10px;

@@ -2,7 +2,7 @@ import cx from 'classnames';
 import { useCallback, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCards, SYNC_EVENT, uuid } from 'shared';
+import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCardsHybrid, SYNC_EVENT, uuid } from 'shared';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
 import { useJoinParams } from '../hooks/useJoinParams';
@@ -74,6 +74,7 @@ export function Game() {
 
 
   const onHandDrop = (info: DropInfo) => {
+    const card = info.data as Card;
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'deck-card') {
@@ -91,24 +92,25 @@ export function Game() {
       }
 
     } else if (info.type === 'meld-card') {
-      const id = findPrivateMeldId(info.data);
+      const id = findPrivateMeldId(card);
       if (!id)
         return notify.create('error', 'Could not find meld');
-      removeFromPrivateMeld(id, info.data);
+      removeFromPrivateMeld(id, card);
       resetDragAnimations();
 
     } else if (info.type === 'hand-card') {
-      reorderHand(info.data, info.pos?.x ?? 1);
+      reorderHand(card, info.pos?.x ?? 1);
     }
   };
 
   const onDiscardDrop = (info: DropInfo) => {
+    const card = info.data as Card | undefined;
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'hand-card') {
       if (canDiscard(session))
         resetDragAnimations();
-      ws.send(discardCard(session.id, session.me.id, info.data));
+      ws.send(discardCard(session.id, session.me.id, card!));
 
     } else if (info.type === 'deck-card') {
       if (canRevealCard(session))
@@ -116,14 +118,14 @@ export function Game() {
       ws.send(revealCard(session.id, session.me.id));
 
     } else if (info.type === 'meld-card') {
-      const id = findPrivateMeldId(info.data);
+      const id = findPrivateMeldId(card!);
       if (!id)
         return notify.create('error', 'Could not find meld');
       if (canDiscard(session)) {
-        removeFromPrivateMeld(id, info.data);
+        removeFromPrivateMeld(id, card!);
         resetDragAnimations();
       }
-      ws.send(discardCard(session.id, session.me.id, info.data));
+      ws.send(discardCard(session.id, session.me.id, card!));
     }
   };
 
@@ -160,6 +162,7 @@ export function Game() {
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'hand-card') {
+      resetDragAnimations();
       ws.send(addToMeld(session.id, session.me.id, {
         card,
         meldIndex: index,
@@ -236,7 +239,7 @@ export function Game() {
     if (!workingSession.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (hand.length === 0)
-      return setHand(sortCards([...workingSession.me.cards]));
+      return setHand(sortCardsHybrid(workingSession.me.cards));
     const newCards = workingSession.me.cards.filter(card => !hand.some(c => c.id === card.id));
     const cards = hand.filter(x => workingSession.me!.cards.some(xx => xx.id === x.id)).concat(newCards);
     setHand(cards);

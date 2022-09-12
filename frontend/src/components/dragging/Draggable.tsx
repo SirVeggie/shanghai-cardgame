@@ -1,7 +1,7 @@
 import { CSSProperties, ReactNode, RefObject, useEffect, useRef, useState } from 'react';
 import { DraggableCore, DraggableEventHandler } from 'react-draggable';
 import { createUseStyles } from 'react-jss';
-import { Coord, lerpCoord } from 'shared';
+import { Coord } from 'shared';
 import { useDropArea } from '../../hooks/useDropArea';
 import cx from 'classnames';
 import { DropInfo } from '../../reducers/dropReducer';
@@ -18,34 +18,21 @@ type Props = {
   style?: CSSProperties;
 };
 
-const useLerp = false;
-
 export function Draggable(p: Props) {
   const s = useStyles();
   const ref = useRef<HTMLElement>(null);
   const refPos = useRef(undefined as undefined | Coord);
   const refPosTarget = useRef(undefined as undefined | Coord);
   const [drag, setDrag] = useState(false);
+  const [dropped, setDropped] = useState({ state: false, timeout: 0 });
   const dropper = useDropArea();
 
-  if (useLerp) {
-    useEffect(() => {
-      if (!drag)
-        return;
-      const interval = setInterval(() => {
-        if (!refPos.current || !refPosTarget.current)
-          return;
-        const newPos = lerpCoord(refPos.current, refPosTarget.current, 0.1);
-        ref.current!.style.transform = `translate(${newPos.x}px, ${newPos.y}px)`;
-        refPos.current = newPos;
-      }, 5);
-
-      return () => {
-        clearInterval(interval);
-      };
-    }, [drag]);
-  }
-
+  useEffect(() => {
+    return () => {
+      clearTimeout(dropped.timeout);
+    };
+  }, []);
+  
   const onStart: DraggableEventHandler = (e, data) => {
     setDrag(true);
     p.onState?.(true);
@@ -59,21 +46,24 @@ export function Draggable(p: Props) {
   const onDrag: DraggableEventHandler = (e, data) => {
     refPosTarget.current!.x += data.deltaX;
     refPosTarget.current!.y += data.deltaY;
-    if (!useLerp) {
-      refPos.current = refPosTarget.current;
-      ref.current!.style.transform = `translate(${refPos.current!.x}px, ${refPos.current!.y}px)`;
-    }
+    refPos.current = refPosTarget.current;
+    ref.current!.style.transform = `translate(${refPos.current!.x}px, ${refPos.current!.y}px)`;
     p.onDrag?.(e, data);
   };
 
   const onStop: DraggableEventHandler = (e, data) => {
+    const timeout = setTimeout(() => {
+      setDropped({ state: false, timeout: 0 });
+    }, 500);
+    setDropped({ state: true, timeout: timeout as any });
+
     setDrag(false);
     p.onState?.(false);
 
     refPosTarget.current = undefined;
     refPos.current = undefined;
     (ref.current as any).style.transform = 'none';
-    
+
     setTimeout(() => {
       p.onStop?.(e, data);
     }, 10);
@@ -86,7 +76,7 @@ export function Draggable(p: Props) {
 
     dropper.activate(drop, p.info);
   };
-  
+
   const style = {
     zIndex: drag ? 10 : 0,
     ...p.style,
@@ -98,7 +88,7 @@ export function Draggable(p: Props) {
       onDrag={onDrag}
       onStop={onStop}
     >
-      <div ref={(ref as any)} className={cx(s.draggable, 'draggable', p.className, drag && 'dragging')} style={style}>
+      <div ref={(ref as any)} className={cx(s.draggable, 'draggable', p.className, drag && 'dragging', dropped.state && 'dropped')} style={style}>
         {p.children}
       </div>
     </DraggableCore>
@@ -112,6 +102,10 @@ const useStyles = createUseStyles({
     transition: 'transform 500ms ease',
     transform: 'translate(var(--pos-x), var(--pos-y))',
     cursor: 'grab',
+
+    '&.hidden': {
+      opacity: 0,
+    },
     
     '&.no-transition': {
       transition: 'none'
