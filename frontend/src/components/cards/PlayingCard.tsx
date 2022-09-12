@@ -42,7 +42,6 @@ export function PlayingCard(p: Props) {
     return <EmptyCard {...p} />;
   return (
     <div
-      id={String(p.card.id)}
       ref={(p.innerRef as any)}
       className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme, p.isNew && 'new')}
       onClick={p.onClick} style={style}
