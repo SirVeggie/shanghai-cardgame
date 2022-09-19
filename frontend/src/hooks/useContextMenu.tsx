@@ -20,7 +20,11 @@ export function useContextMenu(options: Record<string, (() => void) | undefined>
     const component = (
         <div className={cx(s.context, open && 'open')} style={style}>
             {Object.keys(options).filter(x => options[x]).map((option, i) => (
-                <div key={i} style={index(i)} onClick={options[option]}>{option}</div>
+                <div
+                    key={i}
+                    style={index(i)}
+                    onClick={options[option]}
+                >{option}</div>
             ))}
         </div>
     );
@@ -70,7 +74,7 @@ const useStyle = createUseStyles({
         left: 'var(--x)',
         pointerEvents: 'none',
         color: '#ddd',
-        background: 'linear-gradient(180deg, #0003, #0000)',
+        background: 'linear-gradient(0deg, #0009, #0005)',
         backdropFilter: 'blur(3px)',
         border: '1px solid #fff5',
         minWidth: '10em',
@@ -97,9 +101,10 @@ const useStyle = createUseStyles({
         '& > div': {
             padding: '0.5em 1em',
             cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
 
             '&:hover': {
-                backgroundColor: '#0003',
+                backgroundColor: '#000a',
             },
         },
     },

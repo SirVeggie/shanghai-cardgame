@@ -4,6 +4,7 @@ import { Card } from 'shared';
 import { DropInfo } from '../reducers/dropReducer';
 import { CardFan } from './CardFan';
 import { DropArea } from './dragging/DropArea';
+import { Reposition } from './Reposition';
 
 type Props = {
   cards: Card[];
@@ -17,7 +18,7 @@ export function Hand(p: Props) {
   const fan = {
     angle: 3 / (p.cards.length * 0.1),
     size: 'min(min(2vw, 5vh), 30px)',
-    spacing: Math.min(3, 3 / (p.cards.length * 0.07)),
+    spacing: Math.min(3, 3 / (p.cards.length * 0.08)),
   };
 
   const width = (p.cards.length - 1) * fan.spacing + 5;
@@ -39,19 +40,21 @@ export function Hand(p: Props) {
 
   return (
     <div className={s.hand} style={style}>
-      <DropArea className={s.handDrop} onDrop={onDrop}>
-        <DropArea className={s.dropInner} onDrop={onInnerDrop}>
-          <div className='inner'>
-            <CardFan
-              {...fan}
-              drag
-              cards={p.cards}
-              newCards={p.newCards}
-              cardType='hand-card'
-            />
-          </div>
+      <Reposition size={fan.size} handleOffset={{ x: '0.3em', y: '0.3em' }}>
+        <DropArea className={s.handDrop} onDrop={onDrop}>
+          <DropArea className={s.dropInner} onDrop={onInnerDrop}>
+            <div className='inner'>
+              <CardFan
+                {...fan}
+                drag
+                cards={p.cards}
+                newCards={p.newCards}
+                cardType='hand-card'
+              />
+            </div>
+          </DropArea>
         </DropArea>
-      </DropArea>
+      </Reposition>
     </div>
   );
 }
@@ -75,13 +78,14 @@ const useStyles = createUseStyles({
   },
 
   handDrop: {
+    fontSize: 'var(--size)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    height: '100%',
+    height: '8em',
+    width: 'calc(var(--width) + 5em)',
   },
-
+  
   dropInner: {
     position: 'absolute',
     bottom: 0,
@@ -90,7 +94,7 @@ const useStyles = createUseStyles({
     alignItems: 'center',
     fontSize: 'var(--size)',
     width: 'var(--width)',
-    height: '100%',
+    height: '8em',
 
     '& > div': {
       position: 'absolute',
@@ -98,7 +102,7 @@ const useStyles = createUseStyles({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      height: '70%',
+      height: '100%',
     },
   },
 });

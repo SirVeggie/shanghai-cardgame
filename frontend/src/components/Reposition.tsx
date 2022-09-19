@@ -4,22 +4,32 @@ import Draggable from 'react-draggable';
 import { createUseStyles } from 'react-jss';
 import { useTouch } from '../hooks/useTouch';
 import cx from 'classnames';
+import { CSSProperties } from 'react';
 
 type Props = {
   children: React.ReactNode;
   hideHandle?: boolean;
   className?: string;
   innerClass?: string;
+  handleOffset?: { x?: string, y?: string, rot?: string; };
+  size?: string;
 };
 
 export function Reposition(p: Props) {
   const s = useStyles();
   const touch = useTouch();
+  
+  const style = {
+    fontSize: p.size,
+    '--handle-x': `${p.handleOffset?.x ?? '-30px'}`,
+    '--handle-y': `${p.handleOffset?.y ?? '-30px'}`,
+    '--handle-rot': `${p.handleOffset?.rot ?? '0deg'}`,
+  } as CSSProperties;
 
   return (
     <Draggable handle='.repositionHandle'>
       <div className={cx(s.base, p.className, touch && 'touch', p.hideHandle && 'hide')}>
-        <div className='repositionHandle'><FontAwesomeIcon icon={solid('eject')} /></div>
+        <div className='repositionHandle' style={style}><FontAwesomeIcon icon={solid('eject')} /></div>
         <div className={p.innerClass}>
           {p.children}
         </div>
@@ -36,15 +46,16 @@ const useStyles = createUseStyles({
     '&:not(.hide):hover > :first-child, &.touch:not(.hide) div:first-child': {
       opacity: 1,
     },
-
+    
     '& > :first-child': {
       position: 'absolute',
       opacity: 0,
-      width: 100,
-      height: 100,
+      width: 'min(6em, 100px)',
+      height: 'min(6em, 100px)',
       borderRadius: '5px 0 0 0',
       background: 'linear-gradient(135deg, #0005 0%, #0000 50%)',
-      transform: 'translate(-30px, -30px)',
+      transformOrigin: 'top left',
+      transform: 'translate(calc(var(--handle-x)), calc(var(--handle-y))) rotate(var(--handle-rot))',
       cursor: 'all-scroll',
       transition: 'opacity 200ms ease-out',
       pointerEvents: 'initial',
@@ -53,7 +64,7 @@ const useStyles = createUseStyles({
         fontSize: 20,
         color: '#ccc',
         position: 'absolute',
-        top: 5,
+        top: 4,
         left: 5,
         transform: 'rotate(-45deg)',
       },

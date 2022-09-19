@@ -58,6 +58,7 @@ export function Game() {
       setSortFunc({ f: sortCardsHybrid });
       setHand(sortCardsHybrid(session.me!.cards));
     },
+    'Clear melds': !session.me?.melds.length ? () => setMelds([]) : undefined,
   });
 
   const ws = useSessionComms(params, useCallback(event => {
@@ -74,7 +75,7 @@ export function Game() {
       updateHand(event.session);
     }
   }, [JSON.stringify(hand)]));
-  
+
   useEffect(() => {
     const func = () => context.close();
     window.addEventListener('blur', func);
@@ -288,18 +289,16 @@ export function Game() {
       y: e.clientY,
     });
   }
-  
+
   function touchContext(e: React.PointerEvent<HTMLDivElement>) {
-    console.log('pointer down');
     if (e.pointerType !== 'touch')
-      return console.log('not touch');
+      return;
     const oldTime = prevTouch.time;
     prevTouch.time = Date.now();
     if (Date.now() - oldTime > 350)
-      return context.close();
-    console.log('fast enough');
+      return;
     prevTouch.time = 0;
-    
+
     context.open({
       x: e.clientX,
       y: e.clientY,
@@ -439,7 +438,7 @@ export function Game() {
                 key={p.id}
                 player={p}
                 melds={p.melds}
-                size='min(3vh, 30px)'
+                size='min(3vh, 20px)'
                 onDrop={onPublicMeldDrop}
               />
             ))}
