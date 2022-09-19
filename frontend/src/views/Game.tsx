@@ -1,8 +1,8 @@
 import cx from 'classnames';
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
-import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCardsHybrid, SYNC_EVENT, uuid } from 'shared';
+import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, INFO_EVENT, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCardsHybrid, sortCardsSets, sortCardsStraights, SYNC_EVENT, uuid } from 'shared';
 import { DiscardPile } from '../components/DiscardPile';
 import { DrawPile } from '../components/DrawPile';
 import { useJoinParams } from '../hooks/useJoinParams';
@@ -23,6 +23,14 @@ import { resetDragAnimations } from '../tools/DOM';
 import Draggable from 'react-draggable';
 import { PublicMeldSet } from '../components/PublicMeldSet';
 import { Hand } from '../components/Hand';
+import { ConfirmationModal } from '../components/ConfirmationModal';
+import { useContextMenu } from '../hooks/useContextMenu';
+
+const prevTouch = {
+  time: 0,
+  x: 0,
+  y: 0,
+};
 
 export function Game() {
   const s = useStyles();
@@ -33,14 +41,35 @@ export function Game() {
   const session = useSelector((state: RootState) => state.session)!;
   const [melds, setMelds] = useState<PrivateMeld[]>([]);
   const [hand, setHand] = useState<Card[]>([]);
-  
+  const [turnModal, setTurnModal] = useState(false);
+  const [sortFunc, setSortFunc] = useState<{ f: typeof sortCardsSets; }>({ f: sortCardsSets });
+
+  const context = useContextMenu({
+    'New meld': !session.me?.melds.length ? newPrivateMeld : undefined,
+    'Confirm melds': session.me?.melds.length ? submitMelds : undefined,
+    'Sort by sets': () => {
+      setSortFunc({ f: sortCardsSets });
+      setHand(sortCardsSets(session.me!.cards));
+    },
+    'Sort by straights': () => {
+      setSortFunc({ f: sortCardsStraights });
+      setHand(sortCardsStraights(session.me!.cards));
+    },
+    'Sort by hybrid': () => {
+      setSortFunc({ f: sortCardsHybrid });
+      setHand(sortCardsHybrid(session.me!.cards));
+    },
+  });
+
   const ws = useSessionComms(params, useCallback(event => {
     if (event.type === ERROR_EVENT)
-    log(event.message, 'error');
+      log(event.message, 'error');
     if (event.type === MESSAGE_EVENT && event.method === 'log')
-    log(event.message, 'info');
+      log(event.message, 'info');
     if (event.type === MESSAGE_EVENT && event.method === 'notification')
-    notify.create('info', event.message);
+      notify.create('info', event.message);
+    if (event.type === INFO_EVENT && event.event === 'turn-start')
+      setTurnModal(true);
     if (event.type === SYNC_EVENT) {
       dispatch(sessionActions.setSession(event.session));
       updateHand(event.session);
@@ -78,7 +107,7 @@ export function Game() {
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (info.type === 'deck-card') {
-      if (canDrawDeck(session))
+      if (canDrawDeck(session) && !(session.pendingShanghai && !session.discard.bottom))
         resetDragAnimations();
       ws.send(drawDeck(session.id, session.me.id));
 
@@ -176,9 +205,9 @@ export function Game() {
     ws.send(setReady(session.id, session.me!.id));
   };
 
-  const newPrivateMeld = () => {
+  function newPrivateMeld() {
     setMelds(melds => [...melds, { id: uuid(), cards: [] }]);
-  };
+  }
 
   const addToPrivateMeld = (id: string, card: Card, pos: number) => {
     const meld = melds.find(meld => meld.id === id)!;
@@ -239,25 +268,65 @@ export function Game() {
     if (!workingSession.me)
       return notify.create('error', 'Oh no! session.me not defined');
     if (hand.length === 0)
-      return setHand(sortCardsHybrid(workingSession.me.cards));
+      return setHand(sortFunc.f(workingSession.me.cards));
     const newCards = workingSession.me.cards.filter(card => !hand.some(c => c.id === card.id));
     const cards = hand.filter(x => workingSession.me!.cards.some(xx => xx.id === x.id)).concat(newCards);
     setHand(cards);
   }
+
+  function onContext(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.button !== 2)
+      return context.close();
+    e.preventDefault();
+    context.open({
+      x: e.clientX,
+      y: e.clientY,
+    });
+  }
   
-  function openContext() {
+  function touchContext(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== 'touch')
+      return;
+    const oldTime = prevTouch.time;
+    prevTouch.time = Date.now();
+    if (Date.now() - oldTime < 500)
+      return context.close();
+    if (dist(e.clientX, prevTouch.x) > 20 && dist(e.clientY, prevTouch.y) > 20)
+      return context.close();
+    prevTouch.x = e.clientX;
+    prevTouch.y = e.clientY;
+    prevTouch.time = 0;
     
+    context.open({
+      x: e.clientX,
+      y: e.clientY,
+    });
+    
+    function dist(a: number, b: number): number {
+      return Math.abs(a - b);
+    }
   }
 
-  const submitMelds = () => {
+  function submitMelds() {
     if (!session.me)
       return notify.create('error', 'Oh no! session.me not defined');
     const config: MeldConfig = { type: 'set', length: 1 };
     ws.send(meldCards(session.id, session.me.id, melds.map(x => ({ cards: x.cards, config }))));
-  };
+  }
 
   return (
-    <div className={s.game}>
+    <div className={s.game} onContextMenu={onContext} onClick={context.close} onPointerDown={touchContext}>
+      {context.component}
+      <ConfirmationModal
+        open={turnModal}
+        onInput={() => setTurnModal(false)}
+        title='Your turn has started'
+        noButtons
+        onClick={() => setTurnModal(false)}
+      >
+        <span className={s.turnMessage}>(click anywhere to continue)</span>
+      </ConfirmationModal>
+
       <div className={s.sideButtons}>
         <SlideButton text='Set Ready' icon={solid('user-check')}
           xOffset='2.9em' yOffset='3em' onClick={playerReady}
@@ -347,13 +416,13 @@ export function Game() {
       {/*-----------------------------------------------------------------------*/}
 
       <Draggable handle='.table-handle' positionOffset={{ x: '-25%', y: '-25%' }}>
-        <div className={s.table} onClick={openContext}>
+        <div className={s.table} onPointerDown={() => context.close()}>
           <div className='table-handle' />
 
           <div className={s.decks}>
             <Reposition>
               <div className='inner'>
-                <DiscardPile size={deckSize} discard={session.discard} onDrop={onDiscardDrop} />
+                <DiscardPile size={deckSize} discard={session.discard} shanghai={!!session.pendingShanghai} onDrop={onDiscardDrop} />
                 <DrawPile size={deckSize} amount={session.deckCardAmount} />
               </div>
             </Reposition>
@@ -406,13 +475,13 @@ const useStyles = createUseStyles({
       opacity: 0,
       transform: 'scale(1.05)',
     },
-    
+
     to: {
       opacity: 1,
       transform: 'scale(1)',
     },
   },
-  
+
   game: {
     position: 'relative',
     overflow: 'hidden',
@@ -420,7 +489,7 @@ const useStyles = createUseStyles({
     height: '100vh',
     userSelect: 'none',
     backgroundColor: '#000c',
-    
+
     animation: '$appear 5s ease',
   },
 
@@ -599,5 +668,13 @@ const useStyles = createUseStyles({
     position: 'absolute',
     left: 'calc(100vw - min(4vh, 30px) * 10)',
     top: '88vh',
+  },
+
+  turnMessage: {
+    display: 'block',
+    marginTop: -20,
+    marginBottom: 5,
+    color: '#aaa',
+    fontStyle: 'italic',
   },
 });

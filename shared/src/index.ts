@@ -1,4 +1,4 @@
-import { Card, CardRank, Coord, ErrorEvent, ERROR_EVENT, GameConfig, JOKER_RANK, Meld, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
+import { Card, CardRank, Coord, ErrorEvent, ERROR_EVENT, GameConfig, InfoEvent, INFO_EVENT, JOKER_RANK, Meld, MeldConfig, MessageEvent, MESSAGE_EVENT, Player, PlayerPublic, RoundConfig, Session, SessionPublic } from './types';
 import { v4 } from 'uuid';
 import { isJoker } from './validation';
 import arrayShuffle from 'shuffle-array';
@@ -44,6 +44,13 @@ export function wsMessage(message: string, method: MessageEvent['method']): Mess
     };
 }
 
+export function wsInfo(event: InfoEvent['event']): InfoEvent {
+    return {
+        type: INFO_EVENT,
+        event
+    };
+}
+
 export function assertNever(x: never): never {
     throw new Error('Unexpected object: ' + JSON.stringify(x));
 }
@@ -62,6 +69,8 @@ export function convertSessionToPublic(session: Session, playerId?: string): Ses
         deckCardAmount: session.deck.length,
         turnStartTime: session.turnStartTime,
         gameStartTime: session.gameStartTime,
+        discardOwner: session.discardOwner,
+        pendingShanghai: session.pendingShanghai,
 
         players: session.players.map(x => convertPlayerToPublic(x)),
         me: session.players.find(x => x.id === playerId),

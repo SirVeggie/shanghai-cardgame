@@ -133,7 +133,7 @@ export type MeldAdd = {
     position: 'start' | 'end' | 'joker'
 };
 
-export type WebEvent = GameEvent | SyncEvent | ErrorEvent | MessageEvent | SessionListEvent;
+export type WebEvent = GameEvent | SyncEvent | ErrorEvent | MessageEvent | InfoEvent | SessionListEvent;
 
 export const GAME_EVENT = 'game';
 export type GameEvent = {
@@ -183,6 +183,12 @@ export type MessageEvent = {
     type: typeof MESSAGE_EVENT;
     method: 'log' | 'notification';
     message: string;
+};
+
+export const INFO_EVENT = 'info';
+export type InfoEvent = {
+    type: typeof INFO_EVENT;
+    event: 'turn-start' | 'turn-end' | 'round-end';
 };
 
 export type SessionAction = typeof SESSION_ACTIONS[number];

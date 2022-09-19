@@ -1,9 +1,10 @@
 import { minBy } from 'lodash';
 import { ctool, findJokerSpot, GameEvent, generateDeck, getNextPlayer, getPlayerRoundPoints, isJoker, Player, Session, shuffle, sleep, userError, UserError, validateMeld, validateMelds } from 'shared';
 import { WebSocket } from 'ws';
-import { sendError, sendMessage, sendMessageSingle } from '../networking/socket';
+import { sendError, sendInfo, sendInfoAll, sendMessage } from '../networking/socket';
 import { updateClients } from './controller';
 import _ from 'lodash';
+import { randomInsult } from '../tools/insults';
 
 
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
@@ -385,11 +386,13 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             sendMessage(`Round ${session.round} started: ${player.name} to play`, event);
         }
 
-        startNextTurn('no-message');
+        startNextTurn('no-message', 'current');
     }
 
-    function startNextTurn(msg: 'message' | 'no-message' = 'message') {
-        const nextPlayer = getNextPlayer(session.currentPlayerId, session.players);
+    function startNextTurn(msg: 'message' | 'no-message' = 'message', selectPlayer: 'next' | 'current' = 'next') {
+        const nextPlayer = selectPlayer === 'current'
+            ? session.players.find(x => x.id === session.currentPlayerId)!
+            : getNextPlayer(session.currentPlayerId, session.players);
 
         session.state = 'turn-start';
         session.currentPlayerId = nextPlayer.id;
@@ -400,15 +403,16 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (session.turn !== 1) {
             setTimeout(() => {
                 if (session.turn === oldTurn) {
-                    sendMessage(`${nextPlayer.name} spent more than 1 minute on a turn, they suck :)`, event);
+                    sendMessage(randomInsult(nextPlayer.name), event);
                 }
             }, 60000);
         }
 
         if (msg === 'message') {
             sendMessage(`Turn ${session.turn} started - ${nextPlayer.name} to play`, event, 'log');
-            sendMessageSingle('Your turn started', nextPlayer.id, 'notification');
         }
+
+        sendInfo('turn-start', nextPlayer.id);
     }
 
     function allowShanghai(message: 'message' | 'no-message') {
@@ -454,6 +458,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         if (mode === 'no-continue')
             return;
+        sendInfo('turn-end', currentPlayer.id);
         if (currentPlayer.cards.length === 0) {
             endRound();
         } else {
@@ -473,6 +478,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         if (session.round === session.config.rounds.length)
             return endGame();
         sendMessage('Round has ended, press ready to continue', event);
+        sendInfoAll('round-end', event.sessionId);
     }
 
     function endGame() {

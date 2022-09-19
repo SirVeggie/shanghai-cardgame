@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { convertSessionToPublic, GameEvent, GAME_EVENT, MessageEvent, SessionListEvent, SESSION_LIST_EVENT, userError, UserError, validateJoinParams, WebEvent, wsError, wsMessage } from 'shared';
+import { convertSessionToPublic, GameEvent, GAME_EVENT, InfoEvent, MessageEvent, SessionListEvent, SESSION_LIST_EVENT, userError, UserError, validateJoinParams, WebEvent, wsError, wsInfo, wsMessage } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
 import { cleanupSessions, sessions } from '../logic/controller';
 
@@ -157,13 +157,28 @@ export function sendMessage(message: string, event: GameEvent, method: MessageEv
     });
 }
 
-export function sendMessageSingle(message: string, player: string, method: MessageEvent['method']) {
+export function sendMessageSingle(message: string, playerId: string, method: MessageEvent['method']) {
     for (const session of Object.values(clients)) {
-        const actor = session.find(x => x.playerId === player);
+        const actor = session.find(x => x.playerId === playerId);
         if (actor) {
             return sendMessageWS(actor.ws, message, method);
         }
     }
+}
+
+export function sendInfo(event: InfoEvent['event'], playerId: string) {
+    for (const session of Object.values(clients)) {
+        const actor = session.find(x => x.playerId === playerId);
+        if (actor) {
+            return actor.ws.send(JSON.stringify(wsInfo(event)));
+        }
+    }
+}
+
+export function sendInfoAll(event: InfoEvent['event'], sessionId: string) {
+    clients[sessionId]?.forEach(x => {
+        x.ws.send(JSON.stringify(wsInfo(event)));
+    });
 }
 
 export function sendMessageWS(ws: WebSocket, message: string, method: MessageEvent['method']) {

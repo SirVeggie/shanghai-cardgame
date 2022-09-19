@@ -11,6 +11,7 @@ export type ConfirmationModalProps = {
   children?: React.ReactNode;
   noButtons?: boolean;
   yesNo?: boolean;
+  onClick?: () => void;
 };
 
 export function ConfirmationModal(p: ConfirmationModalProps) {
@@ -37,7 +38,7 @@ export function ConfirmationModal(p: ConfirmationModalProps) {
   return (
     <Toggle on={p.open}>
       <div className={s.modal} onClick={parentClick}>
-        <div className={cx(s.content, p.warning && 'warning')}>
+        <div className={cx(s.content, p.warning && 'warning')} onClick={p.onClick}>
           <h2>{title}</h2>
           {message && <p>{message}</p>}
 

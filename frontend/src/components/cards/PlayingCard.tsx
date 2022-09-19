@@ -22,6 +22,7 @@ type Props = {
   hover?: boolean;
   innerRef?: RefObject<HTMLElement>;
   isNew?: boolean;
+  attention?: boolean;
 };
 
 export function PlayingCard(p: Props) {
@@ -43,7 +44,7 @@ export function PlayingCard(p: Props) {
   return (
     <div
       ref={(p.innerRef as any)}
-      className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme, p.isNew && 'new')}
+      className={cx(s.card, p.className, ctool.color(p.card), p.hover && 'hover', theme, p.isNew && 'new', p.attention && 'attention')}
       onClick={p.onClick} style={style}
     >
       <i>{convert(ctool.suitIcon(p.card))}</i>
@@ -122,6 +123,24 @@ const useStyles = createUseStyles({
       transform: 'rotate(180deg)',
     },
   },
+  
+  '@keyframes attention': {
+    '0%': {
+      transform: 'scale(1)',
+      backgroundColor: 'lightgray',
+      boxShadow: '0 0 1em #fff3',
+    },
+    '20%': {
+      transform: 'scale(1.05)',
+      backgroundColor: 'white',
+      boxShadow: '0 0 1em #fffa',
+    },
+    '100%': {
+      transform: 'scale(1)',
+      backgroundColor: 'lightgray',
+      boxShadow: '0 0 1em #fff3',
+    },
+  },
 
   card: {
     fontSize: '30px',
@@ -139,10 +158,15 @@ const useStyles = createUseStyles({
     
     '&.hover': {
       transition: 'transform 200ms ease',
-
+      
       '&:hover': {
         transform: 'translateY(-0.5em) scale(1.05)',
       },
+    },
+    
+    '&.attention': {
+      filter: 'none',
+      animation: '$attention 1s ease-in-out infinite',
     },
 
     '&.red': {

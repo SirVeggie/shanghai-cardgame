@@ -12,6 +12,7 @@ type Props = {
   onClick?: MouseEventHandler<HTMLDivElement>;
   onDrop?: (info: DropInfo) => void;
   size?: string | number;
+  shanghai?: boolean;
 };
 
 export function DiscardPile(p: Props) {
@@ -33,7 +34,7 @@ export function DiscardPile(p: Props) {
       </Toggle>
       <Toggle on={!!p.discard.top}>
         <Draggable info={info}>
-          <PlayingCard pointer hover size={p.size} card={p.discard.top} onClick={p.onClick} />
+          <PlayingCard attention={p.shanghai} pointer hover size={p.size} card={p.discard.top} onClick={p.onClick} />
         </Draggable>
       </Toggle>
     </div>
