@@ -61,7 +61,7 @@ export function Hand(p: Props) {
 
 const useStyles = createUseStyles({
   hand: {
-    position: 'absolute',
+    position: 'fixed',
     pointerEvents: 'none',
     display: 'flex',
     justifyContent: 'center',

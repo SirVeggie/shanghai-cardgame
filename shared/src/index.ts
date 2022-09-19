@@ -238,11 +238,11 @@ export function getPlayerRoundPoints (config: GameConfig, player: Player) {
 }
 
 export function cardOrderIndex(card: Card): number {
-    return Number(isJoker(card)) * 10000 + card.suit * 1000 + card.rank * 10 + card.deck;
+    return Number(isJoker(card)) * 100000 + card.suit * 1000 + card.rank * 10 + card.deck;
 }
 
 export function cardOrderIndexSet(card: Card): number {
-    return Number(isJoker(card)) * 10000 + card.rank * 1000 + card.suit * 10 + card.deck;
+    return Number(isJoker(card)) * 100000 + card.rank * 1000 + card.suit * 10 + card.deck;
 }
 
 export function sortCardsStraights(cards: Card[]) {
@@ -255,8 +255,8 @@ export function sortCardsSets(cards: Card[]) {
 
 export function sortCardsHybrid(cards: Card[]) {
     const amounts = countBy(cards, x => x.rank);
-    const sets = sortCardsSets(cards.filter(x => amounts[x.rank] > 1));
-    const straights = sortCardsStraights(cards.filter(x => amounts[x.rank] === 1));
+    const sets = sortCardsSets(cards.filter(x => amounts[x.rank] > 1 && !isJoker(x)));
+    const straights = sortCardsStraights(cards.filter(x => amounts[x.rank] === 1 || isJoker(x)));
     return sets.concat(straights);
 }
     

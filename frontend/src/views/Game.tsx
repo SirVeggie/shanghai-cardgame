@@ -456,7 +456,6 @@ export function Game() {
               />
             ))}
           </div>
-
         </div >
       </Draggable>
 
@@ -644,6 +643,10 @@ const useStyles = createUseStyles({
     right: 0,
     pointerEvents: 'none',
 
+    '&:active': {
+      zIndex: 10,
+    },
+
     '& .inner': {
       display: 'flex',
       justifyContent: 'center',
@@ -670,6 +673,10 @@ const useStyles = createUseStyles({
     position: 'absolute',
     left: 'calc(100vw - min(4vh, 30px) * 10)',
     top: '88vh',
+    
+    '& > div:active': {
+      zIndex: 10,
+    },
   },
 
   turnMessage: {
