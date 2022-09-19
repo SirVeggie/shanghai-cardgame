@@ -19,7 +19,7 @@ export function useContextMenu(options: Record<string, (() => void) | undefined>
 
     const component = (
         <div className={cx(s.context, open && 'open')} style={style}>
-            {Object.keys(options).map((option, i) => (
+            {Object.keys(options).filter(x => options[x]).map((option, i) => (
                 <div key={i} style={index(i)} onClick={options[option]}>{option}</div>
             ))}
         </div>
@@ -85,8 +85,8 @@ const useStyle = createUseStyles({
             animation: '$open 0.3s ease',
         },
 
-        '& > div:not(:first-child)': {
-            borderTop: '1px solid #0003',
+        '& > div:not(:last-child)': {
+            borderBottom: '1px solid #0003',
         },
 
         '&.open > div': {

@@ -1,5 +1,5 @@
 import cx from 'classnames';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import { useDispatch, useSelector } from 'react-redux';
 import { canDiscard, canDrawDeck, canDrawDiscard, canRevealCard, Card, ERROR_EVENT, getPlayerRoundPoints, INFO_EVENT, MeldAdd, MeldConfig, MESSAGE_EVENT, PlayerPublic, SessionPublic, sortCardsHybrid, sortCardsSets, sortCardsStraights, SYNC_EVENT, uuid } from 'shared';
@@ -28,8 +28,6 @@ import { useContextMenu } from '../hooks/useContextMenu';
 
 const prevTouch = {
   time: 0,
-  x: 0,
-  y: 0,
 };
 
 export function Game() {
@@ -46,7 +44,8 @@ export function Game() {
 
   const context = useContextMenu({
     'New meld': !session.me?.melds.length ? newPrivateMeld : undefined,
-    'Confirm melds': session.me?.melds.length ? submitMelds : undefined,
+    'Confirm melds': !session.me?.melds.length ? submitMelds : undefined,
+    'Set ready': session.state === 'round-end' && !session.me?.isReady ? playerReady : undefined,
     'Sort by sets': () => {
       setSortFunc({ f: sortCardsSets });
       setHand(sortCardsSets(session.me!.cards));
@@ -75,6 +74,12 @@ export function Game() {
       updateHand(event.session);
     }
   }, [JSON.stringify(hand)]));
+  
+  useEffect(() => {
+    const func = () => context.close();
+    window.addEventListener('blur', func);
+    return () => window.removeEventListener('blur', func);
+  }, []);
 
   // Initialize hand from session cards
   if (!hand.length && session.me!.cards.length)
@@ -201,9 +206,9 @@ export function Game() {
     }
   };
 
-  const playerReady = () => {
+  function playerReady() {
     ws.send(setReady(session.id, session.me!.id));
-  };
+  }
 
   function newPrivateMeld() {
     setMelds(melds => [...melds, { id: uuid(), cards: [] }]);
@@ -285,26 +290,20 @@ export function Game() {
   }
   
   function touchContext(e: React.PointerEvent<HTMLDivElement>) {
+    console.log('pointer down');
     if (e.pointerType !== 'touch')
-      return;
+      return console.log('not touch');
     const oldTime = prevTouch.time;
     prevTouch.time = Date.now();
-    if (Date.now() - oldTime < 500)
+    if (Date.now() - oldTime > 350)
       return context.close();
-    if (dist(e.clientX, prevTouch.x) > 20 && dist(e.clientY, prevTouch.y) > 20)
-      return context.close();
-    prevTouch.x = e.clientX;
-    prevTouch.y = e.clientY;
+    console.log('fast enough');
     prevTouch.time = 0;
     
     context.open({
       x: e.clientX,
       y: e.clientY,
     });
-    
-    function dist(a: number, b: number): number {
-      return Math.abs(a - b);
-    }
   }
 
   function submitMelds() {
@@ -315,7 +314,11 @@ export function Game() {
   }
 
   return (
-    <div className={s.game} onContextMenu={onContext} onClick={context.close} onPointerDown={touchContext}>
+    <div className={s.game}
+      onContextMenu={onContext}
+      onClick={context.close}
+      onPointerDown={touchContext}
+    >
       {context.component}
       <ConfirmationModal
         open={turnModal}
