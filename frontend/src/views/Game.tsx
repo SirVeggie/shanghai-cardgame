@@ -58,7 +58,7 @@ export function Game() {
       setSortFunc({ f: sortCardsHybrid });
       setHand(sortCardsHybrid(session.me!.cards));
     },
-    'Clear melds': !session.me?.melds.length ? () => setMelds([]) : undefined,
+    'Clear melds': !session.me?.melds.length ? () => setPrivateMelds([]) : undefined,
   });
 
   const ws = useSessionComms(params, useCallback(event => {
@@ -70,6 +70,8 @@ export function Game() {
       notify.create('info', event.message);
     if (event.type === INFO_EVENT && event.event === 'turn-start')
       setTurnModal(true);
+    if (event.type === INFO_EVENT && event.event === 'round-end')
+      setPrivateMelds([]);
     if (event.type === SYNC_EVENT) {
       dispatch(sessionActions.setSession(event.session));
       updateHand(event.session);
@@ -77,6 +79,7 @@ export function Game() {
   }, [JSON.stringify(hand)]));
 
   useEffect(() => {
+    setMelds(JSON.parse(localStorage.getItem('private-melds') || '[]'));
     const func = () => context.close();
     window.addEventListener('blur', func);
     return () => window.removeEventListener('blur', func);
@@ -88,7 +91,7 @@ export function Game() {
 
   if (melds.length && session.me!.melds.length) {
     // Remove private melds on meld success
-    setMelds([]);
+    setPrivateMelds([]);
   }
 
   const log = (message: string, type: 'info' | 'error' = 'info') => {
@@ -210,22 +213,30 @@ export function Game() {
   function playerReady() {
     ws.send(setReady(session.id, session.me!.id));
   }
+  
+  function setPrivateMelds(pMelds: PrivateMeld[] | ((melds: PrivateMeld[]) => PrivateMeld[])) {
+    let temp = pMelds;
+    if (typeof pMelds === 'function')
+      temp = pMelds(melds);
+    window.localStorage.setItem('private-melds', JSON.stringify(temp));
+    setMelds(temp);
+  }
 
   function newPrivateMeld() {
-    setMelds(melds => [...melds, { id: uuid(), cards: [] }]);
+    setPrivateMelds(melds => [...melds, { id: uuid(), cards: [] }]);
   }
 
   const addToPrivateMeld = (id: string, card: Card, pos: number) => {
     const meld = melds.find(meld => meld.id === id)!;
     const index = Math.floor(pos * (meld.cards.length + 1));
     meld.cards.splice(index, 0, card);
-    setMelds(melds => melds.map(m => m.id === id ? meld : m));
+    setPrivateMelds(melds => melds.map(m => m.id === id ? meld : m));
   };
 
   const removeFromPrivateMeld = (id: string, card: Card) => {
     let res = melds.map(meld => meld.id === id ? { ...meld, cards: meld.cards.filter(c => c !== card) } : meld);
     res = res.filter(meld => meld.cards.length > 0);
-    setMelds(res);
+    setPrivateMelds(res);
   };
 
   const removeFromAllMelds = (card: Card) => {
@@ -233,7 +244,7 @@ export function Game() {
       .map(meld => ({ ...meld, cards: meld.cards.filter(c => c !== card) }))
       .filter(meld => meld.cards.length > 0)
       .concat(melds.filter(meld => meld.cards.length === 0));
-    setMelds(res);
+    setPrivateMelds(res);
   };
 
   const reorderInPrivateMeld = (id: string, card: Card, pos: number) => {
@@ -246,7 +257,7 @@ export function Game() {
       : (pos - gap / 2) * meld.cards.length);
     meld.cards = meld.cards.filter(c => c.id !== card.id);
     meld.cards.splice(index, 0, card);
-    setMelds(melds => melds.map(m => m.id === id ? meld : m));
+    setPrivateMelds(melds => melds.map(m => m.id === id ? meld : m));
   };
 
   const findPrivateMeldId = (card: Card) => {
