@@ -6,6 +6,7 @@ import { updateClients } from './controller';
 import _ from 'lodash';
 import { randomInsult } from '../tools/insults';
 
+const deckDrawDelay = 5000;
 
 export function eventHandler(sessions: Record<string, Session>, event: GameEvent, ws: WebSocket) {
     if (!sessions[event.sessionId])
@@ -125,8 +126,13 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             throw userError('Cannot draw a card right now');
         if (session.discard.length === 0 && session.deck.length !== 0)
             throw userError('Discard pile empty, reveal a card first');
-        if (Date.now() - session.turnStartTime < 2000)
-            throw userError('Wait at least 2 seconds before drawing');
+        if (Date.now() - session.turnStartTime < deckDrawDelay) {
+            const timeLeft = Math.max(0, deckDrawDelay - (Date.now() - session.turnStartTime));
+            setTimeout(() => {
+                eventHandler(sessions, event, ws);
+            }, timeLeft);
+            throw userError(`Deck not ready yet, drawing card automatically in ${(timeLeft / 1000).toFixed(1)} seconds`);
+        }
 
         if (session.pendingShanghai) {
             allowShanghai('message');
