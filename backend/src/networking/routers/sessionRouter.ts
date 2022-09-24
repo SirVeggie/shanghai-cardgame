@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { convertSessionToPublic, GameJoinParams, Player, userError, uuid, validateJoinParams } from 'shared';
 import { addSession, sessions } from '../../logic/controller';
-import { clients, syncList } from '../socket';
+import { syncList } from '../socket';
 
 export const sessionRouter = Router();
 
@@ -63,8 +63,6 @@ function reconnect(params: GameJoinParams) {
     const player = session.players.find(x => x.name === params.playerName);
     if (!player)
         throw userError('Did not find player by that name');
-    if (clients[session.id]?.some(x => x.playerId === player.id))
-        throw userError('A player by that name is already connected');
 
     console.log(`Player reconnecting: ${params.playerName}`);
     return convertSessionToPublic(session, player.id);

@@ -377,6 +377,15 @@ export function Game() {
 
       {/*-----------------------------------------------------------------------*/}
 
+      <div className={s.meldInfo}>
+        <span>Melds</span>
+        {session.config.rounds[session.round - 1].melds.map((config, i) => (
+          <div key={i}>{config.type} of {config.length}</div>
+        ))}
+      </div>
+
+      {/*-----------------------------------------------------------------------*/}
+
       <div className={s.players}>
         <div>
           <i></i>
@@ -414,15 +423,6 @@ export function Game() {
           <i><FontAwesomeIcon icon={solid('hourglass-half')} /></i>
           {session.players.map(p => <div key={p.id}>{(p.playtime / 1000 / 60).toFixed(0)}m</div>)}
         </div>
-      </div>
-
-      {/*-----------------------------------------------------------------------*/}
-
-      <div className={s.meldInfo}>
-        <span>Melds</span>
-        {session.config.rounds[session.round - 1].melds.map((config, i) => (
-          <div key={i}>{config.type} of {config.length}</div>
-        ))}
       </div>
 
       {/*-----------------------------------------------------------------------*/}
@@ -483,7 +483,7 @@ export function Game() {
               </div>
             </Reposition>
           </div>
-s
+          s
         </div >
       </Draggable>
 
@@ -547,7 +547,7 @@ const useStyles = createUseStyles({
 
   meldInfo: {
     position: 'absolute',
-    top: '40vh',
+    top: '60vh',
     right: 0,
     zIndex: 1,
     display: 'flex',
