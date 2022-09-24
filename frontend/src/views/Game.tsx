@@ -270,13 +270,16 @@ export function Game() {
   };
 
   function reorderHand(card: Card, pos: number) {
-    const oldIndex = hand.findIndex(c => c.id === card.id);
-    const gap = 1 / hand.length;
-    const oldPos = oldIndex / hand.length + gap / 2;
+    const oldHand = hand.filter(x => !privateMeldsContainCard(x));
+    const oldIndex = oldHand.findIndex(c => c.id === card.id);
+    if (oldIndex === -1)
+      return log('Didn\'t find card in hand', 'error');
+    const gap = 1 / oldHand.length;
+    const oldPos = oldIndex / oldHand.length + gap / 2;
     const index = Math.floor(pos < oldPos
-      ? (pos + gap / 2) * hand.length
-      : (pos - gap / 2) * hand.length);
-    const newHand = hand.filter(c => c.id !== card.id);
+      ? (pos + gap / 2) * oldHand.length
+      : (pos - gap / 2) * oldHand.length);
+    const newHand = oldHand.filter(c => c.id !== card.id);
     newHand.splice(index, 0, card);
     setHand(newHand);
   }
