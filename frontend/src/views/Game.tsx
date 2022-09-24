@@ -241,7 +241,7 @@ export function Game() {
 
   const removeFromAllMelds = (card: Card) => {
     const res = melds
-      .map(meld => ({ ...meld, cards: meld.cards.filter(c => c !== card) }))
+      .map(meld => ({ ...meld, cards: meld.cards.filter(c => c.id !== card.id) }))
       .filter(meld => meld.cards.length > 0)
       .concat(melds.filter(meld => meld.cards.length === 0));
     setPrivateMelds(res);
@@ -435,8 +435,19 @@ export function Game() {
           <div className={s.decks}>
             <Reposition>
               <div className='inner'>
-                <DiscardPile size={deckSize} discard={session.discard} shanghai={!!session.pendingShanghai} onDrop={onDiscardDrop} />
-                <DrawPile size={deckSize} amount={session.deckCardAmount} />
+                <DiscardPile
+                  size={deckSize}
+                  discard={session.discard}
+                  shanghai={!!session.pendingShanghai}
+                  discarding={session.state === 'turn-start' && session.discardOwner !== session.me?.id}
+                  drawing={session.state === 'card-drawn' && session.lastDraw === 'discard' && session.currentPlayerId !== session.me?.id}
+                  onDrop={onDiscardDrop}
+                />
+                <DrawPile
+                  size={deckSize}
+                  amount={session.deckCardAmount}
+                  drawing={session.state === 'card-drawn' && session.lastDraw === 'deck'}
+                />
               </div>
             </Reposition>
           </div>
@@ -684,7 +695,7 @@ const useStyles = createUseStyles({
     position: 'absolute',
     left: 'calc(100vw - min(4vh, 30px) * 10)',
     top: '88vh',
-    
+
     '& > div:active': {
       zIndex: 10,
     },
