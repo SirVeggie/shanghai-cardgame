@@ -88,7 +88,7 @@ export function Game() {
     window.addEventListener('blur', func);
     return () => window.removeEventListener('blur', func);
   }, []);
-  
+
   useEffect(() => {
     window.localStorage.setItem('private-melds', JSON.stringify(melds));
   }, [JSON.stringify(melds)]);
@@ -432,30 +432,6 @@ export function Game() {
         <div className={s.table} onPointerDown={() => context.close()}>
           <div className='table-handle' />
 
-          <div className={s.decks}>
-            <Reposition>
-              <div className='inner'>
-                <DiscardPile
-                  size={deckSize}
-                  discard={session.discard}
-                  shanghai={!!session.pendingShanghai}
-                  discarding={session.state === 'turn-start' && session.discardOwner !== session.me?.id}
-                  drawing={session.state === 'card-drawn' && session.lastDraw === 'discard' && session.currentPlayerId !== session.me?.id}
-                  showButton={session.state === 'shanghai-called' && session.currentPlayerId === session.me?.id}
-                  onAllowShanghai={() => ws.send(allowShanghai(session.id, session.me!.id))}
-                  onDrop={onDiscardDrop}
-                />
-                <DrawPile
-                  size={deckSize}
-                  amount={session.deckCardAmount}
-                  drawing={session.state === 'card-drawn' && session.lastDraw === 'deck'}
-                />
-              </div>
-            </Reposition>
-          </div>
-
-          {/*-----------------------------------------------------------------------*/}
-
           <div className={s.publicMelds}>
             {session.players.filter(p => p.melds.length).map(p => (
               <PublicMeldSet
@@ -480,6 +456,31 @@ export function Game() {
               />
             ))}
           </div>
+
+          {/*-----------------------------------------------------------------------*/}
+
+          <div className={s.decks}>
+            <Reposition>
+              <div className='inner'>
+                <DiscardPile
+                  size={deckSize}
+                  discard={session.discard}
+                  shanghai={!!session.pendingShanghai}
+                  discarding={session.state === 'turn-start' && session.discardOwner !== session.me?.id}
+                  drawing={session.state === 'card-drawn' && session.lastDraw === 'discard' && session.currentPlayerId !== session.me?.id}
+                  showButton={!!session.pendingShanghai && session.currentPlayerId === session.me?.id}
+                  onAllowShanghai={() => ws.send(allowShanghai(session.id, session.me!.id))}
+                  onDrop={onDiscardDrop}
+                />
+                <DrawPile
+                  size={deckSize}
+                  amount={session.deckCardAmount}
+                  drawing={session.state === 'card-drawn' && session.lastDraw === 'deck'}
+                />
+              </div>
+            </Reposition>
+          </div>
+s
         </div >
       </Draggable>
 

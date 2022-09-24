@@ -105,8 +105,6 @@ function handleConnect(event: WebEvent, ws: WebSocket): void {
     const existing = session.players.find(x => x.name === event.join.playerName);
     if (!existing)
         throw userError('A player by that name does not exist in the lobby');
-    if (clients[session.id]?.some(x => x.playerId === existing.id))
-        throw userError('A player by that name is already connected');
 
     event.playerId = existing.id;
     event.sessionId = session.id;
