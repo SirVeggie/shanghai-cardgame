@@ -43,8 +43,8 @@ export function Game() {
   const [sortFunc, setSortFunc] = useState<{ f: typeof sortCardsSets; }>({ f: sortCardsSets });
 
   const context = useContextMenu({
-    'New meld': !session.me?.melds.length ? newPrivateMeld : undefined,
-    'Confirm melds': !session.me?.melds.length ? submitMelds : undefined,
+    'New meld': !session.me?.melds.length && session.state !== 'round-end' ? newPrivateMeld : undefined,
+    'Confirm melds': !session.me?.melds.length && session.state !== 'round-end' ? submitMelds : undefined,
     'Set ready': session.state === 'round-end' && !session.me?.isReady ? playerReady : undefined,
     'Sort by sets': () => {
       setSortFunc({ f: sortCardsSets });
