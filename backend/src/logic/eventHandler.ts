@@ -156,6 +156,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.newCards = [card];
 
         session.state = 'card-drawn';
+        session.lastDraw = 'deck';
         sendMessage(`${player.name} drew a card from the deck`, event);
     }
 
@@ -181,6 +182,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         player.newCards = [card];
 
         session.state = 'card-drawn';
+        session.lastDraw = 'discard';
         session.discardOwner = undefined;
         sendMessage(`${player.name} drew from the discard pile`, event);
     }
@@ -408,7 +410,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
         const oldTurn = session.turn;
         if (session.turn !== 1) {
             setTimeout(() => {
-                if (session.turn === oldTurn) {
+                if (session.turn === oldTurn && session.state !== 'round-end') {
                     sendMessage(randomInsult(nextPlayer.name), event);
                 }
             }, 60000);

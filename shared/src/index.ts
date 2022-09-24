@@ -69,6 +69,7 @@ export function convertSessionToPublic(session: Session, playerId?: string): Ses
         deckCardAmount: session.deck.length,
         turnStartTime: session.turnStartTime,
         gameStartTime: session.gameStartTime,
+        lastDraw: session.lastDraw,
         discardOwner: session.discardOwner,
         pendingShanghai: session.pendingShanghai,
 

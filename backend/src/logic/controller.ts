@@ -38,6 +38,7 @@ export function addSession(params: GameJoinParams) {
         password: params.password,
         turnStartTime: Date.now(),
         gameStartTime: Date.now(),
+        lastDraw: 'deck',
 
         currentPlayerId: '',
         state: 'waiting-players',

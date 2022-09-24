@@ -35,6 +35,7 @@ export type Session = {
     discard: Card[];
     gameStartTime: number;
     turnStartTime: number;
+    lastDraw: 'deck' | 'discard';
     pendingShanghai?: string;
     discardOwner?: string;
     winnerId?: string;
