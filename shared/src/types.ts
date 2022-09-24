@@ -202,6 +202,7 @@ export const GAME_ACTIONS = [
     'draw-deck',
     'draw-discard',
     'call-shanghai',
+    'allow-shanghai',
     'set-ready',
     'reveal',
 ] as const;

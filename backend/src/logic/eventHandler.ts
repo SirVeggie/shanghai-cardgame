@@ -30,6 +30,7 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
             case 'set-ready': return handleSetReady();
             case 'reveal': return handleReveal();
             case 'call-shanghai': return handleCallShanghai();
+            case 'allow-shanghai': return handleAllowShanghai();
             case 'draw-deck': return handleDrawDeck();
             case 'draw-discard': return handleDrawDiscard();
             case 'meld': return handleMeld();
@@ -117,6 +118,15 @@ export function eventHandler(sessions: Record<string, Session>, event: GameEvent
 
         sendMessage(`${p.name} called shanghai!`, event, 'log');
         sendMessage(`${p.name} called shanghai!`, event, 'notification');
+    }
+    
+    function handleAllowShanghai() {
+        if (session.state !== 'shanghai-called')
+            throw userError('Shanghai has not been called');
+        if (event.playerId !== session.currentPlayerId)
+            throw userError('Only current player can allow shanghai');
+
+        allowShanghai('message');
     }
 
     function handleDrawDeck() {

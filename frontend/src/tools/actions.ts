@@ -27,6 +27,15 @@ export function callShanghai(sessionId: string, playerId: string): GameEvent {
     };
 }
 
+export function allowShanghai(sessionId: string, playerId: string): GameEvent {
+    return {
+        type: GAME_EVENT,
+        action: 'allow-shanghai',
+        playerId,
+        sessionId,
+    };
+}
+
 export function drawDeck(sessionId: string, playerId: string): GameEvent {
     return {
         type: GAME_EVENT,
