@@ -6,6 +6,6 @@ export const config = {
 
 for (const [key, value] of Object.entries(config)) {
     if (value === undefined || isNaN(value)) {
-        throw `.env is missing ${key}`;
+        throw `.env is missing key ${key}`;
     }
 }
