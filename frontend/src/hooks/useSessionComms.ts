@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { GameEvent, GameJoinParams, GAME_EVENT, WebEvent } from 'shared';
+import { GameEvent, GameJoinParams, GAME_EVENT, uuid, WebEvent } from 'shared';
 import { useLocalSocket } from './useWebSocket';
+
+export const deviceIdComms = uuid();
 
 export function useSessionComms(params: GameJoinParams | null, callback: (data: WebEvent) => void) {
     const [retry, setRetry] = useState(false);
@@ -15,6 +17,7 @@ export function useSessionComms(params: GameJoinParams | null, callback: (data: 
             playerName: params.playerName,
             password: params.password,
         },
+        deviceId: deviceIdComms,
         sessionId: '',
         playerId: ''
     };

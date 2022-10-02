@@ -5,7 +5,7 @@ import { Button } from '../components/Button';
 import { Container } from '../components/Container';
 import { useJoinParams } from '../hooks/useJoinParams';
 import { useNotification } from '../hooks/useNotification';
-import { useSessionComms } from '../hooks/useSessionComms';
+import { deviceIdComms, useSessionComms } from '../hooks/useSessionComms';
 import { sessionActions } from '../reducers/sessionReducer';
 import { RootState } from '../store';
 
@@ -34,6 +34,7 @@ export function Lobby() {
     const event: GameEvent = {
       type: 'game',
       action: 'set-ready',
+      deviceId: deviceIdComms,
       playerId: session.me.id,
       sessionId: session.id,
     };

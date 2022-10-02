@@ -139,6 +139,7 @@ export type WebEvent = GameEvent | SyncEvent | ErrorEvent | MessageEvent | InfoE
 export const GAME_EVENT = 'game';
 export type GameEvent = {
     type: typeof GAME_EVENT;
+    deviceId: string;
     playerId: string;
     sessionId: string;
 } & ({

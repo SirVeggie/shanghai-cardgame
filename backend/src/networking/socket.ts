@@ -3,7 +3,7 @@ import { convertSessionToPublic, GameEvent, GAME_EVENT, InfoEvent, MessageEvent,
 import { WebSocket, WebSocketServer } from 'ws';
 import { cleanupSessions, sessions } from '../logic/controller';
 
-type Actor = { playerId: string, ws: WebSocket; };
+type Actor = { playerId: string, deviceId: string, ws: WebSocket; };
 let wss: WebSocketServer = null as any;
 const actions: Record<WebEvent['type'], ((data: WebEvent, ws: WebSocket) => void)[]> = {} as any;
 export const clients: Record<string, Actor[]> = {};
@@ -95,6 +95,8 @@ export function syncList() {
 function handleConnect(event: WebEvent, ws: WebSocket): void {
     if (event.type !== GAME_EVENT || event.action !== 'connect')
         return;
+    if (Object.values(clients).some(x => x.some(y => y.deviceId === event.deviceId)))
+        return;
     validateJoinParams(event.join);
 
     const session = Object.values(sessions).find(x => x.name === event.join.lobbyName);
@@ -111,7 +113,7 @@ function handleConnect(event: WebEvent, ws: WebSocket): void {
 
     if (!clients[session.id])
         clients[session.id] = [];
-    clients[session.id].push({ playerId: existing.id, ws });
+    clients[session.id].push({ playerId: existing.id, deviceId: event.deviceId, ws });
 }
 
 function handleDisconnect(ws: WebSocket) {
@@ -124,6 +126,7 @@ function handleDisconnect(ws: WebSocket) {
             event = {
                 type: GAME_EVENT,
                 action: 'disconnect',
+                deviceId: actor.deviceId,
                 playerId: actor.playerId,
                 sessionId: key
             };
