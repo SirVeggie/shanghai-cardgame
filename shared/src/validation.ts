@@ -250,7 +250,7 @@ function validateHouse(cards: Card[], length: number): boolean {
     const filteredKeys = keys.filter(key => key !== `${JOKER_RANK}`);
     if (filteredKeys.length > 2)
         return false;
-    if (Math.abs(res[keys[0]] - (res[keys[1]] ?? 0)) > 1 + res[JOKER_RANK])
+    if (Math.abs(res[filteredKeys[0]] - (res[filteredKeys[1]] ?? 0)) > 1 + res[JOKER_RANK])
         return false;
     return true;
 }
