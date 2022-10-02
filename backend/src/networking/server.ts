@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import { errorHandler, unknownEndpoint } from './middleware';
 import { getBuildDir } from '../tools/path';
 import { sessionRouter } from './routers/sessionRouter';
+import { debugRouter } from './routers/debugRouter';
 
 export function createServer(port: number) {
     const app = express();
@@ -27,6 +28,7 @@ export function createServer(port: number) {
     //====| routers |====//
 
     app.use('/api', sessionRouter);
+    app.use('/api/debug', debugRouter);
 
     //====| static files |====//
 

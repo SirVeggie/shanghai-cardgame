@@ -27,6 +27,15 @@ export async function loadJson(filepath: string) {
     return JSON.parse(jsonString);
 }
 
+export async function loadJsonRaw(filepath: string) {
+    if (!fs.existsSync(filepath)) {
+        return null;
+    }
+    
+    const jsonString: any = await readFile(filepath);
+    return jsonString;
+}
+
 function getFolder(filepath: string): string {
     return filepath.replace(/\/[^/]*$/i, '/');
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { WebEvent } from 'shared';
 import ReconnectingWebSocket from 'reconnecting-websocket';
+import axios from 'axios';
 
 // this is a bit dumb
 
@@ -31,6 +32,12 @@ export function useWebSocket(url: string, onOpen?: (ws: ReconnectingWebSocket) =
             ws.onopen = () => {
                 console.log('websocket connected');
                 setConnected(true);
+            };
+            
+            ws.onerror = (e) => {
+                console.log('websocket error', e);
+                axios.post('/api/debug/error', { message: e });
+                setConnected(false);
             };
         }
 

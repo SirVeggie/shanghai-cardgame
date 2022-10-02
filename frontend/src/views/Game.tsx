@@ -84,9 +84,13 @@ export function Game() {
     oldMelds = oldMelds.map(m => ({ ...m, cards: m.cards.filter(c => session.me?.cards.some(x => x.id === c.id)) }));
     oldMelds = oldMelds.filter(m => m.cards.length);
     setMelds(oldMelds);
+    
     const func = () => context.close();
     window.addEventListener('blur', func);
-    return () => window.removeEventListener('blur', func);
+    
+    return () => {
+      window.removeEventListener('blur', func);
+    };
   }, []);
 
   useEffect(() => {
@@ -380,7 +384,7 @@ export function Game() {
       <div className={s.meldInfo}>
         <span>Melds</span>
         {session.config.rounds[session.round - 1].melds.map((config, i) => (
-          <div key={i}>{config.type} of {config.length}</div>
+          <div key={i}>{config.type.replaceAll('-', ' ')} of {config.length}</div>
         ))}
       </div>
 
