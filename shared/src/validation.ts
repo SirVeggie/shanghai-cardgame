@@ -244,15 +244,13 @@ function validateHouse(cards: Card[], length: number): boolean {
     if (cards.length < length)
         return false;
 
-    const res = countBy(cards, x => `${x.rank}|${x.suit}`);
+    const res = countBy(cards, x => x.rank);
 
     const keys = Object.keys(res);
-    const filteredKeys = keys.filter(x => x.split('|')[0] === `${JOKER_RANK}`);
-    if (filteredKeys.length < 2)
-        return true;
+    const filteredKeys = keys.filter(key => key !== `${JOKER_RANK}`);
     if (filteredKeys.length > 2)
         return false;
-    if (Math.abs(res[keys[0]] - res[keys[1]]) > 1)
+    if (Math.abs(res[keys[0]] - (res[keys[1]] ?? 0)) > 1 + res[JOKER_RANK])
         return false;
     return true;
 }
